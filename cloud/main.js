@@ -3,16 +3,14 @@ Parse.Cloud.define("hello", function(request, response) {
 }); 
 
 Parse.Cloud.define("retrievePatientRecordsAll", function(request, response) {
-  return new Promise((resolve,reject)=> {
-    var PatientDemographics = Parse.Object.extend(this.ParseClass);
+    var PatientDemographics = Parse.Object.extend('SurveyData');
     var q = new Parse.Query(PatientDemographics);
     q.limit(2000);
     q.find().then((results) =>{
-      response.success(resolve(results));
+      response.success(results);
     }, (error) => {
-      response.error(reject(error));
+      response.error(error);
     });
-  });
 });
 
 Parse.Cloud.define("retrievePatientRecordByOrgnization", function(request, response) {
