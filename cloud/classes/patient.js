@@ -4,12 +4,19 @@ class Patient {
     constructor(Parse){
         this.Parse = Parse;
         this.ParseClass = "SurveyData";
+        this.forms = [
+            'Allergies', 
+            'EvaluationMedical', 
+            'HistoryEnvironmentalHealth',
+            'HistoryMedical',
+            'Vitals'
+        ];
     }
 
     retrieveAllPatients(){
         return new Promise((resolve, reject) => {
             //Creates local object based on "SurveyData" Object in Parse-Server
-            const PatientDemographics = Parse.Object.extend('SurveyData');
+            const PatientDemographics = Parse.Object.extend(this.ParseClass);
     
             //Queries the SurveyData class from Parse Server
             let query = new Parse.Query(PatientDemographics);
@@ -35,6 +42,11 @@ class Patient {
             }, (error) => {
                 reject(error);
             });
+        });
+    }
+
+    retrieveAllPatientsForms(patientID){
+        return new Promise((resolve,reject)=> {
         });
     }
 }
