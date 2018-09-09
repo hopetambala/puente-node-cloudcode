@@ -1,16 +1,22 @@
-//TODO
-class Patient{
+'use strict';
+
+class Patient {
     constructor(Parse){
         this.Parse = Parse;
         this.ParseClass = "SurveyData";
     }
 
     retrieveAllPatients(){
-        return new Promise((resolve,reject)=> {
-            var PatientDemographics = Parse.Object.extend(this.ParseClass);
-            var q = new Parse.Query(PatientDemographics);
-            q.limit(2000);
-            q.find().then((results) =>{
+        return new Promise((resolve, reject) => {
+            //Creates local object based on "SurveyData" Object in Parse-Server
+            const PatientDemographics = Parse.Object.extend('SurveyData');
+    
+            //Queries the SurveyData class from Parse Server
+            let query = new Parse.Query(PatientDemographics);
+            
+            query.limit(2000);
+            //Below searches what's in the surveyPoints array
+            query.find().then((results) => {
                 resolve(results);
             }, (error) => {
                 reject(error);

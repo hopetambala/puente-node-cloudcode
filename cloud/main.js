@@ -1,7 +1,13 @@
+'use strict';
+
+
+//var Patient = require('./classes/patient');
+const Patient = require('./classes/patient.js')
+
 Parse.Cloud.define("hello", function(request, response) {
   response.success("Hello world!");
 }); 
-
+/*
 Parse.Cloud.define("retrievePatientRecordsAll", function(request, response) {
     var PatientDemographics = Parse.Object.extend('SurveyData');
     var q = new Parse.Query(PatientDemographics);
@@ -11,6 +17,19 @@ Parse.Cloud.define("retrievePatientRecordsAll", function(request, response) {
     }, (error) => {
       response.error(error);
     });
+}); */
+
+Parse.Cloud.define("retrievePatientRecordsAll", function(request, response) {
+  let patient = new Patient();
+
+  try {
+    patient.retrieveAllPatients().then((results)=>{
+      response.success(results);
+    })    
+  }
+  catch(error){
+    console.log(response.error(error));
+  }
 });
 
 Parse.Cloud.define("retrievePatientRecordByOrgnization", function(request, response) {
