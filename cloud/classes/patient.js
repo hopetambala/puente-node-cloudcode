@@ -1,5 +1,7 @@
 'use strict';
 
+const Aggregator = require('../functions/aggregate');
+
 class Patient {
     constructor(Parse){
         this.Parse = Parse;
@@ -31,7 +33,7 @@ class Patient {
         });
     }
 
-    retrievePatientsByOrganization(organization){
+    retrieveAllPatientsByOrganization(organization){
         return new Promise((resolve,reject)=> {
             var PatientDemographics = Parse.Object.extend(this.ParseClass);
             var q = new Parse.Query(PatientDemographics);
@@ -45,8 +47,21 @@ class Patient {
         });
     }
 
-    retrieveAllPatientsForms(patientID){
+    //Proto - Don't Know if works
+    retrieveAllFormsForPatientByPatientID(patientID){
+        var arrayLength = this.forms.length;
+        var dataArray = [];
+
         return new Promise((resolve,reject)=> {
+            for (var i = 0; i < arrayLength; i++){
+                Aggregator.retrieveOneByPatient(this.forms[i],patientID).then((result)=>{
+                    //append result into Array
+                    console.log(result);
+                    //dataArray.push(result);
+                    dataArray.push(result.attributes)
+                })
+            }
+            resolve(dataArray);
         });
     }
 }

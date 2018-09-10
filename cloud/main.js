@@ -1,13 +1,13 @@
 'use strict';
 
 
-//var Patient = require('./classes/patient');
 const Patient = require('./classes/patient.js')
 
 Parse.Cloud.define("hello", function(request, response) {
   response.success("Hello world!");
 }); 
 /*
+OLD version of below
 Parse.Cloud.define("retrievePatientRecordsAll", function(request, response) {
     var PatientDemographics = Parse.Object.extend('SurveyData');
     var q = new Parse.Query(PatientDemographics);
@@ -32,6 +32,7 @@ Parse.Cloud.define("retrievePatientRecordsAll", function(request, response) {
   }
 });
 
+//TO REFACTOR
 Parse.Cloud.define("retrievePatientRecordByOrgnization", function(request, response) {
   return new Promise((resolve,reject)=> {
     var PatientDemographics = Parse.Object.extend(this.ParseClass);
@@ -45,3 +46,17 @@ Parse.Cloud.define("retrievePatientRecordByOrgnization", function(request, respo
     });
   });
 });
+
+//Proto - Don't Know if works, still need to test
+Parse.Cloud.define("retrieveAllFormsForPatientByPatientID", function(request, response) {
+  let patient = new Patient();
+
+  try {
+    patient.retrieveAllFormsForPatientByPatientID(request.patiendID).then((results)=>{
+      response.success(results);
+    })    
+  }
+  catch(error){
+    console.log(response.error(error));
+  }
+}); 
