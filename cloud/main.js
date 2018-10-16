@@ -2,22 +2,11 @@
 
 
 const Patient = require('./classes/patient.js')
+const Query = require('./functions/aggregate.js')
 
 Parse.Cloud.define("hello", function(request, response) {
   response.success("Hello world!");
 }); 
-/*
-OLD version of below
-Parse.Cloud.define("retrievePatientRecordsAll", function(request, response) {
-    var PatientDemographics = Parse.Object.extend('SurveyData');
-    var q = new Parse.Query(PatientDemographics);
-    q.limit(2000);
-    q.find().then((results) =>{
-      response.success(results);
-    }, (error) => {
-      response.error(error);
-    });
-}); */
 
 Parse.Cloud.define("retrievePatientRecordsAll", function(request, response) {
   let patient = new Patient();
@@ -45,6 +34,23 @@ Parse.Cloud.define("retrievePatientRecordByOrgnization", function(request, respo
       response.error(reject(error));
     });
   });
+});
+
+Parse.Cloud.define("retrieveAllPatientsByParam", function(request, response) {
+  let patient = new Patient();
+
+  try {
+    patient.retrieveAllPatientsByParam(
+      request.params.offset,
+      request.params.limit,
+      request.params.parseColumn,
+      request.params.parseParam).then((results)=>{
+        response.success(results);
+    })    
+  }
+  catch(error){
+    console.log(response.error(error));
+  }
 });
 
 //Proto - Don't Know if works, still need to test

@@ -64,6 +64,31 @@ class Patient {
             resolve(dataArray);
         });
     }
+
+    /**
+     * Performs a query based on the parameter defined in a column
+     * 
+     * @returns Results of Query
+     */
+    retrieveAllPatientsByParam(offset, limit, parseColumn, parseParam) {
+        return new Promise((resolve, reject) => {
+            var PatientDemographics = Parse.Object.extend(this.ParseClass);
+
+            var query = new Parse.Query(PatientDemographics);
+            
+            query.skip(offset);
+
+            query.limit(limit);
+
+            query.equalTo(parseColumn,parseParam);
+
+            query.find().then((results) => {
+                resolve(results);
+            }, (error) => {
+                reject(error);
+            })
+        });
+    }
 }
 
 module.exports = Patient;

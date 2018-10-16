@@ -1,43 +1,42 @@
 'use strict';
 
-module.exports = {
-     retrieveAll: function (className){
-        const Class = Parse.Object.extend(className);
+class aggregate{
+    constructor(Parse){
+        this.Parse = Parse;
+    }
 
-        let query = new Parse.Query(Class);
-        
-        query.limit(2000);
-
-        query.find().then((results) => {
-            resolve(results);
-        }, (error) => {
-            reject(error);
-        });
-    },
-
-    retrieveAllByOrganization: function (className, organization){
-        var Class = Parse.Object.extend(className);
-        var q = new Parse.Query(Class);
-        q.limit(2000);
-        q.equalTo("surveyingOrganization", organization);
-        q.find().then((results) =>{
-            resolve(results);
-        }, (error) => {
-            reject(error);
-        });
-    },
-
-    retrieveOneByPatient: function (className,patientID){
+    /**
+     * Performs a query based on the parameter defined in a column
+     * 
+     * @example
+     * basicQuery(0,1000,SurveyData,organization,Puente)
+     * 
+     * @param {number} offset First number
+     * @param {number} limit Max limit of results
+     * @param {string} parseObject Name of Backend Model
+     * @param {string} parseColumn Name of Column in Backend Model
+     * @param {string} parseParam Name of Parameter in Column 
+     * @returns Results of Query
+     */
+    basicQuery(offset, limit, parseObject, parseColumn, parseParam) {
         return new Promise((resolve, reject) => {
-            var Class = Parse.Object.extend(className);
-            var q = new Parse.Query(Class);
-            q.limit(2000);
-            q.get(patientID).then((result) =>{
-                resolve(result);
+            setTimeout(() => {
+            const SurveyData = Parse.Object.extend(parseObject);
+
+            let query = new Parse.Query(SurveyData);
+            
+            query.skip(offset);
+
+            query.limit(limit);
+
+            query.equalTo(parseColumn,parseParam);
+
+            query.find().then((surveyPoints) => {
+                resolve(surveyPoints);
             }, (error) => {
                 reject(error);
             });
+            }, 500);
         });
     }
-
 }
