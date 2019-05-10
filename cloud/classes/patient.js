@@ -47,7 +47,7 @@ class Patient {
         });
     }
 
-    //Proto - Don't Know if works
+    //doesn't work
     retrieveAllFormsForPatientByPatientID(patientID){
         var arrayLength = this.forms.length;
         var dataArray = [];
@@ -88,6 +88,27 @@ class Patient {
                 reject(error);
             })
         });
+    }
+
+    new_retrieve_all_forms_by_patient(){
+        return new Promise((resolve, reject) => {
+            var PatientDemographics = Parse.Object.extend(this.ParseClass);
+            var MedicalEvaluation = Parse.Object.extend('EvaluationMedical')
+
+            var query = new Parse.Query(MedicalEvaluation);
+
+            query.equalTo("client", PatientDemographics);
+            
+            query.skip(offset);
+
+            query.limit(limit);
+
+            query.find().then((results) => {
+                resolve(results);
+            }, (error) => {
+                reject(error);
+            })
+        });  
     }
 }
 

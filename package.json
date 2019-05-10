@@ -1,0 +1,59 @@
+{
+  "name": "puente_cloud",
+  "version": "1.0.0",
+  "description": "[Instructions](https://docs.back4app.com/docs/integrations/command-line-interface/setting-up-cloud-code-2/)",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "dependencies": {
+    "dotenv": "^5.0.1",
+    "events": "^2.0.0",
+    "express": "^4.16.3",
+    "http": "0.0.0",
+    "json2csv": "^4.2.1",
+    "lodash": "^4.17.5",
+    "mailgun-js": "^0.22.0",
+    "moment": "^2.22.2",
+    "parse": "^1.11.1",
+    "parse-dashboard": "^1.2.0",
+    "parse-server": "^2.8.1",
+    "parse-server-simple-mailgun-adapter": "^1.0.1",
+    "path": "^0.12.7",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.2",
+    "simple2e": "^1.0.2"
+  },
+  "devDependencies": {
+    "case": "^1.5.5",
+    "cross-env": "^5.2.0",
+    "chalk": "^2.3.2",
+    "fs": "0.0.1-security",
+    "jasmine": "^3.1.0",
+    "jasmine-node": "^1.14.5",
+    "nodemon": "^1.17.5",
+    "randomstring": "^1.1.5"
+  },
+  "scripts": {
+    "test": "npm run clearDB && npm run migrate && ./node_modules/jasmine/bin/jasmine.js spec/**/*.spec.js",
+    "test:models": "npm run clearDB && npm run migrate && ./node_modules/jasmine/bin/jasmine.js spec/model-tests/**/*.spec.js",
+    "test:functions": "npm run clearDB && npm run migrate && ./node_modules/jasmine/bin/jasmine.js spec/function-tests/**/*.spec.js",
+    "test:blackbox": "npm run clearDB && npm run migrate && ./node_modules/jasmine/bin/jasmine.js spec/black-box-tests/**/*.spec.js",
+    "test:policies": "npm run clearDB && npm run migrate && ./node_modules/jasmine/bin/jasmine.js spec/policy-tests/**/*.spec.js",
+    "start": "nodemon index.js",
+    "start:no-notifs": "cross-env BLOCK_NOTIFICATIONS='true' nodemon index.js",
+    "clearDB": "node scripts/clear-database.js",
+    "migrate": "node scripts/migrate.js",
+    "createPolicy": "node scripts/policy-manager.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sb-enfocus/hp-v2-cloudcode.git"
+  },
+  "author": "Jack Considine <jackconsidine3@gmail.com> (jackconsidine.wordpress.com)",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/sb-enfocus/hp-v2-cloudcode/issues"
+  },
+  "homepage": "https://github.com/sb-enfocus/hp-v2-cloudcode#readme"
+}

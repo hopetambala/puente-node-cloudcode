@@ -21,6 +21,12 @@ Parse.Cloud.define("retrievePatientRecordsAll", function(request, response) {
   }
 });
 
+Parse.Cloud.define("", function(request,response) {
+ 
+  return new Promise((resolve,reject) => {
+
+  })
+})
 //TO REFACTOR
 Parse.Cloud.define("retrievePatientRecordByOrgnization", function(request, response) {
   return new Promise((resolve,reject)=> {
