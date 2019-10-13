@@ -14,4 +14,3 @@ script:
   - npm ci --no-optional
   - npm run test 
   - codecov
-#  - npm run start
