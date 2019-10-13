@@ -7,7 +7,6 @@ var express = require('express');
 var ParseServer = require('parse-server').ParseServer;
 var ParseDashboard = require('parse-dashboard');
 
-var path = require('path');
 
 require('dotenv').config()
 
@@ -24,7 +23,7 @@ let MASTER_KEY = process.env.MASTER_KEY || '';
 let APP_ID = process.env.APP_ID || 'myAppId';
 let DATABASE_URI = databaseUri || 'mongodb://localhost:27017/dev';
 let CLOUD = process.env.CLOUD_CODE_MAIN || __dirname + '/cloud/main.js';
-let APP_NAME = process.env.APP_NAME || "Healthypoints 2.0";
+let APP_NAME = process.env.APP_NAME || "Puente-Node-CloudCode 1.0";
 var api = new ParseServer({
   databaseURI: DATABASE_URI,
   appName: 'Puente Local',
@@ -36,7 +35,6 @@ var api = new ParseServer({
   liveQuery: {
     //classNames: ["Posts", "Comments"] // List of classes to support for query subscriptions
   },
-  // verifyUserEmails: true,
   emailAdapter: {
     module: 'parse-server-simple-mailgun-adapter',
     options: {
@@ -69,7 +67,6 @@ app.use('/parse', api);
 // make the Parse Dashboard available at /dashboard
 app.use('/dashboard', dashboard);
 
-var httpServer = require('http').createServer(app);
 let port;
 let urlPath = SERVER_URL.split(":");
 urlPath = urlPath[urlPath.length - 1];
