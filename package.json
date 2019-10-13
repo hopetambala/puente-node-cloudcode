@@ -32,7 +32,7 @@
     "codecov": "3.6.1",
     "cross-env": "5.2.1",
     "fs": "0.0.1-security",
-    "jasmine": "3.3.1",
+    "jasmine": "3.5.0",
     "jasmine-node": "1.16.2",
     "nodemon": "1.18.10",
     "pre-commit": "1.2.2",
