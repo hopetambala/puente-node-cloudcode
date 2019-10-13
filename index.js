@@ -40,8 +40,7 @@ var api = new ParseServer({
   emailAdapter: {
     module: 'parse-server-simple-mailgun-adapter',
     options: {
-  //      fromAddress: 'jconsidi@nd.edu',
-     fromAddress: 'enFocusHealthyPoints@gmail.com',
+     fromAddress: 'hope@puente-dr.com',
       domain: 'mg.healthypointscommunitymobile.com',
       apiKey: 'key-dcf095002ea70a29c26be664800e0cc6',
     }

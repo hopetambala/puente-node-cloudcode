@@ -7,6 +7,7 @@
     "test": "tests"
   },
   "dependencies": {
+    "concurrently": "^5.0.0",
     "dotenv": "^5.0.1",
     "events": "^2.0.0",
     "express": "^4.16.3",
@@ -26,34 +27,39 @@
   },
   "devDependencies": {
     "case": "^1.5.5",
-    "cross-env": "^5.2.0",
+    "chai": "^4.2.0",
     "chalk": "^2.3.2",
+    "codecov": "3.5.0",
+    "cross-env": "^5.2.0",
     "fs": "0.0.1-security",
     "jasmine": "^3.1.0",
     "jasmine-node": "^1.14.5",
     "nodemon": "^1.17.5",
-    "randomstring": "^1.1.5"
+    "pre-commit": "1.2.2",
+    "randomstring": "^1.1.5",
+    "standard-version": "7.0.0"
   },
   "scripts": {
-    "test": "npm run clearDB && npm run migrate && ./node_modules/jasmine/bin/jasmine.js spec/**/*.spec.js",
-    "test:models": "npm run clearDB && npm run migrate && ./node_modules/jasmine/bin/jasmine.js spec/model-tests/**/*.spec.js",
-    "test:functions": "npm run clearDB && npm run migrate && ./node_modules/jasmine/bin/jasmine.js spec/function-tests/**/*.spec.js",
-    "test:blackbox": "npm run clearDB && npm run migrate && ./node_modules/jasmine/bin/jasmine.js spec/black-box-tests/**/*.spec.js",
-    "test:policies": "npm run clearDB && npm run migrate && ./node_modules/jasmine/bin/jasmine.js spec/policy-tests/**/*.spec.js",
-    "start": "nodemon index.js",
-    "start:no-notifs": "cross-env BLOCK_NOTIFICATIONS='true' nodemon index.js",
+    "test": "./node_modules/jasmine/bin/jasmine.js tests/**/*.spec.js",
+    "test:models": "npm run clearDB && npm run migrate && ./node_modules/jasmine/bin/jasmine.js tests/model-tests/**/*.spec.js",
+    "test:functions": "npm run clearDB && npm run migrate && ./node_modules/jasmine/bin/jasmine.js tests/function-tests/**/*.spec.js",
+    "start": "node index.js",
+    "start-with-db": "concurrently \"mongod\" \"npm run start\"",
     "clearDB": "node scripts/clear-database.js",
     "migrate": "node scripts/migrate.js",
-    "createPolicy": "node scripts/policy-manager.js"
+    "reinstall": "rm -rf node_modules/ && npm install",
+    "gh-prune": "git fetch -p && for branch in `git branch -vv | grep ': gone]' | awk '{print $1}'`; do git branch -D $branch; done",
+    "release": "standard-version",
+    "snyk-protect": "snyk protect"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sb-enfocus/hp-v2-cloudcode.git"
+    "url": "git+https://github.com/hopetambala/puente-node-cloudcode.git"
   },
-  "author": "Jack Considine <jackconsidine3@gmail.com> (jackconsidine.wordpress.com)",
+  "author": "Hope Tambala <hopetambala@outlook.com.com> (hopetambala.com)",
   "license": "UNLICENSED",
   "bugs": {
-    "url": "https://github.com/sb-enfocus/hp-v2-cloudcode/issues"
+    "url": "https://github.com/hopetambala/puente-node-cloudcode/issues"
   },
-  "homepage": "https://github.com/sb-enfocus/hp-v2-cloudcode#readme"
+  "homepage": "https://github.com/hopetambala/puente-node-cloudcode#readme"
 }

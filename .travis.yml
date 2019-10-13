@@ -1,0 +1,17 @@
+sudo: false
+
+language: node_js
+node_js:
+  - '12'
+
+services:
+  - mongodb
+
+install:
+  - npm install -g codecov
+
+script:
+  - npm ci --no-optional
+  - npm run test 
+  - codecov
+  - npm run start
