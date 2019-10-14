@@ -14,14 +14,14 @@ https://docs.parseplatform.org/cloudcode/guide/
 ## Build and run
 
 1. Install or update npm (`sudo apt install npm`, `npm install -g npm`)
-2. Clone Puente-Node-Cloudcode repo `git clone https://github.com/CyberReboot/CRviz.git`
+2. Clone Puente-Node-Cloudcode repo `git clone https://github.com/hopetambala/puente-node-cloudcode.git` or fork this repo
 3. `cd puente-node-cloudcode`
 4. Run `npm install`
 
 ### Run in Two Terminals
 After installation
-1. Open one terminal instance and do following: `sudo mongod` to start mongo instance.
-2. In another terminal to serve the application locally, run `npm start`.
+1. Open one terminal instance and do following: `sudo mongod` to start mongo instance.(Look at the below guide on how to setup `mongod` on your machine
+2. In another terminal, serve the application locally by running `npm run start`.
 
 Changes made in your code will be automatically reloaded on http://localhost:4040/dashboard.
 
