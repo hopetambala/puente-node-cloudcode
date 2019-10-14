@@ -6,15 +6,28 @@
 ![](https://img.shields.io/badge/parse_server-✓-blueviolet.svg)
 
 
-
 Cloud Code is easy to use because it’s built on the JavaScript SDK for parse-server. The only difference is that this code runs in our Parse Server rather than running on the user’s mobile device. When we update your Cloud Code, it becomes available to all mobile environments instantly. 
 
 For a resource guide:
 https://docs.parseplatform.org/cloudcode/guide/
 
+## Build and run
+
+1. Install or update npm (`sudo apt install npm`, `npm install -g npm`)
+2. Clone Puente-Node-Cloudcode repo `git clone https://github.com/CyberReboot/CRviz.git`
+3. `cd puente-node-cloudcode`
+4. Run `npm install`
+
+### Run in Two Terminals
+After installation
+1. Open one terminal instance and do following: `sudo mongod` to start mongo instance.
+2. In another terminal to serve the application locally, run `npm start`.
+
+Changes made in your code will be automatically reloaded on http://localhost:4040/dashboard.
+
 ## Development
 
-This application is built with [Parse Server](https://reactjs.org) and [Back4App](https://github.com/back4app). Support for GraphQL will be added soon
+This application is built with [Parse Server](https://reactjs.org) and [Back4App](https://github.com/back4app). Support for GraphQL will be added soon.
 
 Here are some quick commands to get started:
 
@@ -23,12 +36,10 @@ Here are some quick commands to get started:
 - `npm test`: Run the test suit
 - `npm lint`: Run the ESLinter.
 
-
 Here are some custom commands for this specific project (after you install):
 
 - `npm release`: Create a release of this web application
 - `npm gh-prune`: Remove deleted remote branches on local machine.
-
 
 # Guide
 
@@ -52,21 +63,3 @@ Parse offer a backend to store data, push notifications, social media integratio
 **MongoDB** is a document database designed for ease of development and scaling. Its repository is on [Github](https://github.com/mongodb/mongo).
 
 This application requires the use of Mongo, [here's an explanation of how to install it on Mac OS](https://ademirgabardo.wordpress.com/2016/02/02/installing-and-running-mongodb-on-mac-osx-for-beginners/). 
-
-
-
-# Steps to Run
-
-Open one Terminal Instance and do following:
-```
-sudo mongod 
-```
-to start mongo instance
-
-Open another terminal instance and do following inside puente-node-cloudcode folder
-```
-npm run start 
-```
-
-
-
