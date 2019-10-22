@@ -5,7 +5,7 @@ about: Tell us what is broken
 ---
 
 ### Description
-_Describe your issue here._
+_Describe your issue here. Feel free to use screenshots along with code snippets and/or error logs_
 
 ### Environment
 - version of puente-node-cloudcode?
