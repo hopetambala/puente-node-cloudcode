@@ -37,7 +37,7 @@
     "nodemon": "1.18.10",
     "pre-commit": "1.2.2",
     "randomstring": "1.1.5",
-    "standard-version": "7.0.0"
+    "standard-version": "7.0.1"
   },
   "scripts": {
     "test": "./node_modules/jasmine/bin/jasmine.js tests/**/*.spec.js",
