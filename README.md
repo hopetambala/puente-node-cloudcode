@@ -11,8 +11,22 @@ Cloud Code is easy to use because it’s built on the JavaScript SDK for parse-s
 For a resource guide:
 https://docs.parseplatform.org/cloudcode/guide/
 
+# Table of Contents
+
+- [Build and run](#build-and-run)
+  * [Build](#build)
+  * [Run](#run-in-two-terminals)
+- [Development](#development)
+  * [Node and Parse](#node-and-parse)
+  * [Back4App](#back4app)
+- [General Infrastructure Info](#guide)
+  * [Parse Server](#parse-server)
+  * [MongoDB Installations](#mongodb-installations)
+
+
 ## Build and run
 
+### Build
 1. Install or update npm (`sudo apt install npm`, `npm install -g npm`)
 2. Clone Puente-Node-Cloudcode repo `git clone https://github.com/hopetambala/puente-node-cloudcode.git` or fork this repo
 3. `cd puente-node-cloudcode`
@@ -27,9 +41,11 @@ Changes made in your code will be automatically reloaded on http://localhost:404
 
 ## Development
 
+### Node and Parse
+
 This application is built with [Parse Server](https://reactjs.org) and [Back4App](https://github.com/back4app). Support for GraphQL will be added soon.
 
-Here are some quick commands to get started:
+Here are some quick commands to get started in Node:
 
 - `npm install`: Install Node dependencies
 - `npm start`: Start the hot reloading development server.
@@ -40,6 +56,16 @@ Here are some custom commands for this specific project (after you install):
 
 - `npm release`: Create a release of this web application
 - `npm gh-prune`: Remove deleted remote branches on local machine.
+
+### Back4app
+
+To get ramped onto the project with Back4App these following steps must be taken:
+- [Setting up the b4a cli](https://www.back4app.com/docs/command-line-tool/parse-server-setup) 
+- [Connect your Parse/Back4app app to Back4app Web Service](https://www.back4app.com/docs/command-line-tool/connect-to-back4app)
+- `cd <PROJECT_MAIN_DIRECTORY>`
+- Run `b4a add` and choose the project you've created in Back4app Web Service
+- Run `b4a develop` to see changes live with Back4app Web Service
+
 
 # Guide
 
