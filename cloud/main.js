@@ -8,7 +8,7 @@ Parse.Cloud.define("hello", function(request, response) {
   response.success("Hello world!");
 }); 
 
-Parse.Cloud.define("retrievePatientRecordsAll", function(request, response) {
+Parse.Cloud.define("retrievePatientRecordsAll", async function(request, response) {
   let patient = new Patient();
 
   try {
@@ -30,7 +30,7 @@ Parse.Cloud.define("", function(request,response) {
 //TO REFACTOR
 Parse.Cloud.define("retrievePatientRecordByOrgnization", function(request, response) {
   return new Promise((resolve,reject)=> {
-    var PatientDemographics = Parse.Object.extend(this.ParseClass);
+    var PatientDemographics = Parse.Object.extend("SurveyData");
     var q = new Parse.Query(PatientDemographics);
     q.limit(2000);
     q.equalTo("surveyingOrganization", request.params.organization);
