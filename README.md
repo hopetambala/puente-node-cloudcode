@@ -74,7 +74,7 @@ To get ramped onto the project with Back4App these following steps must be taken
 ## Testing
 
 ### JSBin
-Checkout our pre-setup [JSBin](https://jsbin.com/gizeteg/1/edit?html,js,output) to play with our sample server
+Checkout our pre-setup [JSBin](https://jsbin.com/gizeteg/edit?js,console) to play with our sample server
 
 ### Locally testing queries
 
