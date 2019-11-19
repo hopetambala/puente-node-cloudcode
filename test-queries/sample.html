@@ -1,37 +1,66 @@
 <!DOCTYPE html>
+<!--
+Created using JS Bin
+http://jsbin.com
+
+Copyright (c) 2019 by hopetambala (http://jsbin.com/gizeteg/1/edit)
+
+Released under the MIT license: http://jsbin.mit-license.org
+-->
+<meta name="robots" content="noindex">
 <html>
-    <head>
-    <script src="https://code.jquery.com/jquery-2.2.4.js"></script>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
-    <title>JS Bin</title>
-        <script src="https://npmcdn.com/parse/dist/parse.js"></script>
-    </head>
+<head>
+  <script src="https://code.jquery.com/jquery-2.2.4.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>JS Bin</title>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser-polyfill.min.js'></script>
+  <script src="https://npmcdn.com/parse/dist/parse.js"></script>
+</head>
 <body>
-    <script id="jsbin-javascript">
-    //jshint esnext:true
-    Parse.initialize("ZvGwjA7cemNfr9Qtn6LnwnrcgiM3Xl4N3msObrcg", "dQW12E6wgKWrqdlNCYMCIzLzWomgjCZlLZrrXlki"); //PASTE HERE YOUR Back4App APPLICATION ID AND YOUR JavaScript KEY
+<!--form>
+	<input id="pressme" type="button" value="Press">
+</form-->
+<script id="jsbin-javascript">
+// noprotect
 
-    Parse.serverURL = "https://parseapi.back4app.com/";
+console.clear()
+
+Parse.initialize("ZvGwjA7cemNfr9Qtn6LnwnrcgiM3Xl4N3msObrcg", "dQW12E6wgKWrqdlNCYMCIzLzWomgjCZlLZrrXlki"); //PASTE HERE YOUR Back4App APPLICATION ID AND YOUR JavaScript KEY
+Parse.serverURL = "https://parseapi.back4app.com/";
 
 
-    //Creates an Array of Objects
-    var SurveyData = Parse.Object.extend("SurveyData");
-    var q = new Parse.Query("SurveyData");
-    dataArray = [];
+//EXAMPLE ONE - A General Query
+var SurveyData = Parse.Object.extend("SurveyData");
+var q = new Parse.Query("SurveyData");
+dataArray = [];
 
-    q.find().then(function(results){
-    for (var i = 0; i < results.length; i++){
-        var data = results[i];
-        if (data.get('surveyingOrganization') == 'Test'){
-        dataArray.push(data.attributes);
-        }
-    
+q.find().then(function(results){
+  for (var i = 0; i < results.length; i++){
+    var data = results[i];
+    if (data.get('surveyingOrganization') == 'Test'){
+      dataArray.push(data.attributes);
     }
-    console.log(dataArray);
-    
-    });
-    </script>
+   
+  }
+  //console.log(dataArray);
+  
+});
 
+//EXAMPLE TWO - Running a cloud function
+query_parameters = {
+  organization: "Test"
+}
+
+Parse.Cloud.run("retrievePatientRecordByOrgnization", query_parameters).then(async function(result) {
+    // make sure the set the email sent flag on the object
+    await console.log(JSON.stringify(result))
+}, function(error) {
+    // error
+});
+
+
+
+</script>
 </body>
 </html>
