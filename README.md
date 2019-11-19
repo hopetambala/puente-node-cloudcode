@@ -19,6 +19,9 @@ https://docs.parseplatform.org/cloudcode/guide/
 - [Development](#development)
   * [Node and Parse](#node-and-parse)
   * [Back4App](#back4app)
+- [Testing](#testing)
+  * [JSBin](#jsbin)
+  * [Local](#locally-testing-queries)
 - [General Infrastructure Info](#guide)
   * [Parse Server](#parse-server)
   * [MongoDB Installations](#mongodb-installations)
@@ -67,9 +70,20 @@ To get ramped onto the project with Back4App these following steps must be taken
 - Run `b4a develop` to see changes live with Back4app Web Service
 
 
-# Guide
 
-## Parse Server
+## Testing
+
+### JSBin
+Checkout our pre-setup [JSBin](https://jsbin.com/gizeteg/1/edit?html,js,output) to play with our sample server
+
+### Locally testing queries
+
+Checkout the [sample.html](test-queries/sample.html) for configuration with our sample server
+
+
+## Guide
+
+### Parse Server
 
 **Parse Server** is an open source version of the Parse backend that can be deployed to any infrastructure that can run `Node.js`. It works with the Express web application framework and can be added to existing web applications, or run by itself. Its repository is on [Github](https://github.com/parse-community/parse-server).
 
@@ -84,7 +98,7 @@ Parse offer a backend to store data, push notifications, social media integratio
 - **Ideal for**: General purpose applications
 
 
-## MongoDB Installations
+### MongoDB Installations
 
 **MongoDB** is a document database designed for ease of development and scaling. Its repository is on [Github](https://github.com/mongodb/mongo).
 
