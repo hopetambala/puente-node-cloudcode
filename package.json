@@ -23,7 +23,8 @@
     "path": "^0.12.7",
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
-    "simple2e": "^1.0.2"
+    "simple2e": "^1.0.2",
+    "snyk": "^1.258.2"
   },
   "devDependencies": {
     "case": "1.6.2",
@@ -50,7 +51,8 @@
     "reinstall": "rm -rf node_modules/ && npm install",
     "gh-prune": "git fetch -p && for branch in `git branch -vv | grep ': gone]' | awk '{print $1}'`; do git branch -D $branch; done",
     "release": "standard-version",
-    "snyk-protect": "snyk protect"
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "repository": {
     "type": "git",
@@ -61,5 +63,6 @@
   "bugs": {
     "url": "https://github.com/hopetambala/puente-node-cloudcode/issues"
   },
-  "homepage": "https://github.com/hopetambala/puente-node-cloudcode#readme"
+  "homepage": "https://github.com/hopetambala/puente-node-cloudcode#readme",
+  "snyk": true
 }
