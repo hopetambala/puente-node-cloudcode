@@ -5,7 +5,9 @@ const Patient = require('./classes/patient.js')
 const Query = require('./functions/aggregate.js')
 
 Parse.Cloud.define("hello", function(request, response) {
-  response.success("Hello world!");
+  return new Promise((resolve,reject)=> {
+      response.success(resolve("Hello world!"));
+  });
 }); 
 
 Parse.Cloud.define("retrievePatientRecordsAll", async function(request, response) {
