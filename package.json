@@ -29,7 +29,7 @@
     "case": "1.6.2",
     "chai": "4.2.0",
     "chalk": "2.4.2",
-    "codecov": "3.6.1",
+    "codecov": "3.6.5",
     "cross-env": "5.2.1",
     "fs": "0.0.1-security",
     "jasmine": "3.5.0",
