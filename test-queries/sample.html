@@ -52,7 +52,7 @@ query_parameters = {
   organization: "Test"
 }
 
-Parse.Cloud.run("retrievePatientRecordByOrgnization", query_parameters).then(async function(result) {
+Parse.Cloud.run("retrievePatientRecordByOrganization", query_parameters).then(async function(result) {
     // make sure the set the email sent flag on the object
     await console.log(JSON.stringify(result))
 }, function(error) {

@@ -30,7 +30,7 @@ Parse.Cloud.define("", function(request,response) {
   })
 })
 //TO REFACTOR
-Parse.Cloud.define("retrievePatientRecordByOrgnization", function(request, response) {
+Parse.Cloud.define("retrievePatientRecordByOrganization", function(request, response) {
   return new Promise((resolve,reject)=> {
     var PatientDemographics = Parse.Object.extend("SurveyData");
     var q = new Parse.Query(PatientDemographics);
