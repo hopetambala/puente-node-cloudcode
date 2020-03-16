@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "dependencies": {
-    "concurrently": "^5.0.0",
+    "concurrently": "^5.0.1",
     "dotenv": "^5.0.1",
     "events": "^2.0.0",
     "express": "^4.16.3",
