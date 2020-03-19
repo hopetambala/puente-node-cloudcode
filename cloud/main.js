@@ -1,6 +1,5 @@
 'use strict';
 
-
 const Patient = require('./classes/patient.js')
 const Query = require('./functions/aggregate.js')
 //added not sure if it is needed
