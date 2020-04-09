@@ -117,11 +117,12 @@ Parse.Cloud.define("retrieveAllFormsForPatientByPatientID2", function (request, 
   });
 });
 
-
-// think its working
-// currently checking if that column has a vlaue, but will basically return
-// everything since NULL is a value...
-// is ** equalTo ** what we want here? 90 
+/********************************************
+GENERIC QUERY
+Input Paramaters:
+  parseObject - Class to search
+  parseColumn - Column to search for values
+********************************************/
 Parse.Cloud.define("genericQuery", function (request, response) {
   return new Promise((resolve, reject) => {
     // setTimeout(() => {
@@ -137,6 +138,15 @@ Parse.Cloud.define("genericQuery", function (request, response) {
   });
 });
 
+/********************************************
+BASIC QUERY
+Input Paramaters:
+  parseObject - Class to search
+  parseColumn - Column to search for values
+  parseParam - value to be searched in columns
+  limit - max number of records to return
+  offset - number of records to skip when returned
+********************************************/
 Parse.Cloud.define("basicQuery", function (request, response) {
   return new Promise((resolve, reject) => {
     // setTimeout(() => {
@@ -160,6 +170,16 @@ Parse.Cloud.define("basicQuery", function (request, response) {
   });
 });
 
+
+/********************************************
+GEO QUERY
+Input Paramaters:
+  parseObject - Class to search
+  parseColumn - Column to search for values
+  parseParam - value to be searched in columns
+  limit - max number of records to return
+  lat/long - latitude/longitude, query results will always be within 5 miles of these values
+********************************************/
 Parse.Cloud.define("geoQuery", function (request, response) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -183,6 +203,15 @@ Parse.Cloud.define("geoQuery", function (request, response) {
   });
 });
 
+/********************************************
+POST OBJECTS TO CLASS
+Input Paramaters:
+  parseClass - Class to post the object to
+  photoFile - photo of the member profile that submits the POST
+  signature - signature of the member profile that submits the POST
+  localObject - Continas key value pairs that will be posted to the class
+              - this contains a latitude/longitude which will post the location
+********************************************/
 Parse.Cloud.define("postObjectsToClass", function (request, response) {
   return new Promise((resolve, reject) => {
     const SurveyData = Parse.Object.extend(request.params.parseClass);
@@ -237,6 +266,15 @@ Parse.Cloud.define("postObjectsToClass", function (request, response) {
   })
 })
 
+/********************************************
+POST OBJECTS TO CLASS WITH RELATION
+Input Paramaters:
+  parseClass - Class to post the object to
+  parseParentClass - Class to associate the parseClass with
+  localObject - Continas key value pairs that will be posted to the class
+              - this contains a latitude/longitude which will post the location
+  parseParentClassID - ID of the parseParentClass Object to associate the new post with
+********************************************/
 Parse.Cloud.define("postObjectsToClassWithRelation", function (request, response) {
   return new Promise((resolve, reject) => {
     const childClass = Parse.Object.extend(request.params.parseClass);
@@ -264,6 +302,12 @@ Parse.Cloud.define("postObjectsToClassWithRelation", function (request, response
   })
 })
 
+/********************************************
+REMOVE OBJECTS
+Input Paramaters:
+  parseClass - Class to remove the object from
+  objectIDinparseClass - object to remove from the parseClass
+********************************************/
 Parse.Cloud.define("removeObjectsinClass", function (request, response) {
   return new Promise((resolve, reject) => {
     var yourClass = Parse.Object.extend(request.params.parseClass);
@@ -281,3 +325,189 @@ Parse.Cloud.define("removeObjectsinClass", function (request, response) {
   });
 })
 
+// allergies, environmentalHistory, evaluation-medical, evaultion-surgical,
+// medicalHistory, patientID, vitals, perscriptions 
+
+
+Parse.Cloud.define("postObjectsToAnyClassWithRelation", function (request, response) {
+  return new Promise((resolve, reject) => {
+    const parentClass = Parse.Object.extend(request.params.parseParentClass);
+    const vitalsClass = Parse.Object.extend("Vitals");
+    const historyMedicalClass = Parse.Object.extend("HistoryMedical");
+    const perscriptionsClass = Parse.Object.extend("Prescriptions");
+    const allergiesClass = Parse.Object.extend("Allergies");
+    const evaluationSurgicalClass = Parse.Object.extend("EvaluationSurgical");
+    const evaluationMedicalClass = Parse.Object.extend("EvaluationMedical");
+    const environmentalHealthClass = Parse.Object.extend("HistoryEnvironmentalHealth");
+
+    let parent = new parentClass();
+
+    // create variables but do not define as Parse Class
+    // until there is an object to add
+    var vitals;
+    var historyMedical;
+    var perscriptions;
+    var allergies;
+    var evaluationSurgical;
+    var evaluationMedical;
+    var environmentalHealth;
+
+    // arrays filled with data points for each class
+    const vitalsArr = ["height", "weight", "bmi", "temp", "pulse", "respRate", "bloodPressure",
+      "bloodOxygen", "bloodSugar", "painLevels", "hemoglobinLevels"];
+
+    const historyMedicalArr = ["majorEvents", "surgeryWhatKind", "medicalIllnesses", "whenDiagnosed",
+      "whatDoctorDoyousee", "treatment", "refill", "familyhistory", "preventativeCare", "allergies"];
+
+    const perscriptionsArr = ["name", "dose", "administerRoute", "frequency", "quantity", "provider", "refill",
+      "startdatePerscription", "enddatePerscription", "dateDispense", "type", "instructions"];
+
+    const allergiesArr = ["substance", "reaction", "category", "severity", "informationsource",
+      "onset", "comments"];
+
+    // does not include user and organization from evaluationSurgical
+    const evaluationSurgicalArr = ["AssessmentandEvaluationSurgical", "planOfActionSurgical", "notesSurgical"];
+
+    // does not include user and organization either
+    const evaluationMedicalArr = ["chronic_condition_hypertension", "chronic_condition_diabetes",
+      "chronic_condition_other", "seen_doctor", "received_treatment_notes", "received_treatment_description",
+      "part_of_body", "part_of_body_description", "duration", "trauma_induced", "condition_progression", "pain",
+      "notes", "AssessmentandEvaluation", "AssessmentandEvaluation_Surgical", "AssessmentandEvaluation_Surgical_Guess",
+      "planOfAction", "immediate_follow_up", "needsAssessmentandEvaluation"];
+
+    const environmentalHealthArr = ["yearsLivedinthecommunity", "yearsLivedinThisHouse", "waterAccess", "typeofWaterdoyoudrink",
+      "bathroomAccess", "latrineAccess", "clinicAccess", "conditionoFloorinyourhouse", "conditionoRoofinyourhouse",
+      "stoveType", "medicalproblemswheredoyougo", "dentalproblemswheredoyougo", "biggestproblemofcommunity",
+      "timesperweektrashcollected", "wheretrashleftbetweenpickups", "numberofIndividualsLivingintheHouse",
+      "numberofChildrenLivinginHouseUndertheAgeof5", "houseownership"];
+
+    let vitalsObj = false;
+    let historyMedicalObj = false;
+    let perscriptionsObj = false;
+    let allergiesObj = false;
+    let evaluationSurgicalObj = false;
+    let evaluationMedicalObj = false;
+    let environmentalHealthObj = false;
+
+    // add variables in the local object to the correct child class
+    // create the Parse object if it is the first variable added to the 
+    // object
+    var localObject = request.params.localObject;
+    for (var key in localObject) {
+      var obj = localObject[key];
+      if (vitalsArr.includes(String(key)) && vitalsObj == false) {
+        vitals = new vitalsClass();
+        vitals.set(String(key), obj);
+        vitalsObj = true;
+      }
+      else if (vitalsArr.includes(String(key))) {
+        vitals.set(String(key), obj);
+      }
+      else if (historyMedicalArr.includes(String(key)) && historyMedicalObj == false) {
+        historyMedical = new historyMedicalClass();
+        historyMedical.set(String(key), obj);
+        historyMedicalObj = true;
+      }
+      else if (historyMedicalArr.includes(String(key))) {
+        historyMedical.set(String(key), obj);
+      }
+      else if (perscriptionsArr.includes(String(key)) && perscriptionsObj == false) {
+        perscriptions = new perscriptionsClass();
+        perscriptions.set(String(key), obj);
+        perscriptionsObj = true;
+      }
+      else if (perscriptionsArr.includes(String(key))) {
+        perscriptions.set(String(key), obj);
+      }
+      else if (allergiesArr.includes(String(key)) && allergiesObj == false) {
+        allergies = new allergiesClass();
+        allergies.set(String(key), obj);
+        allergiesObj = true;
+      }
+      else if (allergiesArr.includes(String(key))) {
+        allergies.set(String(key), obj);
+      }
+      else if (evaluationSurgicalArr.includes(String(key)) && evaluationSurgicalObj == false) {
+        evaluationSurgical = new evaluationSurgicalClass();
+        evaluationSurgical.set(String(key), obj);
+        evaluationSurgicalObj = true;
+      }
+      else if (evaluationSurgicalArr.includes(String(key))) {
+        evaluationSurgical.set(String(key), obj);
+      }
+      else if (evaluationMedicalArr.includes(String(key)) && evaluationMedicalObj == false) {
+        evaluationMedical = new evaluationMedicalClass();
+        evaluationMedical.set(String(key), obj);
+        evaluationMedicalObj = true;
+      }
+      else if (evaluationMedicalArr.includes(String(key))) {
+        evaluationMedical.set(String(key), obj);
+      }
+      else if (environmentalHealthArr.includes(String(key)) && environmentalHealthObj == false) {
+        environmentalHealth = new environmentalHealthClass();
+        environmentalHealth.set(String(key), obj);
+        environmentalHealthObj = true;
+      }
+      else if (environmentalHealthArr.includes(String(key))) {
+        environmentalHealth.set(String(key), obj);
+      }
+
+    }
+
+    // store the Parse objects that were asspciated with local object
+    var arr = [];
+
+    // check if each Class had any objects added to them
+    // add the parent and add save prokmise
+    if (vitalsObj) {
+      parent.id = String(request.params.parseParentClassID);
+      vitals.set('client', parent);
+      arr.push(vitals.save());
+    }
+
+    if (historyMedicalObj) {
+      parent.id = String(request.params.parseParentClassID);
+      historyMedical.set('client', parent);
+      arr.push(historyMedical.save());
+    }
+
+
+    if (perscriptionsObj) {
+      parent.id = String(request.params.parseParentClassID);
+      perscriptions.set('client', parent);
+      arr.push(perscriptions.save())
+    }
+
+    if (allergiesObj) {
+      parent.id = String(request.params.parseParentClassID);
+      allergies.set('client', parent);
+      arr.push(allergies.save());
+    }
+
+    if (evaluationSurgicalObj) {
+      parent.id = String(request.params.parseParentClassID);
+      evaluationSurgical.set('client', parent);
+      arr.push(evaluationSurgical.save());
+    }
+
+    if (evaluationMedicalObj) {
+      parent.id = String(request.params.parseParentClassID);
+      evaluationMedical.set('client', parent);
+      arr.push(evaluationMedical.save());
+    }
+
+    if (environmentalHealthObj) {
+      parent.id = String(request.params.parseParentClassID);
+      environmentalHealth.set('client', parent);
+      arr.push(environmentalHealth.save());
+    }
+
+    // save all parse objects that had any objects added
+    Promise.all(arr)
+      .then((results) => {
+        response.success(resolve(results));
+      }, (error) => {
+        response.error(reject(error));
+      });
+  })
+})
