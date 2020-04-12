@@ -3,8 +3,6 @@
 
 const Patient = require('./classes/patient.js')
 const Query = require('./functions/aggregate.js')
-//added not sure if it is needed
-// var Parse = require("parse/node");
 
 Parse.Cloud.define("hello", function (request, response) {
   return new Promise((resolve, reject) => {
@@ -325,10 +323,20 @@ Parse.Cloud.define("removeObjectsinClass", function (request, response) {
   });
 })
 
-// allergies, environmentalHistory, evaluation-medical, evaultion-surgical,
-// medicalHistory, patientID, vitals, perscriptions 
 
 
+/********************************************
+POST OBJECT TO ANY CLASS WITH RELATION
+Takes objects to post to a variety of classes and post them to their 
+corresponding class with a relation to the parent (SurveyData)
+
+Input Paramaters:
+  parseParentClass - parent class to post objects to ("SurveyData")
+  parseParentClassID - ID of parent class
+  localObject - Continas key value pairs that will be sorted and posted
+                to the correct class (Vitals, HistoryMedical, Perscriptions,
+                Allergies, EvaluationSurgical, EvaluationMedical, HistoryEnvironmental)
+********************************************/
 Parse.Cloud.define("postObjectsToAnyClassWithRelation", function (request, response) {
   return new Promise((resolve, reject) => {
     const parentClass = Parse.Object.extend(request.params.parseParentClass);
@@ -340,7 +348,7 @@ Parse.Cloud.define("postObjectsToAnyClassWithRelation", function (request, respo
     const evaluationMedicalClass = Parse.Object.extend("EvaluationMedical");
     const environmentalHealthClass = Parse.Object.extend("HistoryEnvironmentalHealth");
 
-    let parent = new parentClass();
+    var parent = new parentClass();
 
     // create variables but do not define as Parse Class
     // until there is an object to add
@@ -509,5 +517,42 @@ Parse.Cloud.define("postObjectsToAnyClassWithRelation", function (request, respo
       }, (error) => {
         response.error(reject(error));
       });
+  })
+})
+
+/********************************************
+UPDATE OBJECT
+Receives an objectID and then updates the corresponding
+objectID with the new key/value pairs
+
+Input Paramaters:
+  parseClass - parse class that need to be updated
+  parseClassID - ID of object to be updated
+  localObject - Continas key value pairs that will be updated
+********************************************/
+Parse.Cloud.define("updateObject", function (request, response) {
+  return new Promise((resolve, reject) => {
+    const parseClass = Parse.Object.extend(request.params.parseClass);
+    var query = new Parse.Query(parseClass)
+
+    // get the object that needs to be updated
+    query.get(request.params.parseClassID).then((result) => {
+      // update object with new attributes
+      var localObject = request.params.localObject;
+      for (var key in localObject) {
+        var obj = localObject[key];
+        result.set(String(key), obj);
+      }
+      return result;
+    }).then(function (result) {
+      // save the object
+      return result.save();
+    }).then(function (result) {
+      // object updated and saved
+      response.success(resolve(result));
+    }, (error) => {
+      // error
+      response.error(reject(error));
+    })
   })
 })
