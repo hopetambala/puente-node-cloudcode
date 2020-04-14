@@ -9,66 +9,8 @@ Parse.Cloud.define("hello", (request, response) => {
 });
 
 
-//TO REFACTOR
-Parse.Cloud.define("retrievePatientRecordByOrganization", function (request, response) {
-  return new Promise((resolve, reject) => {
-    var Patient = classes.Patient();
-    var q = new Parse.Query(Patient);
-    q.limit(2000);
-    q.equalTo("surveyingOrganization", request.params.organization);
-    q.find().then((results) => {
-      response.success(resolve(results));
-    }, (error) => {
-      response.error(reject(error));
-    });
-  });
-});
-
-// my version of above function...
-// wasnt sure if it working or not currently.
-// couldnt test if it is working or not
-Parse.Cloud.define("retrieveAllPatientsByParam2", function (request, response) {
-  return new Promise((resolve, reject) => {
-    // setTimeout(() => {
-    const SurveyData = Parse.Object.extend("SurveyData");
-    var query = new Parse.Query(SurveyData);
-    query.skip(request.params.offset);
-    query.limit(request.params.limit);
-    query.equalTo(request.params.parseColumn, request.params.parseParam);
-    query.find().then((results) => {
-      response.success(resolve(results));
-    }, (error) => {
-      response.error(reject(error));
-    });
-    // }, 500);
-  });
-});
-
-// my version of above function..
-// unsure if above version works
-// this should work if SurveyData is correct class and patientID is correct field
-// couldnt test if it is working or not
-Parse.Cloud.define("retrieveAllFormsForPatientByPatientID2", function (request, response) {
-  return new Promise((resolve, reject) => {
-    // setTimeout(() => {
-    const SurveyData = Parse.Object.extend("SurveyData");
-    var query = new Parse.Query(SurveyData);
-    // unsure if "patientID" is correct field to be searching
-    query.equalTo("patientID", request.params.patientID);
-    query.find().then((results) => {
-      response.success(resolve(results));
-    }, (error) => {
-      response.error(reject(error));
-    });
-    // }, 500);
-  });
-});
-
 /********************************************
 GENERIC QUERY
-Input Paramaters:
-  parseObject - Class to search
-  parseColumn - Column to search for values
 ********************************************/
 Parse.Cloud.define("genericQuery", function (request, response) {
  

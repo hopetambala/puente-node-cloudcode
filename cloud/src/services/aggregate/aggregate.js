@@ -1,10 +1,6 @@
 'use strict';
 
-class aggregate{
-    constructor(Parse){
-        this.Parse = Parse;
-    }
-
+const Aggregate = {
     /**
      * Performs a query based on the parameter defined in a column
      * 
@@ -17,13 +13,13 @@ class aggregate{
      * @param {string} parseColumn Name of Column in Backend Model
      * @param {string} parseParam Name of Parameter in Column 
      * @returns Results of Query
-     */
-    basicQuery(offset, limit, parseObject, parseColumn, parseParam) {
+     */   
+    basicQuery: function basicQuery(modelObject, offset, limit, parseColumn, parseParam){
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-            const SurveyData = Parse.Object.extend(parseObject);
+            const Model = Parse.Object.extend(modelObject);
 
-            let query = new Parse.Query(SurveyData);
+            let query = new Parse.Query(Model);
             
             query.skip(offset);
 
@@ -38,5 +34,20 @@ class aggregate{
             });
             }, 500);
         });
-    }
+    },
+    genericQuery: function genericQuery(modelObject){
+        return new Promise((resolve, reject) => {
+            const Model = Parse.Object.extend(modelObject);
+
+            var query = new Parse.Query(Model);
+            
+            query.find().then((results) => {
+                resolve(results);
+            }, (error) => {
+                reject(error);
+            });
+        });
+    },
 }
+
+module.exports = Aggregate;
