@@ -4,10 +4,10 @@
 * 2019-05-01
 */
 
-var Parse = require("../utils/parse").getParse();
+var Parse = require("../parse").getParse();
 var _ = require("lodash");
 
-var CleanUp = require("../utils/clean-up-database");
+var CleanUp = require("../clean-up-database");
 
 
 const builtInFields = [
