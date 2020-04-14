@@ -30,48 +30,36 @@ Input Paramaters:
   offset - number of records to skip when returned
 ********************************************/
 Parse.Cloud.define("basicQuery", function (request, response) {
-    const model = classes.patient.ParseClass;
-    const service = services.batch;  
-    return service.basicQuery(
-      model,
-      request.params.offset,
-      request.params.limit,
-      request.params.parseColumn,
-      request.params.parseParam
-    );
+  const model = classes.patient.ParseClass;
+  const service = services.batch;  
+  return service.basicQuery(
+    model,
+    request.params.offset,
+    request.params.limit,
+    request.params.parseColumn,
+    request.params.parseParam
+  );
 });
-
 
 /********************************************
 GEO QUERY
 Input Paramaters:
-  parseObject - Class to search
   parseColumn - Column to search for values
   parseParam - value to be searched in columns
   limit - max number of records to return
   lat/long - latitude/longitude, query results will always be within 5 miles of these values
 ********************************************/
 Parse.Cloud.define("geoQuery", function (request, response) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const SurveyData = Parse.Object.extend(request.params.parseObject);
-      let query = new Parse.Query(SurveyData);
-
-      const myLocation = new Parse.GeoPoint({ latitude: request.params.lat, longitude: request.params.long });
-      const sorted = true;
-      query.withinMiles("location", myLocation, 5, sorted);
-
-      query.limit(request.params.limit);
-      query.descending("createdAt");
-      query.equalTo(request.params.parseColumn, request.params.parseParam);
-
-      query.find().then((results) => {
-        response.success(resolve(results));
-      }, (error) => {
-        response.error(reject(error));
-      });
-    }, 500);
-  });
+  const model = classes.patient.ParseClass;
+  const service = services.batch;  
+  return service.geoQuery(
+    model,
+    request.params.lat,
+    request.params.long,
+    request.params.limit,
+    request.params.parseColumn,
+    request.params.parseParam
+  );
 });
 
 /********************************************

@@ -17,22 +17,22 @@ const Batch = {
     basicQuery: function basicQuery(modelObject, offset, limit, parseColumn, parseParam){
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-            const Model = Parse.Object.extend(modelObject);
+                const Model = Parse.Object.extend(modelObject);
 
-            let query = new Parse.Query(Model);
-            
-            query.skip(offset);
+                let query = new Parse.Query(Model);
+                
+                query.skip(offset);
 
-            query.limit(limit);
+                query.limit(limit);
 
-            query.equalTo(parseColumn,parseParam);
+                query.equalTo(parseColumn,parseParam);
 
-            query.find().then((surveyPoints) => {
-                resolve(surveyPoints);
-            }, (error) => {
-                reject(error);
-            });
-            }, 500);
+                query.find().then((surveyPoints) => {
+                    resolve(surveyPoints);
+                }, (error) => {
+                    reject(error);
+                });
+                }, 500);
         });
     },
     genericQuery: function genericQuery(modelObject){
@@ -48,6 +48,28 @@ const Batch = {
             });
         });
     },
+    geoQuery: function geoQuery(modelObject, latitude, longitude, limit, parseColumn, parseParam){
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+              const Model = Parse.Object.extend(modelObject);
+              let query = new Parse.Query(Model);
+        
+              const myLocation = new Parse.GeoPoint({ latitude: latitude, longitude: longitude });
+              const sorted = true;
+              query.withinMiles("location", myLocation, 5, sorted);
+        
+              query.limit(limit);
+              query.descending("createdAt");
+              query.equalTo(parseColumn,parseParam);
+        
+              query.find().then((results) => {
+                resolve(results);
+              }, (error) => {
+                reject(error);
+              });
+            }, 500);
+          });
+    }
 }
 // export default batch;
 
