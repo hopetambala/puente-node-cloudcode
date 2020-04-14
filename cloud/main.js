@@ -1,39 +1,19 @@
 'use strict';
+const classes = require('./src/classes')
+const services = require('./src/services')
 
-
-const Patient = require('./classes/patient.js')
-const Query = require('./functions/aggregate.js')
-
-Parse.Cloud.define("hello", function (request, response) {
+Parse.Cloud.define("hello", (request, response) => {
   return new Promise((resolve, reject) => {
     response.success(resolve("Hello world!"));
   });
 });
 
-Parse.Cloud.define("retrievePatientRecordsAll", async function (request, response) {
-  let patient = new Patient();
 
-  try {
-    patient.retrieveAllPatients().then((results) => {
-      response.success(results);
-    })
-  }
-  catch (error) {
-    console.log(response.error(error));
-  }
-});
-
-Parse.Cloud.define("", function (request, response) {
-
-  return new Promise((resolve, reject) => {
-
-  })
-})
 //TO REFACTOR
 Parse.Cloud.define("retrievePatientRecordByOrganization", function (request, response) {
   return new Promise((resolve, reject) => {
-    var PatientDemographics = Parse.Object.extend("SurveyData");
-    var q = new Parse.Query(PatientDemographics);
+    var Patient = classes.Patient();
+    var q = new Parse.Query(Patient);
     q.limit(2000);
     q.equalTo("surveyingOrganization", request.params.organization);
     q.find().then((results) => {
@@ -42,23 +22,6 @@ Parse.Cloud.define("retrievePatientRecordByOrganization", function (request, res
       response.error(reject(error));
     });
   });
-});
-
-Parse.Cloud.define("retrieveAllPatientsByParam", function (request, response) {
-  let patient = new Patient();
-
-  try {
-    patient.retrieveAllPatientsByParam(
-      request.params.offset,
-      request.params.limit,
-      request.params.parseColumn,
-      request.params.parseParam).then((results) => {
-        response.success(results);
-      })
-  }
-  catch (error) {
-    console.log(response.error(error));
-  }
 });
 
 // my version of above function...
@@ -79,20 +42,6 @@ Parse.Cloud.define("retrieveAllPatientsByParam2", function (request, response) {
     });
     // }, 500);
   });
-});
-
-//Proto - Don't Know if works, still need to test
-Parse.Cloud.define("retrieveAllFormsForPatientByPatientID", function (request, response) {
-  let patient = new Patient();
-
-  try {
-    patient.retrieveAllFormsForPatientByPatientID(request.patiendID).then((results) => {
-      response.success(results);
-    })
-  }
-  catch (error) {
-    console.log(response.error(error));
-  }
 });
 
 // my version of above function..
@@ -122,18 +71,11 @@ Input Paramaters:
   parseColumn - Column to search for values
 ********************************************/
 Parse.Cloud.define("genericQuery", function (request, response) {
-  return new Promise((resolve, reject) => {
-    // setTimeout(() => {
-    const SurveyData = Parse.Object.extend(request.params.parseObject);
-    var query = new Parse.Query(SurveyData);
-    query.equalTo(request.params.parseColumn);
-    query.find().then((results) => {
-      response.success(resolve(results));
-    }, (error) => {
-      response.error(reject(error));
-    });
-    // }, 500);
-  });
+ 
+  const model = classes.patient.ParseClass;
+  const service = services.batch;
+  console.log(model);
+  return service.genericQuery(model);
 });
 
 /********************************************
@@ -146,26 +88,15 @@ Input Paramaters:
   offset - number of records to skip when returned
 ********************************************/
 Parse.Cloud.define("basicQuery", function (request, response) {
-  return new Promise((resolve, reject) => {
-    // setTimeout(() => {
-    const SurveyData = Parse.Object.extend(request.params.parseObject);
-    let query = new Parse.Query(SurveyData);
-    // can skip the first results by setting "skip"
-    query.skip(request.params.offset);
-    // limit the number of results by setting "limit"
-    query.limit(request.params.limit);
-    // retrieve the most recent 
-    query.descending("createdAt");
-    // limit results based on a class
-    query.equalTo(request.params.parseColumn, request.params.parseParam);
-    // searches whats in surveryPoints array
-    query.find().then((results) => {
-      response.success(resolve(results));
-    }, (error) => {
-      response.error(reject(error));
-    });
-    // }, 1500);
-  });
+    const model = classes.patient.ParseClass;
+    const service = services.batch;  
+    return service.basicQuery(
+      model,
+      request.params.offset,
+      request.params.limit,
+      request.params.parseColumn,
+      request.params.parseParam
+    );
 });
 
 
@@ -322,8 +253,6 @@ Parse.Cloud.define("removeObjectsinClass", function (request, response) {
     })
   });
 })
-
-
 
 /********************************************
 POST OBJECT TO ANY CLASS WITH RELATION

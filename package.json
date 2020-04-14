@@ -10,6 +10,7 @@
     "concurrently": "5.0.0",
     "dotenv": "5.0.1",
     "events": "2.0.0",
+    "esm": "3.2.25",
     "express": "4.16.3",
     "http": "0.0.0",
     "json2csv": "4.2.1",
@@ -26,6 +27,11 @@
     "simple2e": "1.0.2"
   },
   "devDependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.0",
+    "@babel/node": "^7.8.7",
+    "@babel/preset-env": "^7.9.0",
+    "babel-jest": "25.2.6",
     "case": "1.6.2",
     "chai": "4.2.0",
     "chalk": "2.4.2",
@@ -43,7 +49,7 @@
   },
   "scripts": {
     "test": "jest",
-    "start": "node index.js",
+    "start": "node -r esm index.js",
     "start-with-db": "concurrently \"sudo mongod\" \"npm run start\"",
     "clearDB": "node scripts/clear-database.js",
     "migrate": "node scripts/migrate.js",

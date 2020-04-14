@@ -24,6 +24,8 @@ Released under the MIT license: http://jsbin.mit-license.org
 <script id="jsbin-javascript">
 // noprotect
 
+// noprotect
+
 console.clear()
 
 Parse.initialize("ZvGwjA7cemNfr9Qtn6LnwnrcgiM3Xl4N3msObrcg", "dQW12E6wgKWrqdlNCYMCIzLzWomgjCZlLZrrXlki"); //PASTE HERE YOUR Back4App APPLICATION ID AND YOUR JavaScript KEY
@@ -33,30 +35,33 @@ Parse.serverURL = "https://parseapi.back4app.com/";
 //EXAMPLE ONE - A General Query
 var SurveyData = Parse.Object.extend("SurveyData");
 var q = new Parse.Query("SurveyData");
-dataArray = [];
 
-q.find().then(function(results){
-  for (var i = 0; i < results.length; i++){
-    var data = results[i];
-    if (data.get('surveyingOrganization') == 'Test'){
-      dataArray.push(data.attributes);
-    }
-   
-  }
-  //console.log(dataArray);
-  
+
+
+Parse.Cloud.run("hello").then(async function (result) {
+    await console.log(JSON.stringify(result))
+}, function (error) {
+    console.log(error)
 });
 
-//EXAMPLE TWO - Running a cloud function
-query_parameters = {
-  organization: "Test"
+Parse.Cloud.run("genericQuery").then(async function (result) {
+    await console.log(JSON.stringify(result))
+}, function (error) {
+    console.log(error)
+});
+
+// EXAMPLE - Basic Query
+query_parameters2 = {
+    parseColumn: "surveyingOrganization",
+    parseParam: "Test",
+    offset: 0,
+    limit: 3
 }
 
-Parse.Cloud.run("retrievePatientRecordByOrganization", query_parameters).then(async function(result) {
-    // make sure the set the email sent flag on the object
+Parse.Cloud.run("basicQuery", query_parameters2).then(async function (result) {
     await console.log(JSON.stringify(result))
-}, function(error) {
-    // error
+}, function (error) {
+    console.log(error)
 });
 
 

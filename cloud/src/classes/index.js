@@ -1,16 +1,11 @@
-// import { url } from "../config/db.config.js";
-// import mongoose from "mongoose";
+const Patient = require("./patient.model.js");
+const Vitals = require("./vitals.model");
+const MedicalAssessment = require("./medical_assessment.model");
 
-// const db = {};
+const classes = {}
 
-// db.mongoose = mongoose;
-// db.url = url;
-// db.leaderboard = require("./leaderboard.model.js.js").default(mongoose);
+classes.patient = new Patient();
+classes.Vitals = new Vitals();
+classes.MedicalAssessment = new MedicalAssessment();
 
-// export default db;
-
-import Patient from "./patient.model";
-import Vitals from "./vitals.model";
-
-
-export { Patient, Vitals };
+module.exports = classes;

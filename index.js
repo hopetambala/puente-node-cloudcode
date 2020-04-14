@@ -3,9 +3,8 @@
 */
 
 
-var express = require('express');
+import express from 'express';
 var ParseServer = require('parse-server').ParseServer;
-var ParseDashboard = require('parse-dashboard');
 
 
 require('dotenv').config()
@@ -32,40 +31,18 @@ var api = new ParseServer({
   appId: APP_ID,
   masterKey: MASTER_KEY, //Add your master key here. Keep it secret!
   serverURL: SERVER_URL,  // Don't forget to change to https if needed
-  liveQuery: {
-    //classNames: ["Posts", "Comments"] // List of classes to support for query subscriptions
-  },
-  emailAdapter: {
-    module: 'parse-server-simple-mailgun-adapter',
-    options: {
-     fromAddress: 'hope@puente-dr.com',
-      domain: 'mg.healthypointscommunitymobile.com',
-      apiKey: 'key-dcf095002ea70a29c26be664800e0cc6',
-    }
-  }
+  // liveQuery: {
+  //   //classNames: ["Posts", "Comments"] // List of classes to support for query subscriptions
+  // }
 });
 
 
-var options = { allowInsecureHTTP: true };
-
-var dashboard = new ParseDashboard({
-  "apps": [
-  {
-    "serverURL": SERVER_URL,
-    "appId": APP_ID,
-    "masterKey": MASTER_KEY,
-    "appName": APP_NAME
-  }
-]
-}, options);
 
 var app = express();
 
 // make the Parse Server available at /parse
 app.use('/parse', api);
 
-// make the Parse Dashboard available at /dashboard
-app.use('/dashboard', dashboard);
 
 let port;
 let urlPath = SERVER_URL.split(":");

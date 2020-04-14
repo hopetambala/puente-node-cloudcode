@@ -1,10 +1,10 @@
 'use strict';
 
 class Vitals {
-    constructor(Parse){
-        this.Parse = Parse;
+    constructor(){
         this.ParseClass = "Vitals";
+        this.Vitals = Parse.Object.extend(this.ParseClass);
     }
 }
 
-export default Vitals;
+module.exports = Vitals

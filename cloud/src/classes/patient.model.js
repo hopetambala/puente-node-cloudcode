@@ -1,10 +1,10 @@
 'use strict';
 
 class Patient {
-    constructor(Parse){
-        this.Parse = Parse;
+    constructor(){
         this.ParseClass = "SurveyData";
+        this.Patient = Parse.Object.extend(this.ParseClass);
     }
 }
 
-export default Patient;
+module.exports = Patient
