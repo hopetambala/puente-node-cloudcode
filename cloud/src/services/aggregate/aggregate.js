@@ -1,53 +1,54 @@
-'use strict';
+/* global Parse */
+/* eslint no-undef: "error" */
 
 const Aggregate = {
-    /**
+  /**
      * Performs a query based on the parameter defined in a column
-     * 
+     *
      * @example
      * basicQuery(0,1000,SurveyData,organization,Puente)
-     * 
+     *
      * @param {number} offset First number
      * @param {number} limit Max limit of results
      * @param {string} parseObject Name of Backend Model
      * @param {string} parseColumn Name of Column in Backend Model
-     * @param {string} parseParam Name of Parameter in Column 
+     * @param {string} parseParam Name of Parameter in Column
      * @returns Results of Query
-     */   
-    basicQuery: function basicQuery(modelObject, offset, limit, parseColumn, parseParam){
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-            const Model = Parse.Object.extend(modelObject);
+     */
+  basicQuery: function basicQuery(modelObject, offset, limit, parseColumn, parseParam) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const Model = Parse.Object.extend(modelObject);
 
-            let query = new Parse.Query(Model);
-            
-            query.skip(offset);
+        const query = new Parse.Query(Model);
 
-            query.limit(limit);
+        query.skip(offset);
 
-            query.equalTo(parseColumn,parseParam);
+        query.limit(limit);
 
-            query.find().then((surveyPoints) => {
-                resolve(surveyPoints);
-            }, (error) => {
-                reject(error);
-            });
-            }, 500);
+        query.equalTo(parseColumn, parseParam);
+
+        query.find().then((surveyPoints) => {
+          resolve(surveyPoints);
+        }, (error) => {
+          reject(error);
         });
-    },
-    genericQuery: function genericQuery(modelObject){
-        return new Promise((resolve, reject) => {
-            const Model = Parse.Object.extend(modelObject);
+      }, 500);
+    });
+  },
+  genericQuery: function genericQuery(modelObject) {
+    return new Promise((resolve, reject) => {
+      const Model = Parse.Object.extend(modelObject);
 
-            var query = new Parse.Query(Model);
-            
-            query.find().then((results) => {
-                resolve(results);
-            }, (error) => {
-                reject(error);
-            });
-        });
-    },
-}
+      const query = new Parse.Query(Model);
+
+      query.find().then((results) => {
+        resolve(results);
+      }, (error) => {
+        reject(error);
+      });
+    });
+  },
+};
 
 module.exports = Aggregate;

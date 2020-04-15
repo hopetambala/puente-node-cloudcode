@@ -1,6 +1,6 @@
 const Batch = require('./batch/batch.js');
 
-const services = {}
+const services = {};
 
 services.batch = Batch;
 
