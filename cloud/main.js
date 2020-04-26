@@ -1,31 +1,3 @@
-'use strict';
-const { ParseServer } = require('parse-server');
-
-const Patient = require('./classes/patient.js')
-const Query = require('./functions/aggregate.js')
-
-
-
-Parse.initialize("ZvGwjA7cemNfr9Qtn6LnwnrcgiM3Xl4N3msObrcg", "dQW12E6wgKWrqdlNCYMCIzLzWomgjCZlLZrrXlki"); //PASTE HERE YOUR Back4App APPLICATION ID AND YOUR JavaScript KEY
-Parse.serverURL = "https://parseapi.back4app.com/";
-
-const cloudFunctions = {
-  hello: (request) =>
-    Parse.Cloud
-      .run("hello")
-      .then(res => res.data)
-      .catch(err => 'error'),
-
-  postObjectsToClass: (post_params) =>
-    Parse.Cloud
-      .run("PostObjectsToClass", post_params)
-      .then(res => res.data)
-      .catch(err => 'error')
-}
-
-module.exports = cloudFunctions;
-
-
 Parse.Cloud.define("hello", function (request, response) {
   return new Promise((resolve, reject) => {
     response.success(resolve("Hello world!"));
