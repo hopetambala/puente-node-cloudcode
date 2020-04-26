@@ -29,7 +29,7 @@
     "@babel/core": "7.9.0",
     "@babel/node": "7.8.7",
     "@babel/preset-env": "7.9.0",
-    "babel-jest": "25.2.6",
+    "babel-jest": "25.4.0",
     "case": "1.6.2",
     "chai": "4.2.0",
     "chalk": "2.4.2",
