@@ -14,7 +14,7 @@
     "json2csv": "4.2.1",
     "lodash": "4.17.15",
     "mailgun-js": "0.22.0",
-    "moment": "2.22.2",
+    "moment": "2.24.0",
     "parse": "1.11.1",
     "parse-dashboard": "2.1.0",
     "parse-server": "2.8.1",
