@@ -5,13 +5,12 @@
 [![codecov](https://codecov.io/gh/hopetambala/puente-node-cloudcode/branch/master/graph/badge.svg)](https://codecov.io/gh/hopetambala/puente-node-cloudcode)
 ![](https://img.shields.io/badge/parse_server-✓-blueviolet.svg)
 
-
-Cloud Code is easy to use because it’s built on the JavaScript SDK for parse-server. The only difference is that this code runs in our Parse Server rather than running on the user’s mobile device. When we update your Cloud Code, it becomes available to all mobile environments instantly. 
+Cloud Code is easy to use because it’s built on the JavaScript SDK for parse-server. The only difference is that this code runs in our Parse Server rather than running on the user’s mobile device. When we update our Cloud Code, it becomes available to all mobile environments instantly. 
 
 For a resource guide:
 https://docs.parseplatform.org/cloudcode/guide/
 
-# Table of Contents
+## Table of Contents
 
 - [Build and run](#build-and-run)
   * [Build](#build)
@@ -25,7 +24,6 @@ https://docs.parseplatform.org/cloudcode/guide/
 - [General Infrastructure Info](#guide)
   * [Parse Server](#parse-server)
   * [MongoDB Installations](#mongodb-installations)
-
 
 ## Build and run
 
@@ -51,7 +49,8 @@ This application is built with [Parse Server](https://reactjs.org) and [Back4App
 Here are some quick commands to get started in Node:
 
 - `npm install`: Install Node dependencies
-- `npm start`: Start the hot reloading development server.
+- `npm start`: Start the development server.
+- `npm start-with-dash`: Start the server with Parse Dashboard
 - `npm test`: Run the test suit
 - `npm lint`: Run the ESLinter.
 
@@ -69,8 +68,6 @@ To get ramped onto the project with Back4App these following steps must be taken
 - Run `b4a add` and choose the project you've created in Back4app Web Service
 - Run `b4a develop` to see changes live with Back4app Web Service
 
-
-
 ## Testing
 
 ### JSBin
@@ -79,7 +76,6 @@ Checkout our pre-setup [JSBin](https://jsbin.com/gizeteg/edit?js,console) to pla
 ### Locally testing queries
 
 Checkout the [sample.html](test-queries/sample.html) for configuration with our sample server
-
 
 ## Guide
 
@@ -103,3 +99,8 @@ Parse offer a backend to store data, push notifications, social media integratio
 **MongoDB** is a document database designed for ease of development and scaling. Its repository is on [Github](https://github.com/mongodb/mongo).
 
 This application requires the use of Mongo, [here's an explanation of how to install it on Mac OS](https://ademirgabardo.wordpress.com/2016/02/02/installing-and-running-mongodb-on-mac-osx-for-beginners/). 
+
+## Troubleshooting
+
+### Not able to push to Github
+Make sure to keep your `mongod` command running while pushing to origin.
