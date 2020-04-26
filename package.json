@@ -40,7 +40,7 @@
     "eslint-plugin-import": "2.20.2",
     "fs": "0.0.1-security",
     "jasmine": "3.5.0",
-    "jasmine-node": "1.16.2",
+    "jasmine-node": "3.0.0",
     "jest": "25.2.4",
     "nodemon": "1.18.10",
     "pre-commit": "1.2.2",
