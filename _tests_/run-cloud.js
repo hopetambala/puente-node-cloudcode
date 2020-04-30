@@ -8,7 +8,6 @@ const cloudFunctions = {
     .run('hello')
     .then((res) => res.data)
     .catch((err) => 'error'),
-
   postObjectsToClass: (post_params) => Parse.Cloud
     .run('postObjectsToClass', post_params)
     .then((response) => response)
