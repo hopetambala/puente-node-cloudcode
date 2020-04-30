@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/hopetambala/puente-node-cloudcode/branch/master/graph/badge.svg)](https://codecov.io/gh/hopetambala/puente-node-cloudcode)
 ![](https://img.shields.io/badge/parse_server-✓-blueviolet.svg)
 
-Cloud Code is easy to use because it’s built on the JavaScript SDK for parse-server. The only difference is that this code runs in our Parse Server rather than running on the user’s mobile device. When we update your Cloud Code, it becomes available to all mobile environments instantly. 
+Cloud Code is easy to use because it’s built on the JavaScript SDK for parse-server. The only difference is that this code runs in our Parse Server rather than running on the user’s mobile device. When we update our Cloud Code, it becomes available to all mobile environments instantly. 
 
 For a resource guide:
 https://docs.parseplatform.org/cloudcode/guide/
@@ -49,7 +49,8 @@ This application is built with [Parse Server](https://reactjs.org) and [Back4App
 Here are some quick commands to get started in Node:
 
 - `npm install`: Install Node dependencies
-- `npm start`: Start the hot reloading development server.
+- `npm start`: Start the development server.
+- `npm start-with-dash`: Start the server with Parse Dashboard
 - `npm test`: Run the test suit
 - `npm lint`: Run the ESLinter.
 
@@ -66,8 +67,6 @@ To get ramped onto the project with Back4App these following steps must be taken
 - `cd <PROJECT_MAIN_DIRECTORY>`
 - Run `b4a add` and choose the project you've created in Back4app Web Service
 - Run `b4a develop` to see changes live with Back4app Web Service
-
-
 
 ## Testing
 
