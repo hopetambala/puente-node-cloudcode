@@ -381,14 +381,14 @@ Parse.Cloud.define('updateObject', (request, response) => new Promise((resolve, 
     }
     return result;
   }).then((result) =>
-  // save the object
+    // save the object
     result.save()).then((result) => {
-    // object updated and saved
-    response.success(resolve(result));
-  }, (error) => {
-    // error
-    response.error(reject(error));
-  });
+      // object updated and saved
+      response.success(resolve(result));
+    }, (error) => {
+      // error
+      response.error(reject(error));
+    });
 }));
 
 
@@ -412,18 +412,108 @@ Parse.Cloud.define('signup', (request, response) => new Promise((resolve, reject
   user.set('username', String(request.params.username));
   user.set('password', String(request.params.password));
   user.set('email', String(request.params.email));
-  user.set('orginization', String(request.params.orginization));
-  user.set('role', String(request.params.role));
-  user.set('adminVerified', false);
+  user.set('organization', String(request.params.organization));
 
-  user.signUp().then((result) => {
-    console.log(`User created successfully with name ${result.get('username')} and email: ${result.get('email')}`);
-    response.success(resolve(result));
+  //Query to count number of users for the organization passed into function
+  let userQuery = new Parse.Query(Parse.User);
+  userQuery.equalTo("organization", String(request.params.organization));
+  userQuery.count().then((results) => {
+    // first user signed up, gets admin accesss
+    if (results == 0) {
+      user.set('role', 'Admin');
+      user.set('adminVerified', true);
+    }
+    else {
+      // others need approval from admin
+      user.set('role', 'Contributor');
+      user.set('adminVerified', false);
+    }
+    return user;
+  }).then((user) => {
+    // sign up user
+    user.signUp().then((result) => {
+      console.log(`User created successfully with name ${result.get('username')} and email: ${result.get('email')}`);
+      // Parse.Cloud.run('createAdmin', {})
+      // Parse.Cloud.run('addAdmin', { 'user': result.objectID })
+      response.success(resolve(result));
+    }, (error) => {
+      console.log(`Error: ${error.code} ${error.message}`);
+      response.error(reject(error));
+    });
   }, (error) => {
-    console.log(`Error: ${error.code} ${error.message}`);
+    response.error(reject(error));
+  })
+}));
+
+
+/**********************************************
+ * Basic user organization query
+ * input: organization
+ *********************************************/
+Parse.Cloud.define('organizationJoinRequests', (request, response) => new Promise((resolve, reject) => {
+  // const User = Parse.Object.extend(Parse.User);
+  let userQuery = new Parse.Query(Parse.User);
+  // find if there is a current user associated with organization
+  userQuery.equalTo("organization", String(request.params.organization));
+  userQuery.equalTo("adminVerified", false);
+  userQuery.find().then((results) => {
+    // if (results[0]) {
+    //   return true;
+    // }
+    // else {
+    //   return false;
+    // }
+    response.success(resolve(results));
+  }, (error) => {
     response.error(reject(error));
   });
 }));
+
+Parse.Cloud.define('verifyUserAndChangeRole', (request, response) => new Promise((resolve, reject) => {
+  let user
+}))
+
+// Parse.Cloud.define('createAdmin', (request, response) => new Promise((resolve, reject) => {
+//   const Role = Parse.Object.extend('_Role');
+//   const existingAdminRole = new Parse.Query(Role)
+//     .equalTo('name', 'admin')
+//     .first()
+//   //admin already created, nothing to do here
+//   if (existingAdminRole) {
+//     response.success(resolve("Admin Role Already Exists."))
+//   }
+//   else {
+//     const acl = new Parse.ACL();
+//     acl.setPublicReadAccess(true);
+//     acl.setPublicWriteAccess(false);
+//     acl.setRoleWriteAccess(true);
+//     const adminRole = new Role();
+//     adminRole.set('name', 'admin');
+//     adminRole.setACL(acl)
+//     adminRole.save({}, { useMasterKey: true }).then((results) => {
+//       response.success(resolve(results));
+//     }, (error) => {
+//       response.error(reject(error));
+//     })
+//   }
+// }));
+
+// Parse.Cloud.define('addAdmin', (request, response) => new Promise((resolve, reject) => {
+//   user = request.params.user;
+
+//   var queryRole = new Parse.Query('_Role');
+//   queryRole.equalTo("name", "admin");
+//   queryRole.first().then(function (role) {
+//     // response.success(resolve(role));
+
+//     role.getUsers().add(user);
+//     role.save({}, { useMasterKey: true });
+//     response.success(resolve("Admin added"))
+//   }, (error) => {
+//     response.error(reject(error))
+//   })
+// }));
+
 
 /** ******************************************
 SIGN IN
