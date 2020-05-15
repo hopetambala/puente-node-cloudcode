@@ -37,6 +37,7 @@ https://docs.parseplatform.org/cloudcode/guide/
 After installation
 1. Open one terminal instance and do following: `sudo mongod` to start mongo instance.(Look at the below guide on how to setup `mongod` on your machine
 2. In another terminal, serve the application locally by running `npm run start`.
+3. (Optionally), if you want to start the application with the dashboard, run `npm run start-with-dash`
 
 Changes made in your code will be automatically reloaded on http://localhost:4040/dashboard.
 
