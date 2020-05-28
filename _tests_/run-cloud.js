@@ -16,6 +16,10 @@ const cloudFunctions = {
     .run('genericQuery', post_params)
     .then((res) => res.data)
     .catch((err) => 'error'),
+  roleQuery: () => Parse.Cloud
+    .run('queryRoles')
+    .then((res) => res.data)
+    .catch((err) => 'error'),
 };
 
 module.exports = { cloudFunctions };
