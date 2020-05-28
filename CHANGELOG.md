@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.4.0](https://github.com/hopetambala/puente-node-cloudcode/compare/v1.3.0...v1.4.0) (2020-05-28)
+
+
+### Features
+
+* add ability to create roles ([a4c443a](https://github.com/hopetambala/puente-node-cloudcode/commit/a4c443aeed98442f09224f376ee93d2991fa5181))
+
+
+### Bug Fixes
+
+* location of tests and alot of dependencies ([e7ebf03](https://github.com/hopetambala/puente-node-cloudcode/commit/e7ebf0395cc17aecab50f1b5a33c4faf3c7ee40d))
+* **deps:** update dependency request-promise to v4.2.5 ([f374259](https://github.com/hopetambala/puente-node-cloudcode/commit/f3742594df8f172693bd276cce3a2450393de67a))
+
 ## [1.3.0](https://github.com/hopetambala/puente-node-cloudcode/compare/v1.2.0...v1.3.0) (2020-04-26)
 
 
