@@ -1,8 +1,8 @@
 /* global Parse */
 /* eslint no-undef: "error" */
 
-const Aggregate = {
+const Post = {
   
 };
 
-module.exports = Aggregate;
+module.exports = Post;
