@@ -1,4 +1,3 @@
-
 const { cloudFunctions } = require('../run-cloud');
 
 // hello world
@@ -15,7 +14,7 @@ test('Post Exists', async () => {
 
 test('Post object - async', async () => {
   // expect.assertions(1);
-  const post_params = {
+  const postParams = {
     parseClass: 'SurveyData',
     signature: 'Joe',
     photoFile: 'pictureofJoe',
@@ -24,7 +23,10 @@ test('Post object - async', async () => {
       lname: 'Bouble',
     },
   };
-  return cloudFunctions.postObjectsToClass(post_params).then((result) => {
+  return cloudFunctions.postObjectsToClass(postParams).then((result) => {
     console.log(result);
   });
-});
+}, 30000);
+
+
+
