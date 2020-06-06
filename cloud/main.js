@@ -60,21 +60,33 @@ Parse.Cloud.define('addToRole', (request, response) => new Promise((resolve, rej
     user.set('adminVerified', true);
     return user;
   }).then((user) => user.save()).then((result) => {
-    Parse.Cloud.useMasterKey();
     const roleQuery = new Parse.Query(Parse.Role);
     roleQuery.equalTo('name', String(request.params.roleName));
-    roleQuery.first().then((role) => {
+    roleQuery.first({ useMasterKey: true }).then((role) => {
       role.getUsers().add(result);
-      role.save();
+      role.save(null, { useMasterKey: true });
       response.success(resolve(result));
     }, (error) => {
-      response.error(reject(error));
+      error(reject(error));
     });
   }, (error) => {
-    response.error(reject(error));
+    error(reject(error));
   });
 }));
 
+Parse.Cloud.define('roleTest', (request, response) => new Promise((resolve, reject) => {
+  var rolesQuery = new Parse.Query(Parse.Role);
+  rolesQuery.equalTo('name', str(request.params.role));
+  return rolesQuery.first({ useMasterKey: true })
+    .then(function (roleObject) {
+      var user = new Parse.User();
+      user.id = request.params.userId;
+      roleObject.getUsers().add(user);
+      roleObject.save(null, { useMasterKey: true });
+      response.success(resolve(result));
+    });
+}));
+// xgUArKSqmn
 // Parse.Cloud.define('createContributor', (request, response) => new Promise((resolve, reject) => {
 //   const Role = Parse.Object.extend('_Role');
 //   const existingContributorRole = new Parse.Query(Role)
