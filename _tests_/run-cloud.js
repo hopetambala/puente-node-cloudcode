@@ -1,7 +1,10 @@
 const { Parse } = require('parse/node');
 
-Parse.initialize('ZvGwjA7cemNfr9Qtn6LnwnrcgiM3Xl4N3msObrcg', 'dQW12E6wgKWrqdlNCYMCIzLzWomgjCZlLZrrXlki'); // PASTE HERE YOUR Back4App APPLICATION ID AND YOUR JavaScript KEY
-Parse.serverURL = 'https://parseapi.back4app.com/';
+// Parse.initialize('ZvGwjA7cemNfr9Qtn6LnwnrcgiM3Xl4N3msObrcg', 'dQW12E6wgKWrqdlNCYMCIzLzWomgjCZlLZrrXlki'); // PASTE HERE YOUR Back4App APPLICATION ID AND YOUR JavaScript KEY
+// Parse.serverURL = 'https://parseapi.back4app.com/';
+
+Parse.initialize("myAppId");
+Parse.serverURL = 'http://localhost:1337/parse';
 
 const cloudFunctions = {
   hello: (request) => Parse.Cloud
@@ -30,7 +33,7 @@ const cloudFunctions = {
     .catch((err) => err),
   genericQuery: (queryParams) => Parse.Cloud
     .run('genericQuery', queryParams)
-    .then((res) => res.data)
+    .then((res) => res)
     .catch((err) => 'error'),
   basicQuery: (queryParams) => Parse.Cloud
     .run('basicQuery', queryParams)

@@ -1,6 +1,7 @@
 const { cloudFunctions } = require('../run-cloud');
 const { MongoClient } = require('mongodb');
 // hello world
+
 test('Hello World exists', async () => {
   // expect.assertions(1);
   // const data = await cloudFunctions.hello()
@@ -67,13 +68,16 @@ describe('insert', () => {
       console.log(result);
     });
   });
+
   it('should return the posted results back', async () => {
     const queryParams = {
       parseObject: 'SurveyData'
     };
+
     return cloudFunctions.genericQuery(queryParams).then((result) => {
       console.log(result);
       expect(result).toBeDefined();
     });
+    
   });
 });
