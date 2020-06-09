@@ -53,24 +53,23 @@ Parse.Cloud.define('addAdmin', (request, response) => new Promise((resolve, reje
 
 Parse.Cloud.define('addToRole', (request, response) => new Promise((resolve, reject) => {
   const userQuery = new Parse.Query(Parse.User);
-  // userQuery.equalTo("username", request.params.userID);
 
   userQuery.get(request.params.userID).then((user) => {
     user.set('role', String(request.params.roleName));
     user.set('adminVerified', true);
     return user;
-  }).then((user) => user.save()).then((result) => {
+  }).then((user) => user.save(null, { useMasterKey: true })).then((result) => {
     const roleQuery = new Parse.Query(Parse.Role);
     roleQuery.equalTo('name', String(request.params.roleName));
     roleQuery.first({ useMasterKey: true }).then((role) => {
       role.getUsers().add(result);
       role.save(null, { useMasterKey: true });
-      response.success(resolve(result));
+      resolve(result);
     }, (error) => {
-      error(reject(error));
+      reject(error);
     });
   }, (error) => {
-    error(reject(error));
+    reject(error);
   });
 }));
 
