@@ -32,7 +32,7 @@ Parse.Cloud.define('signup', (request, response) => new Promise((resolve, reject
     if (results == 0) {
       user.set('role', 'administrator');
       user.set('adminVerified', true);
-      userRole = 'administrator';
+      userRole = 'admin';
     } else {
       // others need approval from admin
       user.set('role', 'contributor');
@@ -44,24 +44,50 @@ Parse.Cloud.define('signup', (request, response) => new Promise((resolve, reject
     // sign up user
     user.signUp().then((result) => {
       console.log(`User created successfully with name ${result.get('username')} and email: ${result.get('email')}`);
-      Parse.Cloud.useMasterKey();
-      const roleQuery = new Parse.Query(Parse.Role);
-      roleQuery.equalTo('name', userRole);
+      // Parse.Cloud.useMasterKey();
+      const acl = new Parse.ACL();
+      acl.setPublicReadAccess(true);
+      console.log(result)
+      acl.setWriteAccess(result, true);
+      acl.setRoleWriteAccess('admin', true)
+      result.setACL(acl)
+      result.save(null, { useMasterKey: true }).then((aclUser) => {
+        console.log('SAve user with new ACL');
+        const roleQuery = new Parse.Query(Parse.Role);
+        roleQuery.equalTo('name', userRole);
 
-      roleQuery.first().then((role) => {
-        role.getUsers().add(result);
-        role.save();
-        // user.set('role', userRole)
-        response.success(resolve(result, role));
-      }, (error) => {
-        response.error(reject(error));
-      });
-    }, (error) => {
-      console.log(`Error: ${error.code} ${error.message}`);
-      response.error(reject(error));
-    });
+        // return roleQuery.first({ useMasterKey: true })
+        roleQuery.first({ useMasterKey: true }).then((role) => {
+          console.log('Found role')
+          role.getUsers().add(aclUser);
+          console.log('add user to role')
+          role.save(null, { useMasterKey: true });
+          console.log('saved user to role')
+          // user.set('role', userRole)
+          response.success(resolve(aclUser));
+        }, (error) => {
+          response.error(reject(error));
+        });
+      })
+
+      // }).then(function (roleObject) {
+      //   var userAdded = new Parse.User();
+      //   userAdded.id = request.params.username;
+      //   roleObject.getUsers().add(userAdded);
+      //   roleObject.save(null, { useMasterKey: true }).then((result) => {
+      //     console.log('User added to role: ' + userRole)
+      //     response.success(resolve(result));
+      //   }, (error) => {
+      //     console.log('User was not added to role :' + userRole)
+      //     response.error(reject(error));
+      //   })
+    })
+  }, (error) => {
+    console.log(`Error: ${error.code} ${error.message}`);
+    response.error(reject(error));
   });
 }));
+
 
 /** ******************************************
 SIGN IN
