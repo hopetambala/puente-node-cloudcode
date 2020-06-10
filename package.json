@@ -53,7 +53,7 @@
   "scripts": {
     "dashboard": "parse-dashboard --dev --appId myAppId --masterKey myMasterKey --serverURL http://localhost:1337/parse --appName PuenteCloudCode",
     "test-local": "env-cmd -f .env.dev jest",
-    "test": "env-cmd -f .env.staging jest",
+    "test": "env-cmd -f .env.staging jest && codecov",
     "start": "node -r esm index.js",
     "start-with-dash": "concurrently \"npm run start\" \"npm run dashboard\"",
     "start-with-db": "concurrently \"sudo mongod\" \"npm run start\"",
@@ -72,7 +72,9 @@
     "coveragePathIgnorePatterns": [
       "/node_modules/"
     ],
-    "preset": "@shelf/jest-mongodb"
+    "preset": "@shelf/jest-mongodb",
+    "coverageDirectory": "./coverage/",
+    "collectCoverage": true
   },
   "repository": {
     "type": "git",
