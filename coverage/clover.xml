@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1591824506742" clover="3.2.0">
-  <project timestamp="1591824506742" name="All files">
+<coverage generated="1591824641388" clover="3.2.0">
+  <project timestamp="1591824641389" name="All files">
     <metrics statements="55" coveredstatements="23" conditionals="2" coveredconditionals="1" methods="45" coveredmethods="15" elements="102" coveredelements="39" complexity="0" loc="55" ncloc="55" packages="1" files="2" classes="2"/>
     <file name="env.config.js" path="/Users/hopetambala/Documents/development/nonprofit/puente-node-cloudcode/_tests_/env.config.js">
       <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
