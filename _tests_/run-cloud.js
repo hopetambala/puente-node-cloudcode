@@ -33,7 +33,9 @@ const cloudFunctions = {
     .catch((err) => err),
   genericQuery: (queryParams) => Parse.Cloud
     .run('genericQuery', queryParams)
-    .then((res) => res)
+    .then(res => {
+      return res
+    })
     .catch((err) => 'error'),
   basicQuery: (queryParams) => Parse.Cloud
     .run('basicQuery', queryParams)
