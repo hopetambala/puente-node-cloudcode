@@ -12,5 +12,5 @@ install:
 
 script:
   - npm ci --no-optional
-  - npm run test-stage 
+  - npm run test 
   - codecov
