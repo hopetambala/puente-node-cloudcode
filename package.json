@@ -38,6 +38,7 @@
     "eslint": "6.8.0",
     "eslint-config-airbnb-base": "14.1.0",
     "eslint-plugin-import": "2.20.2",
+    "env-cmd": "10.1.0",
     "fs": "0.0.1-security",
     "jasmine": "3.5.0",
     "jasmine-node": "3.0.0",
@@ -51,7 +52,8 @@
   },
   "scripts": {
     "dashboard": "parse-dashboard --dev --appId myAppId --masterKey myMasterKey --serverURL http://localhost:1337/parse --appName PuenteCloudCode",
-    "test": "jest",
+    "test-local": "env-cmd -f .env.dev jest",
+    "test": "env-cmd -f .env.staging jest",
     "start": "node -r esm index.js",
     "start-with-dash": "concurrently \"npm run start\" \"npm run dashboard\"",
     "start-with-db": "concurrently \"sudo mongod\" \"npm run start\"",
