@@ -50,10 +50,10 @@ This application is built with [Parse Server](https://reactjs.org) and [Back4App
 Here are some quick commands to get started in Node:
 
 - `npm install`: Install Node dependencies
-- `npm start`: Start the development server.
-- `npm start-with-dash`: Start the server with Parse Dashboard
-- `npm test`: Run the test suit
-- `npm lint`: Run the ESLinter.
+- `npm run start`: Start the development server.
+- `npm run start-with-dash`: Start the server with Parse Dashboard
+- `npm run test`: Run the test suit
+- `npm run lint`: Run the ESLinter.
 
 Here are some custom commands for this specific project (after you install):
 
@@ -71,12 +71,17 @@ To get ramped onto the project with Back4App these following steps must be taken
 
 ## Testing
 
+### Jest
+
+You need two terminals to do testing in Jest. One terminal should be running `npm run start` or `npm run start-with-dash` to have the application running. The other terminal will use `npm run test`.
+
 ### JSBin
 Checkout our pre-setup [JSBin](https://jsbin.com/gizeteg/edit?js,console) to play with our sample server
 
 ### Locally testing queries
 
 Checkout the [sample.html](test-queries/sample.html) for configuration with our sample server
+
 
 ## Guide
 

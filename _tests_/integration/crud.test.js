@@ -79,17 +79,19 @@ describe('insert', () => {
     };
 
 
-    return cloudFunctions.genericQuery(queryParams).then((result) => {
-      console.log(result);
+    return cloudFunctions.genericQuery(queryParams).then((results) => {
+      var arrayOfObjectsGeneric = results.filter(result=>{
+        return result["attributes"]
+      });
+      
+      console.log(arrayOfObjectsGeneric);
 
-      // for (var i in result[0]) {
-      //   console.log(i);
-      //   console.log(result[0][i])
-      // }
-      // firstName = result[0].fname;
-      // console.log(firstName);
-      // expect(result[0].fname).toEqual('Greetings');
-      expect(result).toBeDefined();
+      // let jsonString = JSON.stringify(result)
+      // console.log(JSON.parse(jsonString));
+
+      let firstName = arrayOfObjectsGeneric[0].get('fname');
+      expect(firstName).toEqual('Greetings');
+      expect(results).toBeDefined();
     });
   });
 
