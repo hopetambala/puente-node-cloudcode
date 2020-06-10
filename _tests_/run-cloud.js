@@ -10,65 +10,75 @@ const cloudFunctions = {
   hello: (request) => Parse.Cloud
     .run('hello')
     .then((res) => res.data)
-    .catch((err) => 'error'),
+    .catch((error) => error),
   postObjectsToClass: (post_params) => Parse.Cloud
     .run('postObjectsToClass', post_params)
     .then((response) => response)
-    .catch((err) => err),
+    .catch((error) => error),
   postObjectsToClassWithRelation: (post_params) => Parse.Cloud
     .run('postObjectsToClassWithRelation', post_params)
     .then((response) => response)
-    .catch((err) => err),
+    .catch((error) => error),
   postObjectsToAnyClassWithRelation: (post_params) => Parse.Cloud
     .run('postObjectsToAnyClassWithRelation', post_params)
     .then((response) => response)
-    .catch((err) => err),
+    .catch((error) => error),
   updateObject: (update_params) => Parse.Cloud
     .run('updateObject', update_params)
     .then((response) => response)
-    .catch((err) => err),
+    .catch((error) => error),
   removeObjectsinClass: (remove_params) => Parse.Cloud
     .run('removeObjectsinClass', remove_params)
     .then((response) => response)
-    .catch((err) => err),
+    .catch((error) => error),
   genericQuery: (queryParams) => Parse.Cloud
     .run('genericQuery', queryParams)
-    .then(res => {
-      return res
-    })
-    .catch((err) => 'error'),
+    .then((response) => response)
+    .catch((error) => error),
   basicQuery: (queryParams) => Parse.Cloud
     .run('basicQuery', queryParams)
     .then((response) => response)
-    .catch((err) => 'error'),
+    .catch((error) => error),
   geoQuery: (queryParams) => Parse.Cloud
     .run('geoQuery', queryParams)
-    .then((response) => response.data)
-    .catch((err) => 'error'),
-  signup: (params) => Parse.Cloud
-    .run('singup', params)
     .then((response) => response)
-    .catch((error) => 'error'),
+    .catch((error) => error),
+  signup: (params) => Parse.Cloud
+    .run('signup', params)
+    .then((response) => response)
+    .catch((error) => error),
   signin: (params) => Parse.Cloud
     .run('signin', params)
     .then((response) => response)
-    .catch((error) => 'error'),
+    .catch((error) => error),
   signout: (params) => Parse.Cloud
     .run('signout', params)
     .then((response) => response)
-    .catch((error) => 'error'),
+    .catch((error) => error),
   forgotPassword: (params) => Parse.Cloud
     .run('forgotPassword', params)
     .then((response) => response)
-    .catch((error) => 'error'),
+    .catch((error) => error),
   currentUser: (params) => Parse.Cloud
     .run('currentUser', params)
     .then((response) => response)
-    .catch((error) => 'error'),
-  roleQuery: () => Parse.Cloud
+    .catch((error) => error),
+  createAdminRole: () => Parse.Cloud
+    .run('createAdminRole')
+    .then((response) => response)
+    .catch((error) => error),
+  createManagerRole: () => Parse.Cloud
+    .run('createManagerRole')
+    .then((response) => response)
+    .catch((error) => error),
+  createContributorRole: () => Parse.Cloud
+    .run('createContributorRole')
+    .then((response) => response)
+    .catch((error) => error),
+  queryRoles: () => Parse.Cloud
     .run('queryRoles')
-    .then((res) => res.data)
-    .catch((err) => 'error'),
+    .then(response => { return response })
+    .catch((error) => error),
 };
 
 module.exports = { cloudFunctions };
