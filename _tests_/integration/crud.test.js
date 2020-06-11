@@ -304,8 +304,8 @@ describe('crud testing', () => {
 
   it('should return the the updated object - geo query', async () => {
     const query_params = {
-      lat: 4,
-      long: 5,
+      lat: 3,
+      long: 4,
       limit: 10,
       parseColumn: 'height',
       parseParam: 'Test',
