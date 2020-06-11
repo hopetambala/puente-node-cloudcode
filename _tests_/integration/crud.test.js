@@ -1,5 +1,5 @@
-const { cloudFunctions } = require('../run-cloud');
 const { MongoClient } = require('mongodb');
+const { cloudFunctions } = require('../run-cloud');
 // hello world
 
 test('Hello World exists', async () => {
@@ -48,7 +48,7 @@ describe('insert', () => {
   beforeAll(async () => {
     connection = await MongoClient.connect(process.env.MONGO_URL, {
       useNewUrlParser: true,
-      useUnifiedTopology: true
+      useUnifiedTopology: true,
     });
     db = await connection.db();
   });
@@ -69,27 +69,25 @@ describe('insert', () => {
     };
     return cloudFunctions.postObjectsToClass(postParams).then((result) => {
       console.log(result);
-      postID1 = result.id
+      postID1 = result.id;
     });
   });
 
   it('should return the posted results back', async () => {
     const queryParams = {
-      parseObject: 'SurveyData'
+      parseObject: 'SurveyData',
     };
 
 
     return cloudFunctions.genericQuery(queryParams).then((results) => {
-      var arrayOfObjectsGeneric = results.filter(result=>{
-        return result["attributes"]
-      });
-      
+      const arrayOfObjectsGeneric = results.filter((result) => result.attributes);
+
       console.log(arrayOfObjectsGeneric);
 
       // let jsonString = JSON.stringify(result)
       // console.log(JSON.parse(jsonString));
 
-      let firstName = arrayOfObjectsGeneric[0].get('fname');
+      const firstName = arrayOfObjectsGeneric[0].get('fname');
       // expect(firstName).toEqual('Greetings');
       expect(Array.isArray(arrayOfObjectsGeneric)).toBe(true);
       expect(typeof firstName).toBe('string');
@@ -99,9 +97,9 @@ describe('insert', () => {
 
   it('should post an object with relation to original post with history medical class', async () => {
     const postParams = {
-      parseClass: "HistoryMedical",
-      parseParentClass: "SurveyData",
-      parseParentClassID: "jSez2hFlLT",
+      parseClass: 'HistoryMedical',
+      parseParentClass: 'SurveyData',
+      parseParentClassID: 'jSez2hFlLT',
       localObject: {
         majorEvents: null,
         surgeryWhatKind: null,
@@ -113,9 +111,9 @@ describe('insert', () => {
         preventativeCare: null,
         allergies: null,
         latitude: 3,
-        longitude: 7
-      }
-    }
+        longitude: 7,
+      },
+    };
     return cloudFunctions.postObjectsToClassWithRelation(postParams).then((result) => {
       console.log(result);
       postID2 = result.id;
@@ -125,29 +123,29 @@ describe('insert', () => {
 
   it('should post an object to class with relation to original post with a variety of classes', async () => {
     const post_params = {
-      parseParentClass: "SurveyData",
+      parseParentClass: 'SurveyData',
       parseParentClassID: postID1,
       localObject: {
-        height: "4",
+        height: '4',
         majorEvents: null,
-        name: "JOSIAH",
-        substance: "DRUG",
-        AssessmentandEvaluationSurgical: "test",
-        chronic_condition_hypertension: "test",
-        yearsLivedinthecommunity: "TEST"
-      }
-    }
+        name: 'JOSIAH',
+        substance: 'DRUG',
+        AssessmentandEvaluationSurgical: 'test',
+        chronic_condition_hypertension: 'test',
+        yearsLivedinthecommunity: 'TEST',
+      },
+    };
 
     return cloudFunctions.postObjectsToAnyClassWithRelation(post_params).then((result) => {
       console.log(result);
       postID3 = result[0].id;
       expect(result).toBeDefined();
-    })
-  })
+    });
+  });
 
   it('should return the posted results back', async () => {
     const queryParams = {
-      parseObject: 'HistoryMedical'
+      parseObject: 'HistoryMedical',
     };
 
 
@@ -167,20 +165,20 @@ describe('insert', () => {
 
   it('should update the originally posted item', async () => {
     const update_params = {
-      parseClass: "SurveyData",
+      parseClass: 'SurveyData',
       parseClassID: postID1,
       localObject: {
-        height: "1231",
+        height: '1231',
         majorEvents: null,
-        name: "no name",
+        name: 'no name',
         substance: null,
-        AssessmentandEvaluationSurgical: "yes",
-        chronic_condition_hypertension: "no",
-        yearsLivedinthecommunity: "TEST",
+        AssessmentandEvaluationSurgical: 'yes',
+        chronic_condition_hypertension: 'no',
+        yearsLivedinthecommunity: 'TEST',
         latitude: 3,
-        longitude: 4
-      }
-    }
+        longitude: 4,
+      },
+    };
     return cloudFunctions.updateObject(update_params).then((result) => {
       console.log(result);
       expect(result).toBeDefined();
@@ -205,31 +203,25 @@ describe('insert', () => {
   it('should remove the posted object with relation', async () => {
     const removeParams = {
       parseClass: 'HistoryMedical',
-      objectIDinparseClass: postID2
-    }
+      objectIDinparseClass: postID2,
+    };
 
     return cloudFunctions.removeObjectsinClass(removeParams).then((result) => {
-      console.log(result)
+      console.log(result);
       expect(result).toBeDefined();
     });
   });
-
 
 
   it('should remove the original posted object', async () => {
     const removeParams = {
       parseClass: 'SurveyData',
-      objectIDinparseClass: postID1
-    }
+      objectIDinparseClass: postID1,
+    };
 
     return cloudFunctions.removeObjectsinClass(removeParams).then((result) => {
-      console.log(result)
+      console.log(result);
       expect(result).toBeDefined();
     });
   });
-
-
-
 });
-
-

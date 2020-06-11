@@ -1,6 +1,3 @@
-/* global Parse */
-/* eslint no-undef: "error" */
-
 const classes = require('../classes');
 const services = require('../services');
 
@@ -382,10 +379,10 @@ Parse.Cloud.define('updateObject', (request, response) => new Promise((resolve, 
   }).then((result) =>
     // save the object
     result.save()).then((result) => {
-      // object updated and saved
-      response.success(resolve(result));
-    }, (error) => {
-      // error
-      response.error(reject(error));
-    });
+    // object updated and saved
+    response.success(resolve(result));
+  }, (error) => {
+    // error
+    response.error(reject(error));
+  });
 }));

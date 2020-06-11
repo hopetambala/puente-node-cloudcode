@@ -1,6 +1,3 @@
-/* global Parse */
-/* eslint no-undef: "error" */
-
 /** ******************************************
 SIGN UP
 Receives user attributes and registers user
@@ -47,10 +44,10 @@ Parse.Cloud.define('signup', (request, response) => new Promise((resolve, reject
       // Parse.Cloud.useMasterKey();
       const acl = new Parse.ACL();
       acl.setPublicReadAccess(true);
-      console.log(result)
+      console.log(result);
       acl.setWriteAccess(result, true);
-      acl.setRoleWriteAccess('admin', true)
-      result.setACL(acl)
+      acl.setRoleWriteAccess('admin', true);
+      result.setACL(acl);
       result.save(null, { useMasterKey: true }).then((aclUser) => {
         console.log('SAve user with new ACL');
         const roleQuery = new Parse.Query(Parse.Role);
@@ -58,17 +55,17 @@ Parse.Cloud.define('signup', (request, response) => new Promise((resolve, reject
 
         // return roleQuery.first({ useMasterKey: true })
         roleQuery.first({ useMasterKey: true }).then((role) => {
-          console.log('Found role')
+          console.log('Found role');
           role.getUsers().add(aclUser);
-          console.log('add user to role')
+          console.log('add user to role');
           role.save(null, { useMasterKey: true });
-          console.log('saved user to role')
+          console.log('saved user to role');
           // user.set('role', userRole)
           response.success(resolve(aclUser));
         }, (error) => {
           response.error(reject(error));
         });
-      })
+      });
 
       // }).then(function (roleObject) {
       //   var userAdded = new Parse.User();
@@ -81,7 +78,7 @@ Parse.Cloud.define('signup', (request, response) => new Promise((resolve, reject
       //     console.log('User was not added to role :' + userRole)
       //     response.error(reject(error));
       //   })
-    })
+    });
   }, (error) => {
     console.log(`Error: ${error.code} ${error.message}`);
     response.error(reject(error));

@@ -1,12 +1,12 @@
 const { Parse } = require('parse/node');
-const { PARSE_ENV, PARSE_APP_ID, PARSE_JAVASCRIPT_KEY, PARSE_SERVER_URL } = require('./env.config')
+const {
+  PARSE_ENV, PARSE_APP_ID, PARSE_JAVASCRIPT_KEY, PARSE_SERVER_URL,
+} = require('./env.config');
 
-if (PARSE_ENV == 'staging')  {
+if (PARSE_ENV == 'staging') {
   Parse.initialize(PARSE_APP_ID, PARSE_JAVASCRIPT_KEY); // PASTE HERE YOUR Back4App APPLICATION ID AND YOUR JavaScript KEY
   Parse.serverURL = PARSE_SERVER_URL;
-}
-
-else {
+} else {
   Parse.initialize(PARSE_APP_ID);
   Parse.serverURL = PARSE_SERVER_URL;
 }
@@ -38,9 +38,7 @@ const cloudFunctions = {
     .catch((err) => err),
   genericQuery: (queryParams) => Parse.Cloud
     .run('genericQuery', queryParams)
-    .then(res => {
-      return res
-    })
+    .then((res) => res)
     .catch((err) => 'error'),
   basicQuery: (queryParams) => Parse.Cloud
     .run('basicQuery', queryParams)
