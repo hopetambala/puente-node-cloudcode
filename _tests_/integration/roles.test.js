@@ -31,7 +31,6 @@ describe('role testing', () => {
   it('should create the admin role', async () => cloudFunctions.createAdminRole().then((result) => {
     const jsonString = JSON.stringify(result);
     const jsonValues = JSON.parse(jsonString);
-    console.log(jsonValues);
 
     const roleName = jsonValues.name;
     expect(roleName).toEqual('admin');
@@ -41,7 +40,6 @@ describe('role testing', () => {
   it('should create the manager role', async () => cloudFunctions.createManagerRole().then((result) => {
     const jsonString = JSON.stringify(result);
     const jsonValues = JSON.parse(jsonString);
-    console.log(jsonValues);
 
     const roleName = jsonValues.name;
     expect(roleName).toEqual('manager');
@@ -51,7 +49,6 @@ describe('role testing', () => {
   it('should create the contributor role', async () => cloudFunctions.createContributorRole().then((result) => {
     const jsonString = JSON.stringify(result);
     const jsonValues = JSON.parse(jsonString);
-    console.log(jsonValues);
 
     const roleName = jsonValues.name;
     expect(roleName).toEqual('contributor');
@@ -61,7 +58,6 @@ describe('role testing', () => {
   it('should return the 3 created roles', async () => cloudFunctions.queryRoles().then((result) => {
     const jsonString = JSON.stringify(result);
     const jsonValues = JSON.parse(jsonString);
-    console.log(jsonValues);
 
     let count = 0;
     for (const i in jsonValues) {
@@ -82,7 +78,6 @@ describe('role testing', () => {
     return cloudFunctions.signup(credentials).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
 
       expect(jsonValues.firstname).toEqual('Luke');
       expect(jsonValues.lastname).toEqual('Skywalker');
@@ -107,7 +102,6 @@ describe('role testing', () => {
     return cloudFunctions.signup(credentials).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
 
       expect(jsonValues.firstname).toEqual('Han');
       expect(jsonValues.lastname).toEqual('Solo');
@@ -128,7 +122,6 @@ describe('role testing', () => {
     return cloudFunctions.organizationVerified(query_params).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
 
       expect(jsonValues[0].firstname).toEqual('Luke');
       expect(jsonValues[0].lastname).toEqual('Skywalker');
@@ -146,9 +139,7 @@ describe('role testing', () => {
     };
 
     return cloudFunctions.organizationUnverified(query_params).then((result) => {
-      const jsonString = JSON.stringify(result);
-      const jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
+      const jsonValues = JSON.parse(JSON.stringify(result));
 
       expect(jsonValues[0].firstname).toEqual('Han');
       expect(jsonValues[0].lastname).toEqual('Solo');
@@ -169,7 +160,6 @@ describe('role testing', () => {
     return cloudFunctions.addToRole(add_params).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
 
       expect(jsonValues.firstname).toEqual('Han');
       expect(jsonValues.lastname).toEqual('Solo');
@@ -189,7 +179,6 @@ describe('role testing', () => {
     return cloudFunctions.organizationVerified(query_params).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
 
       for (const i in jsonValues) {
         if (jsonValues[i].firstname == 'Luke') {
@@ -221,7 +210,6 @@ describe('role testing', () => {
     return cloudFunctions.organizationUnverified(query_params).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
 
       expect(jsonValues[0]).not.toBeDefined();
     });

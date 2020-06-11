@@ -32,7 +32,6 @@ describe('role testing', () => {
     return cloudFunctions.signup(credentials).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
 
       expect(jsonValues.firstname).toEqual('Dany');
       expect(jsonValues.lastname).toEqual('Targaryen');
@@ -57,7 +56,6 @@ describe('role testing', () => {
     return cloudFunctions.signup(credentials).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
 
       expect(jsonValues.firstname).toEqual('Jon');
       expect(jsonValues.lastname).toEqual('Snow');
@@ -79,7 +77,6 @@ describe('role testing', () => {
     return cloudFunctions.signin(credentials).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
 
       expect(jsonValues.firstname).toEqual('Dany');
       expect(jsonValues.lastname).toEqual('Targaryen');
@@ -101,7 +98,6 @@ describe('role testing', () => {
     return cloudFunctions.signin(credentials).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
 
       expect(jsonValues.firstname).toEqual('Jon');
       expect(jsonValues.lastname).toEqual('Snow');
@@ -113,16 +109,4 @@ describe('role testing', () => {
       expect(jsonValues.objectId).toEqual(contribRoleID);
     });
   });
-
-  // it('should send a password reset link to the user', async () => {
-  //     const credentials = {
-  //         email: 'bendtheknee@gmail.com'
-  //     }
-
-  //     return cloudFunctions.forgotPassword(credentials).then((result) => {
-  //         let jsonString = JSON.stringify(result)
-  //         let jsonValues = JSON.parse(jsonString);
-  //         console.log(jsonValues);
-  //     });
-  // });
 });

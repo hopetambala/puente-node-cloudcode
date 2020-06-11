@@ -17,6 +17,8 @@ describe('crud testing', () => {
   let connection;
   let db;
   let postID1;
+  let postID2;
+  let postID3;
 
   beforeAll(async () => {
     connection = await MongoClient.connect(process.env.MONGO_URL, {
@@ -42,7 +44,6 @@ describe('crud testing', () => {
       },
     };
     return cloudFunctions.postObjectsToClass(postParams).then((result) => {
-      console.log(result);
       postID1 = result.id;
     });
   });
@@ -56,10 +57,7 @@ describe('crud testing', () => {
     return cloudFunctions.genericQuery(queryParams).then((results) => {
       const arrayOfObjectsGeneric = results.filter((result) => result.attributes);
 
-      console.log(arrayOfObjectsGeneric);
-
-      // let jsonString = JSON.stringify(result)
-      // console.log(JSON.parse(jsonString));
+      // console.log(arrayOfObjectsGeneric);
 
       const firstName = arrayOfObjectsGeneric[0].get('fname');
       // expect(firstName).toEqual('Greetings');
@@ -256,7 +254,6 @@ describe('crud testing', () => {
       const jsonValues = JSON.parse(jsonString);
 
       const { height } = jsonValues[0];
-      console.log(height);
       const { majorEvents } = jsonValues[0];
       const { name } = jsonValues[0];
       const { substance } = jsonValues[0];
