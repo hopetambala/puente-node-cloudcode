@@ -1,6 +1,3 @@
-/* global Parse */
-/* eslint no-undef: "error" */
-
 class Vitals {
   constructor() {
     this.ParseClass = 'Vitals';

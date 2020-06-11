@@ -1,6 +1,3 @@
-/* global Parse */
-/* eslint no-undef: "error" */
-
 Parse.Cloud.define('hello', (request, response) => new Promise((resolve) => {
   response.success(resolve('Hello world!'));
 }));
@@ -22,7 +19,7 @@ require('./src/definer/auth.definer');
 require('./src/definer/verification.definer');
 
 /** ********************************************
- * Roles Creator 
+ * Roles Creator
  ******************************************** */
 require('./src/definer/roles.definer');
 
@@ -74,11 +71,11 @@ Parse.Cloud.define('addToRole', (request, response) => new Promise((resolve, rej
 }));
 
 Parse.Cloud.define('roleTest', (request, response) => new Promise((resolve, reject) => {
-  var rolesQuery = new Parse.Query(Parse.Role);
+  const rolesQuery = new Parse.Query(Parse.Role);
   rolesQuery.equalTo('name', str(request.params.role));
   return rolesQuery.first({ useMasterKey: true })
-    .then(function (roleObject) {
-      var user = new Parse.User();
+    .then((roleObject) => {
+      const user = new Parse.User();
       user.id = request.params.userId;
       roleObject.getUsers().add(user);
       roleObject.save(null, { useMasterKey: true });
