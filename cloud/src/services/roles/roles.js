@@ -6,7 +6,7 @@ const Roles = {
 
       existingAdminRole
         .equalTo('name', 'admin')
-        .first()
+        .first();
 
       existingAdminRole.first()
         .then((results) => {
@@ -14,8 +14,7 @@ const Roles = {
           if (results) {
             console.log('Admin Exists');
             resolve(results);
-          }
-          else {
+          } else {
             console.log('Admin Does Not Exist');
             const acl = new Parse.ACL();
             acl.setPublicReadAccess(true);
@@ -36,10 +35,9 @@ const Roles = {
             });
           }
         },
-          (error) => {
-            reject(error);
-          }
-        );
+        (error) => {
+          reject(error);
+        });
     });
   },
   createManagerRole: function createManagerRole() {
@@ -107,7 +105,7 @@ const Roles = {
         reject(error);
       });
     });
-  }
+  },
 };
 
 module.exports = Roles;

@@ -45,7 +45,6 @@
     "jasmine-node": "3.0.0",
     "jest": "25.4.0",
     "nodemon": "2.0.3",
-    "pre-commit": "1.2.2",
     "randomstring": "1.1.5",
     "standard-version": "8.0.0",
     "supertest": "4.0.2"
