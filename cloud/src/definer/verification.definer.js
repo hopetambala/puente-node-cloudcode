@@ -25,21 +25,12 @@ Parse.Cloud.define('organizationVerified', (request) => new Promise((resolve, re
 }));
 
 Parse.Cloud.define('queryRoles', (request, response) => new Promise((resolve, reject) => {
-  // return new Promise((resolve, reject) => {
   const Role = Parse.Object.extend('_Role');
   const queryRole = new Parse.Query(Role);
 
   queryRole.find().then((result) => {
-//     console.log(result);
-//     resolve(result);
-//   }, (error) => {
-//     reject(error);
-//   });
-// }));
-    // console.log(result);
     response.success(resolve(result));
   }, (error) => {
     response.error(reject(error));
   });
-  // })
 }));

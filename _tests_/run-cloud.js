@@ -10,11 +10,6 @@ if (PARSE_ENV == 'staging') {
   Parse.initialize(PARSE_APP_ID);
   Parse.serverURL = PARSE_SERVER_URL;
 }
-// Parse.initialize('ZvGwjA7cemNfr9Qtn6LnwnrcgiM3Xl4N3msObrcg', 'dQW12E6wgKWrqdlNCYMCIzLzWomgjCZlLZrrXlki'); // PASTE HERE YOUR Back4App APPLICATION ID AND YOUR JavaScript KEY
-// Parse.serverURL = 'https://parseapi.back4app.com/';
-
-// Parse.initialize('myAppId');
-// Parse.serverURL = 'http://localhost:1337/parse';
 
 const cloudFunctions = {
   hello: (request) => Parse.Cloud

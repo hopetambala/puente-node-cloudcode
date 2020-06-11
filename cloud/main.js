@@ -82,36 +82,3 @@ Parse.Cloud.define('roleTest', (request, response) => new Promise((resolve, reje
       response.success(resolve(result));
     });
 }));
-// xgUArKSqmn
-// Parse.Cloud.define('createContributor', (request, response) => new Promise((resolve, reject) => {
-//   const Role = Parse.Object.extend('_Role');
-//   const existingContributorRole = new Parse.Query(Role)
-//     .equalTo('name', 'contributor');
-//   existingContributorRole.first().then((results) => {
-//     // If the admin role already exists we have nothing to do here
-//     if (results) {
-//       console.log('Contributor Exists');
-//       response.success(resolve(results));
-//       // If the admin role does not exist create it and set the ACLs
-//     } else {
-//       console.log('Moderator DNE');
-//       const acl = new Parse.ACL();
-//       acl.setPublicReadAccess(true);
-//       acl.setPublicWriteAccess(false);
-//       acl.setRoleWriteAccess('administrator', false);
-//       acl.setRoleWriteAccess('moderator', false);
-//       acl.setRoleReadAccess('administrator', false);
-//       acl.setRoleReadAccess('moderator', false);
-//       const adminRole = new Role();
-//       adminRole.set('name', 'contributor');
-//       adminRole.setACL(acl);
-//       adminRole.save({}, { useMasterKey: true }).then((results) => {
-//         response.success(resolve(results));
-//       }, (error) => {
-//         response.error(reject(error));
-//       });
-//     }
-//   }, (error) => {
-//     response.error(reject(error));
-//   });
-// }));

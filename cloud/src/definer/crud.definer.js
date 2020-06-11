@@ -7,7 +7,6 @@ GENERIC QUERY
 Parse.Cloud.define('genericQuery', (request, response) => {
   const model = classes.patient.ParseClass;
   const service = services.batch;
-  console.log(model);
   return service.genericQuery(model);
 });
 
@@ -108,10 +107,8 @@ Parse.Cloud.define('postObjectsToClass', (request, response) => new Promise((res
   surveyPoint.set('location', point);
 
   surveyPoint.save().then((results) => {
-    console.log(surveyPoint);
     response.success(resolve(results));
   }, (error) => {
-    console.log(error);
     response.error(reject(error));
   });
 }));

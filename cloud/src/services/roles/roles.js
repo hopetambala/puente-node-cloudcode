@@ -14,8 +14,7 @@ const Roles = {
           if (results) {
             console.log('Admin Exists');
             resolve(results);
-          }
-          else {
+          } else {
             console.log('Admin Does Not Exist');
             const acl = new Parse.ACL();
             acl.setPublicReadAccess(true);
@@ -28,18 +27,15 @@ const Roles = {
             adminRole.set('name', 'admin');
             adminRole.setACL(acl);
             adminRole.save({}, { useMasterKey: true }).then((results) => {
-              console.log(results);
               resolve(results);
             }, (error) => {
-              console.log(error);
               reject(error);
             });
           }
         },
-          (error) => {
-            reject(error);
-          }
-        );
+        (error) => {
+          reject(error);
+        });
     });
   },
   createManagerRole: function createManagerRole() {

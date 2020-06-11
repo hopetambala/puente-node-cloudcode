@@ -53,31 +53,17 @@ Parse.Cloud.define('signup', (request, response) => new Promise((resolve, reject
         const roleQuery = new Parse.Query(Parse.Role);
         roleQuery.equalTo('name', userRole);
 
-        // return roleQuery.first({ useMasterKey: true })
         roleQuery.first({ useMasterKey: true }).then((role) => {
           console.log('Found role');
           role.getUsers().add(aclUser);
           console.log('add user to role');
           role.save(null, { useMasterKey: true });
           console.log('saved user to role');
-          // user.set('role', userRole)
           response.success(resolve(aclUser));
         }, (error) => {
           response.error(reject(error));
         });
       });
-
-      // }).then(function (roleObject) {
-      //   var userAdded = new Parse.User();
-      //   userAdded.id = request.params.username;
-      //   roleObject.getUsers().add(userAdded);
-      //   roleObject.save(null, { useMasterKey: true }).then((result) => {
-      //     console.log('User added to role: ' + userRole)
-      //     response.success(resolve(result));
-      //   }, (error) => {
-      //     console.log('User was not added to role :' + userRole)
-      //     response.error(reject(error));
-      //   })
     });
   }, (error) => {
     console.log(`Error: ${error.code} ${error.message}`);
@@ -131,10 +117,8 @@ Input Paramaters:
 ******************************************* */
 Parse.Cloud.define('signout', (request, response) => new Promise((resolve, reject) => {
   Parse.User.logOut().then((result) => {
-    console.log('User successfully logged out');
     response.success(resolve(result));
   }, (error) => {
-    console.log(`Error: ${error.code} ${error.message}`);
     response.error(reject(error));
   });
 }));

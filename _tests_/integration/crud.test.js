@@ -3,40 +3,16 @@ const { cloudFunctions } = require('../run-cloud');
 // hello world
 
 test('Hello World exists', async () => {
-  // expect.assertions(1);
-  // const data = await cloudFunctions.hello()
   expect(cloudFunctions.hello()).toBeDefined();
 });
 
-// test to ensure it is defined
 test('Post Exists', async () => {
   expect(cloudFunctions.postObjectsToClass()).toBeDefined();
 });
 
-// test to ensure it is defined
 test('generic Query Exists', async () => {
   expect(cloudFunctions.genericQuery()).toBeDefined();
 });
-
-// test('Post object - async', async () => {
-//   // expect.assertions(1);
-//   const postParams = {
-//     parseClass: 'SurveyData',
-//     signature: 'Joe',
-//     photoFile: 'pictureofJoe',
-//     localObject: {
-//       fname: 'Greetings',
-//       lname: 'Bouble',
-//     },
-//   };
-//   return cloudFunctions.postObjectsToClass(postParams).then((result) => {
-//     console.log(result);
-//     // const queryParams = {
-//     //   parseObject: 'SurveyData'
-//     // };
-//     // expect(cloudFunctions.genericQuery(queryParams)).toHaveProperty('signature', 'ehh')
-//   });
-// }, 30000);
 
 describe('crud testing', () => {
   let connection;
@@ -71,7 +47,6 @@ describe('crud testing', () => {
     return cloudFunctions.postObjectsToClass(postParams).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
 
       expect(jsonValues.fname).toEqual('Greetings__');
       expect(jsonValues.lname).toEqual('Tester');
@@ -107,7 +82,6 @@ describe('crud testing', () => {
     return cloudFunctions.postObjectsToClassWithRelation(postParams).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
 
       const { client } = jsonValues;
       const type = client.__type;
@@ -162,7 +136,6 @@ describe('crud testing', () => {
     return cloudFunctions.postObjectsToAnyClassWithRelation(post_params).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
 
       let i;
       for (i in jsonValues) {
@@ -228,7 +201,6 @@ describe('crud testing', () => {
     return cloudFunctions.updateObject(update_params).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
 
       // updated properties
       const { height } = jsonValues;
@@ -271,7 +243,6 @@ describe('crud testing', () => {
     return cloudFunctions.genericQuery(queryParams).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
 
       const surveyData = jsonValues.filter((surveyData) => surveyData.fname == 'Greetings__');
 
@@ -314,7 +285,6 @@ describe('crud testing', () => {
     return cloudFunctions.geoQuery(query_params).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
 
       const surveyData = jsonValues.filter((surveyData) => surveyData.fname == 'Greetings__');
 
@@ -358,7 +328,6 @@ describe('crud testing', () => {
     return cloudFunctions.basicQuery(query_params).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
 
       const surveyData = jsonValues.filter((surveyData) => surveyData.fname == 'Greetings__');
 
@@ -399,7 +368,6 @@ describe('crud testing', () => {
     return cloudFunctions.removeObjectsinClass(removeParams).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
 
       expect(jsonValues.objectId).toEqual(postID1);
       expect(result).toBeDefined();
