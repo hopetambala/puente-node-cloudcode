@@ -380,18 +380,6 @@ describe('crud testing', () => {
     });
   });
 
-  it('should remove the posted object with relation', async () => {
-    const removeParams = {
-      parseClass: 'HistoryMedical',
-      objectIDinparseClass: postID2
-    }
-
-    return cloudFunctions.removeObjectsinClass(removeParams).then((result) => {
-      console.log(result)
-      expect(result).toBeDefined();
-    });
-  });
-
 
 
   it('should remove the original posted object', async () => {
@@ -401,28 +389,13 @@ describe('crud testing', () => {
     }
 
     return cloudFunctions.removeObjectsinClass(removeParams).then((result) => {
-      console.log(result)
+      let jsonString = JSON.stringify(result)
+      let jsonValues = JSON.parse(jsonString);
+      console.log(jsonValues);
+
+      expect(jsonValues['objectId']).toEqual(postID1);
       expect(result).toBeDefined();
     });
   });
 
-  it('should add a user with admin role', async () => {
-    const credentials = {
-      firstname: 'Luke',
-      lastname: 'Skywalker',
-      username: 'blueSaber',
-      password: 'leia',
-      email: 'lskywalker@gmail.com',
-      organization: 'star-wars'
-    }
-    return cloudFunctions.signin(credentials).then((result) => {
-      let jsonString = JSON.stringify(result)
-      let jsonValues = JSON.parse(jsonString);
-      console.log(jsonValues);
-    })
-
-
-
-  });
-
-
+});

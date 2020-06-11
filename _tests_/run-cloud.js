@@ -51,16 +51,16 @@ const cloudFunctions = {
     .run('signin', params)
     .then((response) => response)
     .catch((error) => error),
-  signout: (params) => Parse.Cloud
-    .run('signout', params)
+  signout: () => Parse.Cloud
+    .run('signout')
     .then((response) => response)
     .catch((error) => error),
   forgotPassword: (params) => Parse.Cloud
     .run('forgotPassword', params)
     .then((response) => response)
     .catch((error) => error),
-  currentUser: (params) => Parse.Cloud
-    .run('currentUser', params)
+  currentUser: () => Parse.Cloud
+    .run('currentUser')
     .then((response) => response)
     .catch((error) => error),
   createAdminRole: () => Parse.Cloud
@@ -79,6 +79,19 @@ const cloudFunctions = {
     .run('queryRoles')
     .then(response => { return response })
     .catch((error) => error),
+  addToRole: (params) => Parse.Cloud
+    .run('addToRole', params)
+    .then((response) => response)
+    .catch((error) => error),
+  organizationUnverified: (params) => Parse.Cloud
+    .run('organizationUnverified', params)
+    .then((response) => response)
+    .catch((error) => error),
+  organizationVerified: (params) => Parse.Cloud
+    .run('organizationVerified', params)
+    .then((response) => response)
+    .catch((error) => error),
+
 };
 
 module.exports = { cloudFunctions };
