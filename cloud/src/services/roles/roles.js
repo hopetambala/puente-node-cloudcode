@@ -12,10 +12,8 @@ const Roles = {
         .then((results) => {
           // If the admin role already exists we have nothing to do here
           if (results) {
-            console.log('Admin Exists');
             resolve(results);
           } else {
-            console.log('Admin Does Not Exist');
             const acl = new Parse.ACL();
             acl.setPublicReadAccess(true);
             acl.setPublicWriteAccess(true);
@@ -27,10 +25,8 @@ const Roles = {
             adminRole.set('name', 'admin');
             adminRole.setACL(acl);
             adminRole.save({}, { useMasterKey: true }).then((results) => {
-              console.log(results);
               resolve(results);
             }, (error) => {
-              console.log(error);
               reject(error);
             });
           }

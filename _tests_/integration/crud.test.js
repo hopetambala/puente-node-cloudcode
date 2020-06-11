@@ -31,6 +31,44 @@ describe('crud testing', () => {
     await db.close();
   });
 
+  it('should post object object to SurveyData', async () => {
+    const postParams = {
+      parseClass: 'SurveyData',
+      signature: 'Test',
+      photoFile: 'TestPicture',
+      localObject: {
+        fname: 'Greetings',
+        lname: 'Tester',
+      },
+    };
+    return cloudFunctions.postObjectsToClass(postParams).then((result) => {
+      console.log(result);
+      postID1 = result.id;
+    });
+  });
+
+  it('should return the posted results back', async () => {
+    const queryParams = {
+      parseObject: 'SurveyData',
+    };
+
+
+    return cloudFunctions.genericQuery(queryParams).then((results) => {
+      const arrayOfObjectsGeneric = results.filter((result) => result.attributes);
+
+      console.log(arrayOfObjectsGeneric);
+
+      // let jsonString = JSON.stringify(result)
+      // console.log(JSON.parse(jsonString));
+
+      const firstName = arrayOfObjectsGeneric[0].get('fname');
+      // expect(firstName).toEqual('Greetings');
+      expect(Array.isArray(arrayOfObjectsGeneric)).toBe(true);
+      expect(typeof firstName).toBe('string');
+      expect(results).toBeDefined();
+    });
+  });
+
   it('should post an object with relation to original post with history medical class', async () => {
     const postParams = {
       parseClass: 'HistoryMedical',
@@ -326,7 +364,6 @@ describe('crud testing', () => {
       expect(result).toBeDefined();
     });
   });
-
 
   it('should remove the original posted object', async () => {
     const removeParams = {

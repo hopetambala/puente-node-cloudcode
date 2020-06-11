@@ -1,6 +1,3 @@
-/* global Parse */
-/* eslint no-undef: "error" */
-
 const classes = require('../classes');
 const services = require('../services');
 
@@ -374,9 +371,13 @@ Parse.Cloud.define('updateObject', (request, response) => new Promise((resolve, 
       const obj = localObject[key];
       result.set(String(key), obj);
     }
+    // Add GeoPoint location
+    const point = new Parse.GeoPoint(localObject.latitude, localObject.longitude);
+    result.set('location', point);
+
     return result;
   }).then((result) =>
-  // save the object
+    // save the object
     result.save()).then((result) => {
     // object updated and saved
     response.success(resolve(result));

@@ -1,6 +1,3 @@
-/* global Parse */
-/* eslint no-undef: "error" */
-
 const Aggregate = {
 
 };

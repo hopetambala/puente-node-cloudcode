@@ -1,6 +1,3 @@
-/* global Parse */
-/* eslint no-undef: "error" */
-
 Parse.Cloud.define('hello', (request, response) => new Promise((resolve) => {
   response.success(resolve('Hello world!'));
 }));

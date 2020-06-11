@@ -1,6 +1,3 @@
-/* global Parse */
-/* eslint no-undef: "error" */
-
 /** ******************************************
 SIGN UP
 Receives user attributes and registers user
