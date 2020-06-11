@@ -8,13 +8,14 @@ const Roles = {
         .equalTo('name', 'admin')
         .first();
 
-      existingAdminRole.count()
+      existingAdminRole.first()
         .then((results) => {
           // If the admin role already exists we have nothing to do here
-          if (results > 0) {
+          if (results) {
             console.log('Admin Exists');
-            resolve('Admin Role Already Exists.');
-          } else {
+            resolve(results);
+          }
+          else {
             console.log('Admin Does Not Exist');
             const acl = new Parse.ACL();
             acl.setPublicReadAccess(true);
@@ -35,9 +36,10 @@ const Roles = {
             });
           }
         },
-        (error) => {
-          reject(error);
-        });
+          (error) => {
+            reject(error);
+          }
+        );
     });
   },
   createManagerRole: function createManagerRole() {
@@ -46,11 +48,11 @@ const Roles = {
       const existingManagerRole = new Parse.Query(Role)
         .equalTo('name', 'manager');
       existingManagerRole.first().then((results) => {
-      // If the admin role already exists we have nothing to do here
+        // If the admin role already exists we have nothing to do here
         if (results) {
           console.log('Manager Role Exists');
           resolve(results);
-        // If the admin role does not exist create it and set the ACLs
+          // If the admin role does not exist create it and set the ACLs
         } else {
           console.log('Moderator Role Does Not Exist.');
           const acl = new Parse.ACL();
