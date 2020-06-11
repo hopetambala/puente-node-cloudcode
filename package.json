@@ -29,12 +29,14 @@
     "@babel/core": "7.9.0",
     "@babel/node": "7.8.7",
     "@babel/preset-env": "7.9.5",
+    "@shelf/jest-mongodb": "1.1.5",
     "babel-jest": "25.2.6",
     "case": "1.6.3",
     "chai": "4.2.0",
     "chalk": "2.4.2",
-    "codecov": "3.6.5",
+    "codecov": "^3.6.5",
     "cross-env": "5.2.1",
+    "env-cmd": "10.1.0",
     "eslint": "6.8.0",
     "eslint-config-airbnb-base": "14.1.0",
     "eslint-plugin-import": "2.20.2",
@@ -43,7 +45,6 @@
     "jasmine-node": "3.0.0",
     "jest": "25.4.0",
     "nodemon": "2.0.3",
-    "@shelf/jest-mongodb": "1.1.5",
     "pre-commit": "1.2.2",
     "randomstring": "1.1.5",
     "standard-version": "8.0.0",
@@ -51,7 +52,8 @@
   },
   "scripts": {
     "dashboard": "parse-dashboard --dev --appId myAppId --masterKey myMasterKey --serverURL http://localhost:1337/parse --appName PuenteCloudCode",
-    "test": "jest",
+    "test-local": "env-cmd -f .env.dev jest",
+    "test": "env-cmd -f .env.staging jest && codecov",
     "start": "node -r esm index.js",
     "start-with-dash": "concurrently \"npm run start\" \"npm run dashboard\"",
     "start-with-db": "concurrently \"sudo mongod\" \"npm run start\"",
@@ -70,7 +72,9 @@
     "coveragePathIgnorePatterns": [
       "/node_modules/"
     ],
-    "preset": "@shelf/jest-mongodb"
+    "preset": "@shelf/jest-mongodb",
+    "coverageDirectory": "./coverage/",
+    "collectCoverage": true
   },
   "repository": {
     "type": "git",
