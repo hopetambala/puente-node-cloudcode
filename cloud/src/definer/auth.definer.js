@@ -170,9 +170,9 @@ Parse.Cloud.define('deleteUser', (request) => new Promise((resolve, reject) => {
   user.set('id', userId);
   const query = new Parse.Query(Parse.User);
   query.get(userId).then((user) => user.destroy({ useMasterKey: true }), { useMasterKey: true })
-  .then(() => {
-    resolve(user);
-  }, (error) => {
-    reject(error);
-  });
+    .then(() => {
+      resolve(user);
+    }, (error) => {
+      reject(error);
+    });
 }));
