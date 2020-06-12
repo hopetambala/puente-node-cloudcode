@@ -15,7 +15,7 @@ Parse.Cloud.define('createContributorRole', () => {
   return service.createContributorRole();
 });
 
-Parse.Cloud.define('addToRole', (request, response) => new Promise((resolve, reject) => {
+Parse.Cloud.define('addToRole', (request) => new Promise((resolve, reject) => {
   const userQuery = new Parse.Query(Parse.User);
 
   userQuery.get(request.params.userID).then((user) => {

@@ -164,7 +164,7 @@ Parse.Cloud.define('currentUser', () => {
   return null;
 });
 
-Parse.Cloud.define('deleteUser', (request, response) => new Promise((resolve, reject) => {
+Parse.Cloud.define('deleteUser', (request) => new Promise((resolve, reject) => {
   const { userId } = request.params;
   const user = new Parse.User();
   user.set('id', userId);
