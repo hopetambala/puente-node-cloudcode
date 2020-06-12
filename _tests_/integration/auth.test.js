@@ -116,7 +116,7 @@ describe('role testing', () => {
     ];
 
     return removeParams.map((user) => {
-      cloudFunctions.deleteUser(user);
+      return cloudFunctions.deleteUser(user);
     });
   });
 
