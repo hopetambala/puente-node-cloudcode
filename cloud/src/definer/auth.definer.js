@@ -164,17 +164,15 @@ Parse.Cloud.define('currentUser', () => {
   return null;
 });
 
-Parse.Cloud.define('deleteUser', (request, response) => new Promise((resolve, reject) => { 
-  console.log("reached")
-  var userId = request.params.userId;
-  var query = new Parse.Query(Parse.User);
-  query.get(userId).then(function(user) {
-      return user.destroy({useMasterKey: true});
-  },{ useMasterKey: true } ).then(() => {
-      resolve(user);
+Parse.Cloud.define('deleteUser', (request, response) => new Promise((resolve, reject) => {
+  console.log('reached');
+  const { userId } = request.params;
+  const query = new Parse.Query(Parse.User);
+  query.get(userId).then((user) => user.destroy({ useMasterKey: true }), { useMasterKey: true }).then(() => {
+    resolve(user);
   }, (error) => {
-      reject(error);
-  });                                                                                                         
+    reject(error);
+  });
 }));
 
 

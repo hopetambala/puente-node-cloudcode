@@ -219,14 +219,14 @@ describe('role testing', () => {
   it('should delete all users', async () => {
     const removeParams = [
       {
-        userId: adminRoleID
+        userId: adminRoleID,
       },
       {
-        userId: contribRoleID
+        userId: contribRoleID,
       },
     ];
-    
-    removeParams.map((user)=>{
+
+    removeParams.map((user) => {
       cloudFunctions.deleteUser(user);
     });
   });

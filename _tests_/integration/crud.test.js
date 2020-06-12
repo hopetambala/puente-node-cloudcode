@@ -238,7 +238,7 @@ describe('crud testing', () => {
   //   const queryParams = {
   //     parseObject: 'SurveyData',
   //   };
-    
+
   //   return cloudFunctions.genericQuery(queryParams).then(async(result) => {
   //     const jsonString = JSON.stringify(result);
   //     const jsonValues = JSON.parse(jsonString);

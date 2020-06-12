@@ -51,7 +51,7 @@
   "scripts": {
     "dashboard": "parse-dashboard --dev --appId myAppId --masterKey myMasterKey --serverURL http://localhost:1337/parse --appName PuenteCloudCode",
     "test-local": "env-cmd -f .env.dev jest",
-    "test": "env-cmd -f .env.staging jest --runInBand && codecov",
+    "test": "env-cmd -f .env.staging jest && codecov",
     "start": "node -r esm index.js",
     "start-with-dash": "concurrently \"npm run start\" \"npm run dashboard\"",
     "start-with-db": "concurrently \"sudo mongod\" \"npm run start\"",
