@@ -29,8 +29,8 @@ Parse.Cloud.define('queryRoles', (request, response) => new Promise((resolve, re
   const queryRole = new Parse.Query(Role);
 
   queryRole.find().then((result) => {
-    response.success(resolve(result));
+    resolve(result);
   }, (error) => {
-    response.error(reject(error));
+    reject(error);
   });
 }));

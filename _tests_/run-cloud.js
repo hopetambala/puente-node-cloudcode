@@ -68,6 +68,10 @@ const cloudFunctions = {
     .run('currentUser')
     .then((response) => response)
     .catch((error) => error),
+  deleteUser: (params) => Parse.Cloud
+    .run('deleteUser', params)
+    .then((response) => response)
+    .catch((error) => error),
   createAdminRole: () => Parse.Cloud
     .run('createAdminRole')
     .then((response) => response)

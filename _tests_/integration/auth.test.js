@@ -12,12 +12,7 @@ describe('role testing', () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    db = await connection.db();
-  });
-
-  afterAll(async () => {
-    await connection.close();
-    await db.close();
+    db = connection.db();
   });
 
   it('should add a user with admin role', async () => {
@@ -108,5 +103,25 @@ describe('role testing', () => {
       expect(jsonValues.adminVerified).toEqual(false);
       expect(jsonValues.objectId).toEqual(contribRoleID);
     });
+  });
+
+  it('should delete all users', async () => {
+    const removeParams = [
+      {
+        userId: adminRoleID
+      },
+      {
+        userId: contribRoleID
+      },
+    ];
+    
+    removeParams.map((user)=>{
+      cloudFunctions.deleteUser(user);
+    });
+  });
+
+  afterAll(async () => {
+    await connection.close();
+    await db.close(); 
   });
 });

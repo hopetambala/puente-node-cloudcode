@@ -59,15 +59,15 @@ Parse.Cloud.define('signup', (request, response) => new Promise((resolve, reject
           console.log('add user to role');
           role.save(null, { useMasterKey: true });
           console.log('saved user to role');
-          response.success(resolve(aclUser));
+          resolve(aclUser);
         }, (error) => {
-          response.error(reject(error));
+          reject(error);
         });
       });
     });
   }, (error) => {
     console.log(`Error: ${error.code} ${error.message}`);
-    response.error(reject(error));
+    reject(error);
   });
 }));
 
@@ -84,7 +84,7 @@ Input Paramaters:
 Parse.Cloud.define('signin', (request, response) => new Promise((resolve, reject) => {
   Parse.User.logIn(String(request.params.username), String(request.params.password)).then((result) => {
     console.log(`User logged in successful with username: ${result.get('username')}`);
-    response.success(resolve(result));
+    resolve(result);
   }, (error) => {
     // If the user inputs their email instead of the username
     // attempt to get the username
@@ -96,7 +96,7 @@ Parse.Cloud.define('signin', (request, response) => new Promise((resolve, reject
       const { username } = success.toJSON();
       Parse.User.logIn(username, String(request.params.password)).then((result) => {
         console.log(`User logged in successful with email: ${result.get('email')}`);
-        response.success(resolve(result));
+        resolve(result);
       }, (error) => {
         console.log(`Error: ${error.code} ${error.message}`);
         response.error(reject(error));
@@ -117,9 +117,9 @@ Input Paramaters:
 ******************************************* */
 Parse.Cloud.define('signout', (request, response) => new Promise((resolve, reject) => {
   Parse.User.logOut().then((result) => {
-    response.success(resolve(result));
+    resolve(result);
   }, (error) => {
-    response.error(reject(error));
+    reject(error);
   });
 }));
 
@@ -134,10 +134,10 @@ Input Paramaters:
 Parse.Cloud.define('forgotPassword', (request, response) => new Promise((resolve, reject) => {
   Parse.User.requestPasswordReset(String(request.params.email)).then(() => {
     console.log('Password reset request was sent successfully');
-    response.success(resolve('Success'));
+    resolve('Success');
   }, (error) => {
     console.log(`Error: ${error.code} ${error.message}`);
-    response.error(reject(error));
+    reject(error);
   });
 }));
 
@@ -163,3 +163,43 @@ Parse.Cloud.define('currentUser', () => {
   }
   return null;
 });
+
+Parse.Cloud.define('deleteUser', (request, response) => new Promise((resolve, reject) => { 
+  console.log("reached")
+  var userId = request.params.userId;
+  var query = new Parse.Query(Parse.User);
+  query.get(userId).then(function(user) {
+      return user.destroy({useMasterKey: true});
+  },{ useMasterKey: true } ).then(() => {
+      resolve(user);
+  }, (error) => {
+      reject(error);
+  });                                                                                                         
+}));
+
+
+// var User = Parse.Object.extend("User");
+// var query = new Parse.Query(User);
+// var userID = request.params.userID;
+// query.get(userID,{
+//           success: function(User) {
+//           var message = 'success';
+
+//           User.destroy({
+//                        useMasterKey: true ,
+//                          success:function() {
+//                          resolve(message);
+//                          return;
+//                          },
+//                          error:function(error) {
+//                          reject(error('Could not delete object '+ User.id));
+//                          return;
+//                          }
+//                          });
+//           },
+//           error: function(object, error) {
+//           var message = 'User could not found';
+//           reject(message);
+//           }
+//           });
+// }));
