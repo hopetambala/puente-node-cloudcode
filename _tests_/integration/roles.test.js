@@ -1,12 +1,6 @@
 const { MongoClient } = require('mongodb');
 const { cloudFunctions } = require('../run-cloud');
 
-test('Hello World exists', async () => {
-  // expect.assertions(1);
-  // const data = await cloudFunctions.hello()
-  expect(cloudFunctions.hello()).toBeDefined();
-});
-
 describe('role testing', () => {
   let connection;
   let db;
@@ -68,6 +62,7 @@ describe('role testing', () => {
     }
     expect(count).toEqual(3);
   }));
+
   it('should add a user with admin role', async () => {
     const credentials = {
       firstname: 'Luke__',
@@ -219,5 +214,18 @@ describe('role testing', () => {
 
       expect(jsonValues[0]).not.toBeDefined();
     });
+  });
+
+  it('should delete all users', async () => {
+    const removeParams = [
+      {
+        userId: adminRoleID,
+      },
+      {
+        userId: contribRoleID,
+      },
+    ];
+
+    return removeParams.map((user) => cloudFunctions.deleteUser(user));
   });
 });
