@@ -175,30 +175,3 @@ Parse.Cloud.define('deleteUser', (request, response) => new Promise((resolve, re
     reject(error);
   });
 }));
-
-
-// var User = Parse.Object.extend("User");
-// var query = new Parse.Query(User);
-// var userID = request.params.userID;
-// query.get(userID,{
-//           success: function(User) {
-//           var message = 'success';
-
-//           User.destroy({
-//                        useMasterKey: true ,
-//                          success:function() {
-//                          resolve(message);
-//                          return;
-//                          },
-//                          error:function(error) {
-//                          reject(error('Could not delete object '+ User.id));
-//                          return;
-//                          }
-//                          });
-//           },
-//           error: function(object, error) {
-//           var message = 'User could not found';
-//           reject(message);
-//           }
-//           });
-// }));
