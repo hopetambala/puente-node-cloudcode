@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/hopetambala/puente-node-cloudcode/branch/master/graph/badge.svg)](https://codecov.io/gh/hopetambala/puente-node-cloudcode)
 ![](https://img.shields.io/badge/parse_server-✓-blueviolet.svg)
 
-Cloud Code is easy to use because it’s built on the JavaScript SDK for parse-server. The only difference is that this code runs in our Parse Server rather than running on the user’s mobile device. When we update our Cloud Code, it becomes available to all mobile environments instantly. 
+Puente Node Cloud Code is a repo that demonstrates how Puente uses parse (now parse-server) to create a real-time querying system for consumption on multiple front-ends. Puente moved most of its code to run in Parse Server Cloud Code rather than running on the user’s mobile device so that we can avoid making updates to Google Play or Itunes Connect. When we update and deploy our Cloud Code, it becomes available to all mobile environments instantly and allows us to be agile with fixes.
 
 For a resource guide:
 https://docs.parseplatform.org/cloudcode/guide/
