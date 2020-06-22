@@ -202,35 +202,6 @@ Parse.Cloud.define('postObjectsToAnyClassWithRelation', (request, response) => n
   let evaluationMedical;
   let environmentalHealth;
 
-  // arrays filled with data points for each class
-  const vitalsArr = ['height', 'weight', 'bmi', 'temp', 'pulse', 'respRate', 'bloodPressure',
-    'bloodOxygen', 'bloodSugar', 'painLevels', 'hemoglobinLevels'];
-
-  const historyMedicalArr = ['majorEvents', 'surgeryWhatKind', 'medicalIllnesses', 'whenDiagnosed',
-    'whatDoctorDoyousee', 'treatment', 'refill', 'familyhistory', 'preventativeCare', 'allergies'];
-
-  const prescriptionsArr = ['name', 'dose', 'administerRoute', 'frequency', 'quantity', 'provider', 'refill',
-    'startdatePerscription', 'enddatePerscription', 'dateDispense', 'type', 'instructions'];
-
-  const allergiesArr = ['substance', 'reaction', 'category', 'severity', 'informationsource',
-    'onset', 'comments'];
-
-  // does not include user and organization from evaluationSurgical
-  const evaluationSurgicalArr = ['AssessmentandEvaluationSurgical', 'planOfActionSurgical', 'notesSurgical'];
-
-  // does not include user and organization either
-  const evaluationMedicalArr = ['chronic_condition_hypertension', 'chronic_condition_diabetes',
-    'chronic_condition_other', 'seen_doctor', 'received_treatment_notes', 'received_treatment_description',
-    'part_of_body', 'part_of_body_description', 'duration', 'trauma_induced', 'condition_progression', 'pain',
-    'notes', 'AssessmentandEvaluation', 'AssessmentandEvaluation_Surgical', 'AssessmentandEvaluation_Surgical_Guess',
-    'planOfAction', 'immediate_follow_up', 'needsAssessmentandEvaluation'];
-
-  const environmentalHealthArr = ['yearsLivedinthecommunity', 'yearsLivedinThisHouse', 'waterAccess', 'typeofWaterdoyoudrink',
-    'bathroomAccess', 'latrineAccess', 'clinicAccess', 'conditionoFloorinyourhouse', 'conditionoRoofinyourhouse',
-    'stoveType', 'medicalproblemswheredoyougo', 'dentalproblemswheredoyougo', 'biggestproblemofcommunity',
-    'timesperweektrashcollected', 'wheretrashleftbetweenpickups', 'numberofIndividualsLivingintheHouse',
-    'numberofChildrenLivinginHouseUndertheAgeof5', 'houseownership'];
-
   let vitalsObj = false;
   let historyMedicalObj = false;
   let prescriptionsObj = false;
@@ -243,50 +214,51 @@ Parse.Cloud.define('postObjectsToAnyClassWithRelation', (request, response) => n
   // create the Parse object if it is the first variable added to the
   // object
   const { localObject } = request.params;
-  for (const key in localObject) {
-    const obj = localObject[key];
-    if (vitalsArr.includes(String(key)) && vitalsObj === false) {
-      vitals = new Vitals();
-      vitals.set(String(key), obj);
-      vitalsObj = true;
-    } else if (vitalsArr.includes(String(key))) {
-      vitals.set(String(key), obj);
-    } else if (historyMedicalArr.includes(String(key)) && historyMedicalObj === false) {
-      historyMedical = new HistoryMedical();
-      historyMedical.set(String(key), obj);
-      historyMedicalObj = true;
-    } else if (historyMedicalArr.includes(String(key))) {
-      historyMedical.set(String(key), obj);
-    } else if (prescriptionsArr.includes(String(key)) && prescriptionsObj === false) {
-      prescriptions = new Prescriptions();
-      prescriptions.set(String(key), obj);
-      prescriptionsObj = true;
-    } else if (prescriptionsArr.includes(String(key))) {
-      prescriptions.set(String(key), obj);
-    } else if (allergiesArr.includes(String(key)) && allergiesObj === false) {
-      allergies = new Allergies();
-      allergies.set(String(key), obj);
-      allergiesObj = true;
-    } else if (allergiesArr.includes(String(key))) {
-      allergies.set(String(key), obj);
-    } else if (evaluationSurgicalArr.includes(String(key)) && evaluationSurgicalObj === false) {
-      evaluationSurgical = new EvaluationSurgical();
-      evaluationSurgical.set(String(key), obj);
-      evaluationSurgicalObj = true;
-    } else if (evaluationSurgicalArr.includes(String(key))) {
-      evaluationSurgical.set(String(key), obj);
-    } else if (evaluationMedicalArr.includes(String(key)) && evaluationMedicalObj === false) {
-      evaluationMedical = new EvaluationMedical();
-      evaluationMedical.set(String(key), obj);
-      evaluationMedicalObj = true;
-    } else if (evaluationMedicalArr.includes(String(key))) {
-      evaluationMedical.set(String(key), obj);
-    } else if (environmentalHealthArr.includes(String(key)) && environmentalHealthObj === false) {
-      environmentalHealth = new EnvironmentalHealth();
-      environmentalHealth.set(String(key), obj);
-      environmentalHealthObj = true;
-    } else if (environmentalHealthArr.includes(String(key))) {
-      environmentalHealth.set(String(key), obj);
+  for (const i in localObject) {
+    object = localObject[i];
+
+    if (object.tag == 'Vitals') {
+      if (vitalsObj === false) {
+        vitals = new Vitals();
+        vitalsObj = true;
+      }
+      vitals.set(String(object.key), object.value);
+    } else if (object.tag == 'HistoryMedical') {
+      if (historyMedicalObj === false) {
+        historyMedical = new HistoryMedical();
+        historyMedicalObj = true;
+      }
+      historyMedical.set(String(object.key), object.value);
+    } else if (object.tag == 'Prescriptions') {
+      if (prescriptionsObj === false) {
+        prescriptions = new Prescriptions();
+        prescriptionsObj = true;
+      }
+      prescriptions.set(String(object.key), object.value);
+    } else if (object.tag == 'Allergies') {
+      if (allergiesObj === false) {
+        allergies = new Allergies();
+        allergiesObj = true;
+      }
+      allergies.set(String(object.key), object.value);
+    } else if (object.tag == 'EvaluationSurgical') {
+      if (evaluationSurgicalObj === false) {
+        evaluationSurgical = new EvaluationSurgical();
+        evaluationSurgicalObj = true;
+      }
+      evaluationSurgical.set(String(object.key), object.value);
+    } else if (object.tag == 'EvaluationMedical') {
+      if (evaluationMedicalObj === false) {
+        evaluationMedical = new EvaluationMedical();
+        evaluationMedicalObj = true;
+      }
+      evaluationMedical.set(String(object.key), object.value);
+    } else if (object.tag == 'HistoryEnvironmentalHealth') {
+      if (environmentalHealthObj === false) {
+        environmentalHealth = new EnvironmentalHealth();
+        environmentalHealthObj = true;
+      }
+      environmentalHealth.set(String(object.key), object.value);
     }
   }
 
@@ -376,10 +348,10 @@ Parse.Cloud.define('updateObject', (request, response) => new Promise((resolve, 
   }).then((result) =>
     // save the object
     result.save()).then((result) => {
-    // object updated and saved
-    resolve(result);
-  }, (error) => {
-    // error
-    reject(error);
-  });
+      // object updated and saved
+      resolve(result);
+    }, (error) => {
+      // error
+      reject(error);
+    });
 }));

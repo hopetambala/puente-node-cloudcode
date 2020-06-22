@@ -122,15 +122,43 @@ describe('crud testing', () => {
     const post_params = {
       parseParentClass: 'SurveyData',
       parseParentClassID: postID1,
-      localObject: {
-        height: '4',
-        majorEvents: null,
-        name: 'Greetings__',
-        substance: 'Tester',
-        AssessmentandEvaluationSurgical: 'Have',
-        chronic_condition_hypertension: 'swell',
-        yearsLivedinthecommunity: 'day!',
-      },
+      localObject: [
+        {
+          tag: 'Vitals',
+          key: 'height',
+          value: '4'
+        },
+        {
+          tag: 'HistoryMedical',
+          key: 'majorEvents',
+          value: null
+        },
+        {
+          tag: 'Prescriptions',
+          key: 'name',
+          value: 'Greetings__'
+        },
+        {
+          tag: 'Allergies',
+          key: 'substance',
+          value: 'Tester'
+        },
+        {
+          tag: 'EvaluationSurgical',
+          key: 'AssessmentandEvaluationSurgical',
+          value: 'Have'
+        },
+        {
+          tag: 'EvaluationMedical',
+          key: 'chronic_condition_hypertension',
+          value: 'swell'
+        },
+        {
+          tag: 'HistoryEnvironmentalHealth',
+          key: 'yearsLivedinthecommunity',
+          value: 'day!'
+        }
+      ],
     };
 
     return cloudFunctions.postObjectsToAnyClassWithRelation(post_params).then((result) => {
