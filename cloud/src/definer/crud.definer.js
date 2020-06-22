@@ -1,6 +1,3 @@
-/* global Parse */
-/* eslint no-undef: "error" */
-
 const classes = require('../classes');
 const services = require('../services');
 
@@ -10,7 +7,6 @@ GENERIC QUERY
 Parse.Cloud.define('genericQuery', (request, response) => {
   const model = classes.patient.ParseClass;
   const service = services.batch;
-  console.log(model);
   return service.genericQuery(model);
 });
 
@@ -111,11 +107,9 @@ Parse.Cloud.define('postObjectsToClass', (request, response) => new Promise((res
   surveyPoint.set('location', point);
 
   surveyPoint.save().then((results) => {
-    console.log(surveyPoint);
-    response.success(resolve(results));
+    resolve(results);
   }, (error) => {
-    console.log(error);
-    response.error(reject(error));
+    reject(error);
   });
 }));
 
@@ -147,9 +141,9 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request, response) => new 
   child.set('client', parent);
 
   child.save().then((results) => {
-    response.success(resolve(results));
+    resolve(results);
   }, (error) => {
-    response.error(reject(error));
+    reject(error);
   });
 }));
 
@@ -167,10 +161,10 @@ Parse.Cloud.define('removeObjectsinClass', (request, response) => new Promise((r
     // log object and destroy
     console.log(results);
     results.destroy({});
-    response.success(resolve(results));
+    resolve(results);
   }, (error) => {
     // object not found
-    response.error(reject(error));
+    reject(error);
   });
 }));
 
@@ -346,9 +340,9 @@ Parse.Cloud.define('postObjectsToAnyClassWithRelation', (request, response) => n
   // save all parse objects that had any objects added
   Promise.all(arr)
     .then((results) => {
-      response.success(resolve(results));
+      resolve(results);
     }, (error) => {
-      response.error(reject(error));
+      reject(error);
     });
 }));
 
@@ -374,14 +368,18 @@ Parse.Cloud.define('updateObject', (request, response) => new Promise((resolve, 
       const obj = localObject[key];
       result.set(String(key), obj);
     }
+    // Add GeoPoint location
+    const point = new Parse.GeoPoint(localObject.latitude, localObject.longitude);
+    result.set('location', point);
+
     return result;
   }).then((result) =>
-  // save the object
+    // save the object
     result.save()).then((result) => {
     // object updated and saved
-    response.success(resolve(result));
+    resolve(result);
   }, (error) => {
     // error
-    response.error(reject(error));
+    reject(error);
   });
 }));

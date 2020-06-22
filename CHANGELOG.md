@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.5.0](https://github.com/hopetambala/puente-node-cloudcode/compare/v1.4.0...v1.5.0) (2020-06-11)
+
+
+### Features
+
+* add environmental variables for local and staging ([6ffd05e](https://github.com/hopetambala/puente-node-cloudcode/commit/6ffd05e3092ddac80b7c1c8def8fcc1cbfd2cd51))
+* add working code coverage ([6e41384](https://github.com/hopetambala/puente-node-cloudcode/commit/6e41384295452513404a7bc4660640a3b3d46347))
+
+
+### Bug Fixes
+
+* add Parse as global ([8f3fe77](https://github.com/hopetambala/puente-node-cloudcode/commit/8f3fe7727c8efd0a53c12add9cadf3d43407a395))
+* errors with response.success ([5de9368](https://github.com/hopetambala/puente-node-cloudcode/commit/5de93682a6ebac32c2a7431e7b892db39a0bc266))
+* lat and long ([7792e5b](https://github.com/hopetambala/puente-node-cloudcode/commit/7792e5b700d1f59313110e52c853a47bdaec4254))
+* object value retrieval for parse objects ([12f3e9b](https://github.com/hopetambala/puente-node-cloudcode/commit/12f3e9bf77af91ca359a43d47329d36453a2b027))
+* returning undefined for generic query ([0d1ecee](https://github.com/hopetambala/puente-node-cloudcode/commit/0d1ecee2cd17a965b3ddafee926ee531ea6881a5))
+* travis.yml ([bbefff6](https://github.com/hopetambala/puente-node-cloudcode/commit/bbefff66c56de1ac08ae78eff253db8341fbeb5f))
+
 ## [1.4.0](https://github.com/hopetambala/puente-node-cloudcode/compare/v1.3.0...v1.4.0) (2020-05-28)
 
 
