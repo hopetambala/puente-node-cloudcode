@@ -27,6 +27,10 @@ https://docs.parseplatform.org/cloudcode/guide/
 
 ## Build and run
 
+### Dependencies
+
+You will need a `.env.staging` and a `.env.dev` file at the root of the project repo with all the necessary environment variables to run the project with all of its dependencies. The dev file here is for the local Node.js/Express server running Parse. The staging variable provided here is for a demo server running on Back4App. For production work, make sure to ask the project lead developer for an `.env.production` file as it contains the production project credentials.
+
 ### Build
 1. Install or update npm (`sudo apt install npm`, `npm install -g npm`)
 2. Clone Puente-Node-Cloudcode repo `git clone https://github.com/hopetambala/puente-node-cloudcode.git` or fork this repo
