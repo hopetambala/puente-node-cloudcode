@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "dependencies": {
-    "concurrently": "5.0.0",
+    "concurrently": "5.2.0",
     "esm": "3.2.25",
     "express": "4.16.3",
     "http": "0.0.0",
