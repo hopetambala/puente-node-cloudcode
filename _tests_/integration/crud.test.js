@@ -84,7 +84,7 @@ describe('crud testing', () => {
       const jsonValues = JSON.parse(jsonString);
 
       const { client } = jsonValues;
-      const type = client.__type;
+      const type = client.__type; // eslint-disable-line
       const { className } = client;
       const objectID = client.objectId;
       const { majorEvents } = jsonValues;
@@ -119,49 +119,49 @@ describe('crud testing', () => {
   });
 
   it('should post an object to class with relation to original post with a variety of classes', async () => {
-    const post_params = {
+    const postParams = {
       parseParentClass: 'SurveyData',
       parseParentClassID: postID1,
       localObject: [
         {
           tag: 'Vitals',
           key: 'height',
-          value: '4'
+          value: '4',
         },
         {
           tag: 'HistoryMedical',
           key: 'majorEvents',
-          value: null
+          value: null,
         },
         {
           tag: 'Prescriptions',
           key: 'name',
-          value: 'Greetings__'
+          value: 'Greetings__',
         },
         {
           tag: 'Allergies',
           key: 'substance',
-          value: 'Tester'
+          value: 'Tester',
         },
         {
           tag: 'EvaluationSurgical',
           key: 'AssessmentandEvaluationSurgical',
-          value: 'Have'
+          value: 'Have',
         },
         {
           tag: 'EvaluationMedical',
           key: 'chronic_condition_hypertension',
-          value: 'swell'
+          value: 'swell',
         },
         {
           tag: 'HistoryEnvironmentalHealth',
           key: 'yearsLivedinthecommunity',
-          value: 'day!'
-        }
+          value: 'day!',
+        },
       ],
     };
 
-    return cloudFunctions.postObjectsToAnyClassWithRelation(post_params).then((result) => {
+    return cloudFunctions.postObjectsToAnyClassWithRelation(postParams).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
 
@@ -169,7 +169,7 @@ describe('crud testing', () => {
       for (i in jsonValues) {
         // ensure all are related to original surveyData form
         const { client } = jsonValues[i];
-        const type = client.__type;
+        const type = client.__type; // eslint-disable-line
         const { className } = client;
         const objectID = client.objectId;
         expect(type).toEqual('Pointer');
@@ -198,8 +198,8 @@ describe('crud testing', () => {
           expect(AssessmentandEvaluationSurgical).toEqual('Have');
         }
         if ('chronic_condition_hypertension' in jsonValues[i]) {
-          const { chronic_condition_hypertension } = jsonValues[i];
-          expect(chronic_condition_hypertension).toEqual('swell');
+          const chronicConditionHypertension = jsonValues[i].chronic_condition_hypertension;
+          expect(chronicConditionHypertension).toEqual('swell');
         }
         if ('yearsLivedinthecommunity' in jsonValues[i]) {
           const { yearsLivedinthecommunity } = jsonValues[i];
@@ -211,7 +211,7 @@ describe('crud testing', () => {
   });
 
   it('should update the originally posted item', async () => {
-    const update_params = {
+    const updateParams = {
       parseClass: 'SurveyData',
       parseClassID: postID1,
       localObject: {
@@ -226,7 +226,7 @@ describe('crud testing', () => {
         longitude: 4,
       },
     };
-    return cloudFunctions.updateObject(update_params).then((result) => {
+    return cloudFunctions.updateObject(updateParams).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
 
@@ -236,7 +236,7 @@ describe('crud testing', () => {
       const { name } = jsonValues;
       const { substance } = jsonValues;
       const { AssessmentandEvaluationSurgical } = jsonValues;
-      const { chronic_condition_hypertension } = jsonValues;
+      const chronicConditionHypertension = jsonValues.chronic_condition_hypertension;
       const { yearsLivedinthecommunity } = jsonValues;
       const { latitude } = jsonValues;
       const { longitude } = jsonValues;
@@ -250,7 +250,7 @@ describe('crud testing', () => {
       expect(name).toEqual('is.');
       expect(substance).toEqual('Succeed');
       expect(AssessmentandEvaluationSurgical).toEqual('it');
-      expect(chronic_condition_hypertension).toEqual('must');
+      expect(chronicConditionHypertension).toEqual('must');
       expect(yearsLivedinthecommunity).toEqual(null);
       expect(latitude).toEqual(3);
       expect(longitude).toEqual(4);
@@ -304,7 +304,7 @@ describe('crud testing', () => {
   // });
 
   it('should return the the updated object - geo query', async () => {
-    const query_params = {
+    const queryParams = {
       lat: 3,
       long: 4,
       limit: 10,
@@ -312,11 +312,11 @@ describe('crud testing', () => {
       parseParam: 'Test',
     };
 
-    return cloudFunctions.geoQuery(query_params).then((result) => {
+    return cloudFunctions.geoQuery(queryParams).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
 
-      const surveyData = jsonValues.filter((surveyData) => surveyData.fname == 'Greetings__');
+      const surveyData = jsonValues.filter((data) => data.fname === 'Greetings__');
 
       // properties from updated object with geolocation with 5 miles
       const { height } = surveyData[0];
@@ -324,7 +324,7 @@ describe('crud testing', () => {
       const { name } = surveyData[0];
       const { substance } = surveyData[0];
       const { AssessmentandEvaluationSurgical } = surveyData[0];
-      const { chronic_condition_hypertension } = surveyData[0];
+      const chronicConditionHypertension = surveyData[0].chronic_condition_hypertension;
       const { yearsLivedinthecommunity } = surveyData[0];
       const { latitude } = surveyData[0];
       const { longitude } = surveyData[0];
@@ -336,7 +336,7 @@ describe('crud testing', () => {
       expect(name).toEqual('is.');
       expect(substance).toEqual('Succeed');
       expect(AssessmentandEvaluationSurgical).toEqual('it');
-      expect(chronic_condition_hypertension).toEqual('must');
+      expect(chronicConditionHypertension).toEqual('must');
       expect(yearsLivedinthecommunity).toEqual(null);
       expect(latitude).toEqual(3);
       expect(longitude).toEqual(4);
@@ -347,7 +347,7 @@ describe('crud testing', () => {
   });
 
   it('should return the the updated object - basic query', async () => {
-    const query_params = {
+    const queryParams = {
       skip: 0,
       offset: 0,
       limit: 10,
@@ -355,11 +355,11 @@ describe('crud testing', () => {
       parseParam: 'Test',
     };
 
-    return cloudFunctions.basicQuery(query_params).then((result) => {
+    return cloudFunctions.basicQuery(queryParams).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
 
-      const surveyData = jsonValues.filter((surveyData) => surveyData.fname == 'Greetings__');
+      const surveyData = jsonValues.filter((data) => data.fname === 'Greetings__');
 
       // properties from updated object with geolocation with 5 miles
       const { height } = surveyData[0];
@@ -367,7 +367,7 @@ describe('crud testing', () => {
       const { name } = surveyData[0];
       const { substance } = surveyData[0];
       const { AssessmentandEvaluationSurgical } = surveyData[0];
-      const { chronic_condition_hypertension } = surveyData[0];
+      const chronicConditionHypertension = surveyData[0].chronic_condition_hypertension;
       const { yearsLivedinthecommunity } = surveyData[0];
       const { latitude } = surveyData[0];
       const { longitude } = surveyData[0];
@@ -379,7 +379,7 @@ describe('crud testing', () => {
       expect(name).toEqual('is.');
       expect(substance).toEqual('Succeed');
       expect(AssessmentandEvaluationSurgical).toEqual('it');
-      expect(chronic_condition_hypertension).toEqual('must');
+      expect(chronicConditionHypertension).toEqual('must');
       expect(yearsLivedinthecommunity).toEqual(null);
       expect(latitude).toEqual(3);
       expect(longitude).toEqual(4);
