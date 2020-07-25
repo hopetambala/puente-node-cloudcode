@@ -1,6 +1,3 @@
-/* global Parse */
-/* eslint no-undef: "error" */
-
 const Batch = {
   /**
      * Performs a query based on the parameter defined in a column
