@@ -19,7 +19,6 @@ describe('role testing', () => {
     const credentials = {
       firstname: 'Dany',
       lastname: 'Targaryen',
-      username: 'dragon_queen',
       password: 'dracarys',
       email: 'bendtheknee@gmail.com',
       organization: 'got',
@@ -30,7 +29,7 @@ describe('role testing', () => {
 
       expect(jsonValues.firstname).toEqual('Dany');
       expect(jsonValues.lastname).toEqual('Targaryen');
-      expect(jsonValues.username).toEqual('dragon_queen');
+      expect(jsonValues.username).toEqual('bendtheknee@gmail.com');
       expect(jsonValues.email).toEqual('bendtheknee@gmail.com');
       expect(jsonValues.organization).toEqual('got');
       expect(jsonValues.role).toEqual('administrator');
@@ -43,10 +42,10 @@ describe('role testing', () => {
     const credentials = {
       firstname: 'Jon',
       lastname: 'Snow',
-      username: 'king_in_the_north',
       password: 'ghost',
       email: 'iknownothing@gmail.com',
       organization: 'got',
+      phonenumber: 1234567890,
     };
     return cloudFunctions.signup(credentials).then((result) => {
       const jsonString = JSON.stringify(result);
@@ -54,10 +53,11 @@ describe('role testing', () => {
 
       expect(jsonValues.firstname).toEqual('Jon');
       expect(jsonValues.lastname).toEqual('Snow');
-      expect(jsonValues.username).toEqual('king_in_the_north');
+      expect(jsonValues.username).toEqual('1234567890');
       expect(jsonValues.email).toEqual('iknownothing@gmail.com');
       expect(jsonValues.organization).toEqual('got');
       expect(jsonValues.role).toEqual('contributor');
+      expect(jsonValues.phonenumber).toEqual('1234567890');
       expect(jsonValues.adminVerified).toEqual(false);
       contribRoleID = jsonValues.objectId;
     });
@@ -65,7 +65,7 @@ describe('role testing', () => {
 
   it('should sign the first user in -- with username', async () => {
     const credentials = {
-      username: 'dragon_queen',
+      username: 'bendtheknee@gmail.com',
       password: 'dracarys',
     };
 
@@ -75,7 +75,7 @@ describe('role testing', () => {
 
       expect(jsonValues.firstname).toEqual('Dany');
       expect(jsonValues.lastname).toEqual('Targaryen');
-      expect(jsonValues.username).toEqual('dragon_queen');
+      expect(jsonValues.username).toEqual('bendtheknee@gmail.com');
       expect(jsonValues.email).toEqual('bendtheknee@gmail.com');
       expect(jsonValues.organization).toEqual('got');
       expect(jsonValues.role).toEqual('administrator');
@@ -86,7 +86,7 @@ describe('role testing', () => {
 
   it('should sign the second user in -- with email', async () => {
     const credentials = {
-      username: 'iknownothing@gmail.com',
+      username: '1234567890',
       password: 'ghost',
     };
 
@@ -96,7 +96,7 @@ describe('role testing', () => {
 
       expect(jsonValues.firstname).toEqual('Jon');
       expect(jsonValues.lastname).toEqual('Snow');
-      expect(jsonValues.username).toEqual('king_in_the_north');
+      expect(jsonValues.username).toEqual('1234567890');
       expect(jsonValues.email).toEqual('iknownothing@gmail.com');
       expect(jsonValues.organization).toEqual('got');
       expect(jsonValues.role).toEqual('contributor');

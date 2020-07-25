@@ -53,11 +53,14 @@ This application is built with [Parse Server](https://reactjs.org) and [Back4App
 
 Here are some quick commands to get started in Node:
 
-- `npm install`: Install Node dependencies
+- `npm install`: Install Node dependencies.
 - `npm run start`: Start the development server.
-- `npm run start-with-dash`: Start the server with Parse Dashboard
-- `npm run test`: Run the test suit
+- `npm run start-with-dash`: Start the server with Parse Dashboard.
+- `npm run test`: Run the test suit on Puente's Staging Parse Server.
+- `npm run test-local`: Run the test suit using your local Parse Server.
 - `npm run lint`: Run the ESLinter.
+- `npm run lint-fix`: Run the ESLinter
+
 
 Here are some custom commands for this specific project (after you install):
 
