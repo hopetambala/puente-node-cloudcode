@@ -31,7 +31,7 @@
     "@shelf/jest-mongodb": "1.1.5",
     "case": "1.6.3",
     "chai": "4.2.0",
-    "chalk": "2.4.2",
+    "chalk": "4.1.0",
     "codecov": "3.7.1",
     "env-cmd": "10.1.0",
     "eslint": "7.5.0",
