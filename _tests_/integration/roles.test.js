@@ -67,7 +67,6 @@ describe('role testing', () => {
     const credentials = {
       firstname: 'Luke__',
       lastname: 'Skywalker',
-      username: 'blueSaber',
       password: 'leia',
       email: 'lskywalker@gmail.com',
       organization: 'star-wars',
@@ -78,7 +77,7 @@ describe('role testing', () => {
 
       expect(jsonValues.firstname).toEqual('Luke__');
       expect(jsonValues.lastname).toEqual('Skywalker');
-      expect(jsonValues.username).toEqual('blueSaber');
+      expect(jsonValues.username).toEqual('lskywalker@gmail.com');
       expect(jsonValues.email).toEqual('lskywalker@gmail.com');
       expect(jsonValues.organization).toEqual('star-wars');
       expect(jsonValues.role).toEqual('administrator');
@@ -91,10 +90,10 @@ describe('role testing', () => {
     const credentials = {
       firstname: 'Han__',
       lastname: 'Solo',
-      username: 'falcon',
       password: 'leia',
       email: 'soloman@gmail.com',
       organization: 'star-wars',
+      phonenumber: '1234567373'
     };
     return cloudFunctions.signup(credentials).then((result) => {
       const jsonString = JSON.stringify(result);
@@ -102,7 +101,7 @@ describe('role testing', () => {
 
       expect(jsonValues.firstname).toEqual('Han__');
       expect(jsonValues.lastname).toEqual('Solo');
-      expect(jsonValues.username).toEqual('falcon');
+      expect(jsonValues.username).toEqual('1234567373');
       expect(jsonValues.email).toEqual('soloman@gmail.com');
       expect(jsonValues.organization).toEqual('star-wars');
       expect(jsonValues.role).toEqual('contributor');
@@ -112,19 +111,19 @@ describe('role testing', () => {
   });
 
   it('should return the admin user who is automatically verified', async () => {
-    const query_params = {
+    const queryParams = {
       organization: 'star-wars',
     };
 
-    return cloudFunctions.organizationVerified(query_params).then((result) => {
+    return cloudFunctions.organizationVerified(queryParams).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
 
-      const adminUser = jsonValues.filter((user) => user.firstname == 'Luke__');
+      const adminUser = jsonValues.filter((user) => user.firstname === 'Luke__');
 
       expect(adminUser[0].firstname).toEqual('Luke__');
       expect(adminUser[0].lastname).toEqual('Skywalker');
-      expect(adminUser[0].username).toEqual('blueSaber');
+      expect(adminUser[0].username).toEqual('lskywalker@gmail.com');
       expect(adminUser[0].organization).toEqual('star-wars');
       expect(adminUser[0].role).toEqual('administrator');
       expect(adminUser[0].adminVerified).toEqual(true);
@@ -133,19 +132,19 @@ describe('role testing', () => {
   });
 
   it('should return the contrib user who is not verified', async () => {
-    const query_params = {
+    const queryParams = {
       organization: 'star-wars',
     };
 
-    return cloudFunctions.organizationUnverified(query_params).then((result) => {
+    return cloudFunctions.organizationUnverified(queryParams).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
 
-      const contribUser = jsonValues.filter((user) => user.firstname == 'Han__');
+      const contribUser = jsonValues.filter((user) => user.firstname === 'Han__');
 
       expect(contribUser[0].firstname).toEqual('Han__');
       expect(contribUser[0].lastname).toEqual('Solo');
-      expect(contribUser[0].username).toEqual('falcon');
+      expect(contribUser[0].username).toEqual('1234567373');
       expect(contribUser[0].organization).toEqual('star-wars');
       expect(contribUser[0].role).toEqual('contributor');
       expect(contribUser[0].adminVerified).toEqual(false);
@@ -154,18 +153,18 @@ describe('role testing', () => {
   });
 
   it('should add the contrib user to a manager role', async () => {
-    const add_params = {
+    const addParams = {
       userID: contribRoleID,
       roleName: 'manager',
     };
 
-    return cloudFunctions.addToRole(add_params).then((result) => {
+    return cloudFunctions.addToRole(addParams).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
 
       expect(jsonValues.firstname).toEqual('Han__');
       expect(jsonValues.lastname).toEqual('Solo');
-      expect(jsonValues.username).toEqual('falcon');
+      expect(jsonValues.username).toEqual('1234567373');
       expect(jsonValues.organization).toEqual('star-wars');
       expect(jsonValues.role).toEqual('manager');
       expect(jsonValues.adminVerified).toEqual(true);
@@ -174,20 +173,20 @@ describe('role testing', () => {
   });
 
   it('should return both users now (both verified)', async () => {
-    const query_params = {
+    const queryParams = {
       organization: 'star-wars',
     };
 
-    return cloudFunctions.organizationVerified(query_params).then((result) => {
+    return cloudFunctions.organizationVerified(queryParams).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
 
-      const contribUser = jsonValues.filter((user) => user.firstname == 'Han__');
-      const adminUser = jsonValues.filter((user) => user.firstname == 'Luke__');
+      const contribUser = jsonValues.filter((user) => user.firstname === 'Han__');
+      const adminUser = jsonValues.filter((user) => user.firstname === 'Luke__');
 
       expect(adminUser[0].firstname).toEqual('Luke__');
       expect(adminUser[0].lastname).toEqual('Skywalker');
-      expect(adminUser[0].username).toEqual('blueSaber');
+      expect(adminUser[0].username).toEqual('lskywalker@gmail.com');
       expect(adminUser[0].organization).toEqual('star-wars');
       expect(adminUser[0].role).toEqual('administrator');
       expect(adminUser[0].adminVerified).toEqual(true);
@@ -195,7 +194,7 @@ describe('role testing', () => {
 
       expect(contribUser[0].firstname).toEqual('Han__');
       expect(contribUser[0].lastname).toEqual('Solo');
-      expect(contribUser[0].username).toEqual('falcon');
+      expect(contribUser[0].username).toEqual('1234567373');
       expect(contribUser[0].organization).toEqual('star-wars');
       expect(contribUser[0].role).toEqual('manager');
       expect(contribUser[0].adminVerified).toEqual(true);
@@ -204,11 +203,11 @@ describe('role testing', () => {
   });
 
   it('should return no users - both verified', async () => {
-    const query_params = {
+    const queryParams = {
       organization: 'star-wars',
     };
 
-    return cloudFunctions.organizationUnverified(query_params).then((result) => {
+    return cloudFunctions.organizationUnverified(queryParams).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
 

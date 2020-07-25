@@ -24,7 +24,7 @@ Parse.Cloud.define('organizationVerified', (request) => new Promise((resolve, re
   });
 }));
 
-Parse.Cloud.define('queryRoles', (request, response) => new Promise((resolve, reject) => {
+Parse.Cloud.define('queryRoles', () => new Promise((resolve, reject) => {
   const Role = Parse.Object.extend('_Role');
   const queryRole = new Parse.Query(Role);
 
