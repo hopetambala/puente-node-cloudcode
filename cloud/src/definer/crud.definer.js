@@ -4,7 +4,7 @@ const services = require('../services');
 /** ******************************************
 GENERIC QUERY
 ******************************************* */
-Parse.Cloud.define('genericQuery', (request, response) => {
+Parse.Cloud.define('genericQuery', () => {
   const model = classes.patient.ParseClass;
   const service = services.batch;
   return service.genericQuery(model);
@@ -19,7 +19,7 @@ Parse.Cloud.define('genericQuery', (request, response) => {
     limit - max number of records to return
     offset - number of records to skip when returned
   ******************************************* */
-Parse.Cloud.define('basicQuery', (request, response) => {
+Parse.Cloud.define('basicQuery', (request) => {
   const model = classes.patient.ParseClass;
   const service = services.batch;
   return service.basicQuery(
@@ -39,7 +39,7 @@ Parse.Cloud.define('basicQuery', (request, response) => {
     limit - max number of records to return
     lat/long - latitude/longitude, query results will always be within 5 miles of these values
   ******************************************* */
-Parse.Cloud.define('geoQuery', (request, response) => {
+Parse.Cloud.define('geoQuery', (request) => {
   const model = classes.patient.ParseClass;
   const service = services.batch;
   return service.geoQuery(
@@ -61,7 +61,7 @@ Parse.Cloud.define('geoQuery', (request, response) => {
     localObject - Continas key value pairs that will be posted to the class
                 - this contains a latitude/longitude which will post the location
   ******************************************* */
-Parse.Cloud.define('postObjectsToClass', (request, response) => new Promise((resolve, reject) => {
+Parse.Cloud.define('postObjectsToClass', (request) => new Promise((resolve, reject) => {
   const SurveyData = Parse.Object.extend(request.params.parseClass);
   const surveyPoint = new SurveyData();
   let parseFilePhoto;
@@ -75,7 +75,7 @@ Parse.Cloud.define('postObjectsToClass', (request, response) => new Promise((res
       // The file has been saved to Parse.
     }, (error) => {
       // The file either could not be read, or could not be saved to Parse.
-      console.log(error);
+      console.log(error); // eslint-disable-line
     });
 
     surveyPoint.set('picture', parseFilePhoto);
@@ -89,7 +89,7 @@ Parse.Cloud.define('postObjectsToClass', (request, response) => new Promise((res
       // The file has been saved to Parse.
     }, (error) => {
       // The file either could not be read, or could not be saved to Parse.
-      console.log(error);
+      console.log(error); // eslint-disable-line
     });
 
     surveyPoint.set('signature', parseFileSignature);
@@ -122,7 +122,7 @@ Parse.Cloud.define('postObjectsToClass', (request, response) => new Promise((res
                 - this contains a latitude/longitude which will post the location
     parseParentClassID - ID of the parseParentClass Object to associate the new post with
   ******************************************* */
-Parse.Cloud.define('postObjectsToClassWithRelation', (request, response) => new Promise((resolve, reject) => {
+Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((resolve, reject) => {
   const Child = Parse.Object.extend(request.params.parseClass);
   const Parent = Parse.Object.extend(request.params.parseParentClass);
 
@@ -153,13 +153,13 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request, response) => new 
     parseClass - Class to remove the object from
     objectIDinparseClass - object to remove from the parseClass
   ******************************************* */
-Parse.Cloud.define('removeObjectsinClass', (request, response) => new Promise((resolve, reject) => {
+Parse.Cloud.define('removeObjectsinClass', (request) => new Promise((resolve, reject) => {
   const yourClass = Parse.Object.extend(request.params.parseClass);
   const query = new Parse.Query(yourClass);
 
   query.get(request.params.objectIDinparseClass).then((results) => {
     // log object and destroy
-    console.log(results);
+    console.log(results); // eslint-disable-line
     results.destroy({});
     resolve(results);
   }, (error) => {
@@ -180,7 +180,7 @@ Parse.Cloud.define('removeObjectsinClass', (request, response) => new Promise((r
                   to the correct class (Vitals, HistoryMedical, prescriptions,
                   Allergies, EvaluationSurgical, EvaluationMedical, HistoryEnvironmental)
   ******************************************* */
-Parse.Cloud.define('postObjectsToAnyClassWithRelation', (request, response) => new Promise((resolve, reject) => {
+Parse.Cloud.define('postObjectsToAnyClassWithRelation', (request) => new Promise((resolve, reject) => {
   const Parent = Parse.Object.extend(request.params.parseParentClass);
   const Vitals = Parse.Object.extend('Vitals');
   const HistoryMedical = Parse.Object.extend('HistoryMedical');
@@ -215,45 +215,45 @@ Parse.Cloud.define('postObjectsToAnyClassWithRelation', (request, response) => n
   // object
   const { localObject } = request.params;
   for (const i in localObject) {
-    object = localObject[i];
+    const object = localObject[i];
 
-    if (object.tag == 'Vitals') {
+    if (object.tag === 'Vitals') {
       if (vitalsObj === false) {
         vitals = new Vitals();
         vitalsObj = true;
       }
       vitals.set(String(object.key), object.value);
-    } else if (object.tag == 'HistoryMedical') {
+    } else if (object.tag === 'HistoryMedical') {
       if (historyMedicalObj === false) {
         historyMedical = new HistoryMedical();
         historyMedicalObj = true;
       }
       historyMedical.set(String(object.key), object.value);
-    } else if (object.tag == 'Prescriptions') {
+    } else if (object.tag === 'Prescriptions') {
       if (prescriptionsObj === false) {
         prescriptions = new Prescriptions();
         prescriptionsObj = true;
       }
       prescriptions.set(String(object.key), object.value);
-    } else if (object.tag == 'Allergies') {
+    } else if (object.tag === 'Allergies') {
       if (allergiesObj === false) {
         allergies = new Allergies();
         allergiesObj = true;
       }
       allergies.set(String(object.key), object.value);
-    } else if (object.tag == 'EvaluationSurgical') {
+    } else if (object.tag === 'EvaluationSurgical') {
       if (evaluationSurgicalObj === false) {
         evaluationSurgical = new EvaluationSurgical();
         evaluationSurgicalObj = true;
       }
       evaluationSurgical.set(String(object.key), object.value);
-    } else if (object.tag == 'EvaluationMedical') {
+    } else if (object.tag === 'EvaluationMedical') {
       if (evaluationMedicalObj === false) {
         evaluationMedical = new EvaluationMedical();
         evaluationMedicalObj = true;
       }
       evaluationMedical.set(String(object.key), object.value);
-    } else if (object.tag == 'HistoryEnvironmentalHealth') {
+    } else if (object.tag === 'HistoryEnvironmentalHealth') {
       if (environmentalHealthObj === false) {
         environmentalHealth = new EnvironmentalHealth();
         environmentalHealthObj = true;
@@ -328,7 +328,7 @@ Parse.Cloud.define('postObjectsToAnyClassWithRelation', (request, response) => n
     parseClassID - ID of object to be updated
     localObject - Continas key value pairs that will be updated
   ******************************************* */
-Parse.Cloud.define('updateObject', (request, response) => new Promise((resolve, reject) => {
+Parse.Cloud.define('updateObject', (request) => new Promise((resolve, reject) => {
   const parseClass = Parse.Object.extend(request.params.parseClass);
   const query = new Parse.Query(parseClass);
 
@@ -345,13 +345,11 @@ Parse.Cloud.define('updateObject', (request, response) => new Promise((resolve, 
     result.set('location', point);
 
     return result;
-  }).then((result) =>
-    // save the object
-    result.save()).then((result) => {
-      // object updated and saved
-      resolve(result);
-    }, (error) => {
-      // error
-      reject(error);
-    });
+  }).then((result) => result.save()).then((result) => {
+    // object updated and saved
+    resolve(result);
+  }, (error) => {
+    // error
+    reject(error);
+  });
 }));

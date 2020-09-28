@@ -12,10 +12,10 @@ const Roles = {
         .then((results) => {
           // If the admin role already exists we have nothing to do here
           if (results) {
-            console.log('Admin Exists');
+            console.log('Admin Exists'); // eslint-disable-line
             resolve(results);
           } else {
-            console.log('Admin Does Not Exist');
+            console.log('Admin Does Not Exist'); // eslint-disable-line
             const acl = new Parse.ACL();
             acl.setPublicReadAccess(true);
             acl.setPublicWriteAccess(true);
@@ -26,11 +26,12 @@ const Roles = {
             const adminRole = new Role();
             adminRole.set('name', 'admin');
             adminRole.setACL(acl);
-            adminRole.save({}, { useMasterKey: true }).then((results) => {
-              resolve(results);
-            }, (error) => {
-              reject(error);
-            });
+            adminRole.save({}, { useMasterKey: true })
+              .then((admin) => {
+                resolve(admin);
+              }, (error) => {
+                reject(error);
+              });
           }
         },
         (error) => {
@@ -46,11 +47,11 @@ const Roles = {
       existingManagerRole.first().then((results) => {
         // If the admin role already exists we have nothing to do here
         if (results) {
-          console.log('Manager Role Exists');
+          console.log('Manager Role Exists'); // eslint-disable-line
           resolve(results);
           // If the admin role does not exist create it and set the ACLs
         } else {
-          console.log('Moderator Role Does Not Exist.');
+          console.log('Moderator Role Does Not Exist.'); // eslint-disable-line
           const acl = new Parse.ACL();
           acl.setPublicReadAccess(true);
           acl.setPublicWriteAccess(false);
@@ -61,11 +62,12 @@ const Roles = {
           const managerRole = new Role();
           managerRole.set('name', 'manager');
           managerRole.setACL(acl);
-          managerRole.save({}, { useMasterKey: true }).then((results) => {
-            resolve(results);
-          }, (error) => {
-            reject(error);
-          });
+          managerRole.save({}, { useMasterKey: true })
+            .then((manager) => {
+              resolve(manager);
+            }, (error) => {
+              reject(error);
+            });
         }
       }, (error) => {
         reject(error);
@@ -79,10 +81,10 @@ const Roles = {
         .equalTo('name', 'contributor');
       existingContributorRole.first().then((results) => {
         if (results) {
-          console.log('Contributor Role Exists');
+          console.log('Contributor Role Exists'); // eslint-disable-line
           resolve(results);
         } else {
-          console.log('Contributor Role Does Not Exist.');
+          console.log('Contributor Role Does Not Exist.'); // eslint-disable-line
           const acl = new Parse.ACL();
           acl.setPublicReadAccess(true);
           acl.setPublicWriteAccess(false);
@@ -93,11 +95,12 @@ const Roles = {
           const contributorRole = new Role();
           contributorRole.set('name', 'contributor');
           contributorRole.setACL(acl);
-          contributorRole.save({}, { useMasterKey: true }).then((results) => {
-            resolve(results);
-          }, (error) => {
-            reject(error);
-          });
+          contributorRole.save({}, { useMasterKey: true })
+            .then((contrib) => {
+              resolve(contrib);
+            }, (error) => {
+              reject(error);
+            });
         }
       }, (error) => {
         reject(error);
