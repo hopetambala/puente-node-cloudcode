@@ -11,14 +11,23 @@ Input Paramaters:
   orginzation - nonprofit user belogns to
   role - role of user within organization
 ******************************************* */
-Parse.Cloud.define('signup', (request, response) => new Promise((resolve, reject) => {
+Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
   const user = new Parse.User();
   user.set('firstname', String(request.params.firstname));
   user.set('lastname', String(request.params.lastname));
-  user.set('username', String(request.params.username));
+  // user.set('username', String(request.params.username));
   user.set('password', String(request.params.password));
-  user.set('email', String(request.params.email));
+  if (String(request.params.email) !== '') {
+    user.set('email', String(request.params.email));
+  }
   user.set('organization', String(request.params.organization));
+  user.set('phonenumber', String(request.params.phonenumber));
+
+  if (request.params.phonenumber) {
+    user.set('username', String(request.params.phonenumber));
+  } else {
+    user.set('username', String(request.params.email));
+  }
 
   let userRole = '';
   // Query to count number of users for the organization passed into function
@@ -26,7 +35,7 @@ Parse.Cloud.define('signup', (request, response) => new Promise((resolve, reject
   userQuery.equalTo('organization', String(request.params.organization));
   userQuery.count().then((results) => {
     // first user signed up, gets admin accesss
-    if (results == 0) {
+    if (results === 0) {
       user.set('role', 'administrator');
       user.set('adminVerified', true);
       userRole = 'admin';
@@ -37,28 +46,22 @@ Parse.Cloud.define('signup', (request, response) => new Promise((resolve, reject
       userRole = 'contributor';
     }
     return user;
-  }).then((user) => {
+  }).then((userUpdated) => {
     // sign up user
-    user.signUp().then((result) => {
-      console.log(`User created successfully with name ${result.get('username')} and email: ${result.get('email')}`);
-      // Parse.Cloud.useMasterKey();
+    userUpdated.signUp().then((result) => {
+      console.log(`User created successfully with name ${result.get('username')} and email: ${result.get('email')}`); // eslint-disable-line
       const acl = new Parse.ACL();
       acl.setPublicReadAccess(true);
-      console.log(result);
       acl.setWriteAccess(result, true);
       acl.setRoleWriteAccess('admin', true);
       result.setACL(acl);
       result.save(null, { useMasterKey: true }).then((aclUser) => {
-        console.log('SAve user with new ACL');
         const roleQuery = new Parse.Query(Parse.Role);
         roleQuery.equalTo('name', userRole);
 
         roleQuery.first({ useMasterKey: true }).then((role) => {
-          console.log('Found role');
           role.getUsers().add(aclUser);
-          console.log('add user to role');
           role.save(null, { useMasterKey: true });
-          console.log('saved user to role');
           resolve(aclUser);
         }, (error) => {
           reject(error);
@@ -66,7 +69,7 @@ Parse.Cloud.define('signup', (request, response) => new Promise((resolve, reject
       });
     });
   }, (error) => {
-    console.log(`Error: ${error.code} ${error.message}`);
+    console.log(`Error: ${error.code} ${error.message}`); // eslint-disable-line
     reject(error);
   });
 }));
@@ -82,30 +85,32 @@ Input Paramaters:
   password - user password
 ******************************************* */
 Parse.Cloud.define('signin', (request, response) => new Promise((resolve, reject) => {
-  Parse.User.logIn(String(request.params.username), String(request.params.password)).then((result) => {
-    console.log(`User logged in successful with username: ${result.get('username')}`);
-    resolve(result);
-  }, (error) => {
-    // If the user inputs their email instead of the username
-    // attempt to get the username
-    console.log('Trying to use email instead of Username');
-    const userQuery = new Parse.Query(Parse.User);
+  Parse.User.logIn(String(request.params.username), String(request.params.password))
+    .then((result) => {
+      console.log(`User logged in successful with username: ${result.get('username')}`); // eslint-disable-line
+      resolve(result);
+    }, (error1) => {
+      // If the user inputs their email instead of the username
+      // attempt to get the username
+      const userQuery = new Parse.Query(Parse.User);
 
-    userQuery.equalTo('email', request.params.username);
-    userQuery.first().then((success) => {
-      const { username } = success.toJSON();
-      Parse.User.logIn(username, String(request.params.password)).then((result) => {
-        console.log(`User logged in successful with email: ${result.get('email')}`);
-        resolve(result);
-      }, (error) => {
-        console.log(`Error: ${error.code} ${error.message}`);
-        response.error(reject(error));
+      userQuery.equalTo('email', request.params.username);
+      userQuery.first().then((success) => {
+        const { username } = success.toJSON();
+        Parse.User.logIn(username, String(request.params.password)).then((result) => {
+          console.log(`User logged in successful with email: ${result.get('email')}`); // eslint-disable-line
+          resolve(result);
+        }, (error2) => {
+          console.log(`Error: ${error2.code} ${error2.message}`); // eslint-disable-line
+          response.error(reject(error2));
+        });
+      }, (error3) => {
+        console.log(`Error: ${error3.code} ${error3.message}`); // eslint-disable-line
+        response.error(reject(error3));
       });
-    }, (error) => {
-      console.log(`Error: ${error.code} ${error.message}`);
-      response.error(reject(error));
+      console.log(`Error: ${error1.code} ${error1.message}`); // eslint-disable-line
+      response.error(reject(error1));
     });
-  });
 }));
 
 /** ******************************************
@@ -115,7 +120,7 @@ Attempts to log a user out and display success/reject message
 Input Paramaters:
   none
 ******************************************* */
-Parse.Cloud.define('signout', (request, response) => new Promise((resolve, reject) => {
+Parse.Cloud.define('signout', () => new Promise((resolve, reject) => {
   Parse.User.logOut().then((result) => {
     resolve(result);
   }, (error) => {
@@ -131,12 +136,12 @@ reset email link to the user.
 Input Paramaters:
   email - user's email associated with the account
 ******************************************* */
-Parse.Cloud.define('forgotPassword', (request, response) => new Promise((resolve, reject) => {
+Parse.Cloud.define('forgotPassword', (request) => new Promise((resolve, reject) => {
   Parse.User.requestPasswordReset(String(request.params.email)).then(() => {
-    console.log('Password reset request was sent successfully');
+    console.log('Password reset request was sent successfully'); // eslint-disable-line
     resolve('Success');
   }, (error) => {
-    console.log(`Error: ${error.code} ${error.message}`);
+    console.log(`Error: ${error.code} ${error.message}`); // eslint-disable-line
     reject(error);
   });
 }));
@@ -152,8 +157,8 @@ Input Paramaters:
 Parse.Cloud.define('currentUser', () => {
   const u = Parse.User.current();
 
-  if (user) {
-    var user = new User();
+  if (u) {
+    const user = new Parse.User();
     user.id = u.id;
     user.name = u.get('username');
     user.email = u.get('email');
@@ -169,7 +174,8 @@ Parse.Cloud.define('deleteUser', (request) => new Promise((resolve, reject) => {
   const user = new Parse.User();
   user.set('id', userId);
   const query = new Parse.Query(Parse.User);
-  query.get(userId).then((user) => user.destroy({ useMasterKey: true }), { useMasterKey: true })
+  query.get(userId)
+    .then((userObj) => userObj.destroy({ useMasterKey: true }), { useMasterKey: true })
     .then(() => {
       resolve(user);
     }, (error) => {

@@ -3,8 +3,9 @@ const {
   PARSE_ENV, PARSE_APP_ID, PARSE_JAVASCRIPT_KEY, PARSE_SERVER_URL,
 } = require('./env.config');
 
-if (PARSE_ENV == 'staging') {
-  Parse.initialize(PARSE_APP_ID, PARSE_JAVASCRIPT_KEY); // PASTE HERE YOUR Back4App APPLICATION ID AND YOUR JavaScript KEY
+if (PARSE_ENV === 'staging') {
+  // PASTE HERE YOUR Back4App APPLICATION ID AND YOUR JavaScript KEY
+  Parse.initialize(PARSE_APP_ID, PARSE_JAVASCRIPT_KEY);
   Parse.serverURL = PARSE_SERVER_URL;
 } else {
   Parse.initialize(PARSE_APP_ID);
@@ -12,23 +13,23 @@ if (PARSE_ENV == 'staging') {
 }
 
 const cloudFunctions = {
-  hello: (request) => Parse.Cloud
+  hello: () => Parse.Cloud
     .run('hello')
     .then((res) => res.data),
-  postObjectsToClass: (post_params) => Parse.Cloud
-    .run('postObjectsToClass', post_params)
+  postObjectsToClass: (postParams) => Parse.Cloud
+    .run('postObjectsToClass', postParams)
     .then((response) => response),
-  postObjectsToClassWithRelation: (post_params) => Parse.Cloud
-    .run('postObjectsToClassWithRelation', post_params)
+  postObjectsToClassWithRelation: (postParams) => Parse.Cloud
+    .run('postObjectsToClassWithRelation', postParams)
     .then((response) => response),
-  postObjectsToAnyClassWithRelation: (post_params) => Parse.Cloud
-    .run('postObjectsToAnyClassWithRelation', post_params)
+  postObjectsToAnyClassWithRelation: (postParams) => Parse.Cloud
+    .run('postObjectsToAnyClassWithRelation', postParams)
     .then((response) => response),
-  updateObject: (update_params) => Parse.Cloud
-    .run('updateObject', update_params)
+  updateObject: (updateParams) => Parse.Cloud
+    .run('updateObject', updateParams)
     .then((response) => response),
-  removeObjectsinClass: (remove_params) => Parse.Cloud
-    .run('removeObjectsinClass', remove_params)
+  removeObjectsinClass: (removeParams) => Parse.Cloud
+    .run('removeObjectsinClass', removeParams)
     .then((response) => response),
   genericQuery: (queryParams) => Parse.Cloud
     .run('genericQuery', queryParams)
