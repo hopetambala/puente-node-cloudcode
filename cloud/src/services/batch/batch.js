@@ -21,7 +21,9 @@ const Batch = {
 
         query.skip(offset);
 
-        query.limit(limit);
+        console.log("old limit is", limit)
+
+        query.limit(1000);
 
         query.equalTo(parseColumn, parseParam);
         query.descending("createdAt");
