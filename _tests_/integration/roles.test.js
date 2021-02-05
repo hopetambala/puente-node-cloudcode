@@ -93,7 +93,7 @@ describe('role testing', () => {
       password: 'leia',
       email: 'soloman@gmail.com',
       organization: 'star-wars',
-      phonenumber: '1234567373'
+      phonenumber: '1234567373',
     };
     return cloudFunctions.signup(credentials).then((result) => {
       const jsonString = JSON.stringify(result);
