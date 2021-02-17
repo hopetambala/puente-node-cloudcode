@@ -133,11 +133,10 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
   const { localObject } = request.params;
   for (const key in localObject) {
     const obj = localObject[key];
-    if(!obj.includes("data:image/jpg;base64,")){
+    if (!obj.includes('data:image/jpg;base64,')) {
       child.set(String(key), obj);
-    }
-    else {
-      let photoFileLocalObject = new Parse.File('picture.png', { base64: obj });
+    } else {
+      const photoFileLocalObject = new Parse.File('picture.png', { base64: obj });
       // put this inside if {
       photoFileLocalObject.save().then(() => {
         // The file has been saved to Parse.
