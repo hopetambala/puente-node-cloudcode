@@ -23,7 +23,7 @@ const Batch = {
 
         console.log("old limit is", limit)
 
-        query.limit(1000);
+        query.limit(2500);
 
         query.equalTo(parseColumn, parseParam);
         query.descending("createdAt");
