@@ -26,7 +26,7 @@ const Batch = {
         query.limit(2500);
 
         query.equalTo(parseColumn, parseParam);
-        query.descending("createdAt");
+        query.descending('createdAt');
 
         query.find().then((surveyPoints) => {
           resolve(surveyPoints);
