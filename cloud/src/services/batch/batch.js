@@ -21,15 +21,31 @@ const Batch = {
 
         query.skip(offset);
 
-        console.log("old limit is", limit)
+        console.log('old limit is', limit);
 
-        query.limit(2500);
+        query.limit(3000);
 
         query.equalTo(parseColumn, parseParam);
         query.descending('createdAt');
 
-        query.find().then((surveyPoints) => {
-          resolve(surveyPoints);
+        query.find().then((records) => {
+          const deDuplicatedRecords = records.reduce((accumulator, current) => {
+            if (checkIfAlreadyExist(current)) {
+              return accumulator;
+            }
+            return [...accumulator, current];
+
+
+            function checkIfAlreadyExist(currentVal) {
+              return accumulator.some((item) => (item.get('fname') === currentVal.get('fname')
+                  && item.get('lname') === currentVal.get('lname')
+                  && item.get('sex') === currentVal.get('sex')
+                  && item.get('marriageStatus') === currentVal.get('marriageStatus')
+                  && item.get('educationLevel') === currentVal.get('educationLevel')
+              ));
+            }
+          }, []);
+          resolve(deDuplicatedRecords);
         }, (error) => {
           reject(error);
         });
