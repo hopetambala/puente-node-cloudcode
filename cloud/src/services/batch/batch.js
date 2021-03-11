@@ -28,8 +28,8 @@ const Batch = {
         query.equalTo(parseColumn, parseParam);
         query.descending('createdAt');
 
-        query.find().then(async (records) => {
-          const deDuplicatedRecords = await records.reduce((accumulator, current) => {
+        query.find().then((records) => {
+          const deDuplicatedRecords = records.reduce((accumulator, current) => {
             if (checkIfAlreadyExist(current)) {
               return accumulator;
             }
