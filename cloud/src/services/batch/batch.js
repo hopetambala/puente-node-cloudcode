@@ -1,3 +1,5 @@
+const { result } = require("lodash");
+
 const Batch = {
   /**
      * Performs a query based on the parameter defined in a column
@@ -86,6 +88,25 @@ const Batch = {
         });
       }, 500);
     });
+  },
+  countService: function countService(modelObject, parseColumn, parseParam) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const Model = Parse.Object.extend(modelObject);
+        const pipeline = [
+          { group: { objectId: ['$fname','$lname','$dob','$sex',
+          '$telephoneNumber','$marriageStatus','$educationLevel',
+          '$city','$communityname'] } }
+        ];
+        const query = new Parse.Query(Model);
+        query.equalTo(parseColumn, parseParam);
+        query.aggregate(pipeline).then((results) => {
+          resolve(results.length);
+        }, (error) => {
+          reject(error);
+        });
+      }, 1500);
+   });
   },
 };
 // export default batch;

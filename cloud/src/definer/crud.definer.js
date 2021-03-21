@@ -52,6 +52,27 @@ Parse.Cloud.define('geoQuery', (request) => {
   );
 });
 
+/**
+  * Performs a query based on the parameter defined in a column
+  *
+  * @example
+  * countService(SurveyData,surveyingUser,Jeff)
+  *
+  * @param {string} parseModel Name of Backend Model
+  * @param {string} parseColumn Name of Column in Backend Model
+  * @param {string} parseParam Name of Parameter in Column
+  * @returns Count of Query
+  */
+ Parse.Cloud.define('countService', (request) => {
+  const model = classes.patient.ParseClass;
+  const service = services.batch;
+  return service.countService(
+    model,
+    request.params.parseColumn,
+    request.params.parseParam
+  )
+});
+
 /** ******************************************
   POST OBJECTS TO CLASS
   Input Paramaters:

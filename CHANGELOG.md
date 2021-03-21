@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.6.0](https://github.com/hopetambala/puente-node-cloudcode/compare/v1.5.0...v1.6.0) (2021-03-20)
+
+
+### Features
+
+* add deleteUser function ([a63bf26](https://github.com/hopetambala/puente-node-cloudcode/commit/a63bf26b32b3986e1c3844324001bf49c7cfe9b7))
+* count service to get unqiue surrveydata created ([89337d0](https://github.com/hopetambala/puente-node-cloudcode/commit/89337d0bfa0b65c7b138afce978143ef0069a713))
+* pictures on any forms work ([79d0a3d](https://github.com/hopetambala/puente-node-cloudcode/commit/79d0a3d0dc9a0954e68549523c5806dd6a1ce37d))
+
+
+### Bug Fixes
+
+* sort basic query results ([c20a12a](https://github.com/hopetambala/puente-node-cloudcode/commit/c20a12a37debffa8edbf585b982a9e0ba8dc53be))
+
 ## [1.5.0](https://github.com/hopetambala/puente-node-cloudcode/compare/v1.4.0...v1.5.0) (2020-06-11)
 
 
