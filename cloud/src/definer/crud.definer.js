@@ -128,8 +128,10 @@ Parse.Cloud.define('postObjectsToClass', (request) => new Promise((resolve, reje
   const point = new Parse.GeoPoint(localObject.latitude, localObject.longitude);
   surveyPoint.set('location', point);
 
-  userObject.id = String(request.params.parseUser);
-  surveyPoint.set('parseUser', userObject);
+  if(request.params.parseUser) {
+    userObject.id = String(request.params.parseUser);
+    surveyPoint.set('parseUser', userObject);
+  }
 
   surveyPoint.save().then((results) => {
     resolve(results);
@@ -173,10 +175,12 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
 
   // Add the residentIdForm as a value in the supplementaryForm
   residentIdForm.id = String(request.params.parseParentClassID);
-  userObject.id = String(request.params.parseUser);
 
   supplementaryForm.set('client', residentIdForm);
-  supplementaryForm.set('parseUser', userObject);
+  if(request.params.parseUser) {
+    userObject.id = String(request.params.parseUser);
+    supplementaryForm.set('parseUser', userObject);
+  }
 
   supplementaryForm.save().then((results) => {
     resolve(results);
