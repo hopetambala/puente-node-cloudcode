@@ -60,64 +60,6 @@ describe('crud testing', () => {
     });
   });
 
-  it('should post an object with relation to original post with history medical class', async () => {
-    const postParams = {
-      parseClass: 'HistoryMedical',
-      parseParentClass: 'SurveyData',
-      parseParentClassID: postID1,
-      localObject: {
-        majorEvents: 'This',
-        surgeryWhatKind: 'is',
-        medicalIllnesses: 'a',
-        whenDiagnosed: 'very',
-        whatDoctorDoyousee: 'thorough',
-        treatment: 'and',
-        familyhistory: 'great',
-        preventativeCare: 'test',
-        allergies: null,
-        latitude: 3,
-        longitude: 7,
-      },
-    };
-    return cloudFunctions.postObjectsToClassWithRelation(postParams).then((result) => {
-      const jsonString = JSON.stringify(result);
-      const jsonValues = JSON.parse(jsonString);
-
-      const { client } = jsonValues;
-      const type = client.__type; // eslint-disable-line
-      const { className } = client;
-      const objectID = client.objectId;
-      const { majorEvents } = jsonValues;
-      const { surgeryWhatKind } = jsonValues;
-      const { medicalIllnesses } = jsonValues;
-      const { whenDiagnosed } = jsonValues;
-      const { whatDoctorDoyousee } = jsonValues;
-      const { treatment } = jsonValues;
-      const { familyhistory } = jsonValues;
-      const { preventativeCare } = jsonValues;
-      const { allergies } = jsonValues;
-      const { latitude } = jsonValues;
-      const { longitude } = jsonValues;
-
-      expect(type).toEqual('Pointer');
-      expect(className).toEqual('SurveyData');
-      expect(objectID).toEqual(postID1);
-      expect(majorEvents).toEqual('This');
-      expect(surgeryWhatKind).toEqual('is');
-      expect(medicalIllnesses).toEqual('a');
-      expect(whenDiagnosed).toEqual('very');
-      expect(whatDoctorDoyousee).toEqual('thorough');
-      expect(treatment).toEqual('and');
-      expect(familyhistory).toEqual('great');
-      expect(preventativeCare).toEqual('test');
-      expect(allergies).toEqual(null);
-      expect(latitude).toEqual(3);
-      expect(longitude).toEqual(7);
-
-      expect(result).toBeDefined();
-    });
-  });
-
   it('should post an object to class with relation to original post with a variety of classes', async () => {
     const postParams = {
       parseParentClass: 'SurveyData',
@@ -261,47 +203,6 @@ describe('crud testing', () => {
       expect(result).toBeDefined();
     });
   });
-
-  // it('should return the updated object - generic query', async () => {
-  //   const queryParams = {
-  //     parseObject: 'SurveyData',
-  //   };
-
-  //   return cloudFunctions.genericQuery(queryParams).then(async(result) => {
-  //     const jsonString = JSON.stringify(result);
-  //     const jsonValues = JSON.parse(jsonString);
-
-  //     const surveyData = await jsonValues.filter((surveyData) => {
-  //       console.log(surveyData.fname)
-  //       surveyData.fname == 'Greetings__'
-  //     });
-
-  //     const { height } = surveyData[0];
-  //     const { majorEvents } = surveyData[0];
-  //     const { name } = surveyData[0];
-  //     const { substance } = surveyData[0];
-  //     const { AssessmentandEvaluationSurgical } = surveyData[0];
-  //     const { chronic_condition_hypertension } = surveyData[0];
-  //     const { yearsLivedinthecommunity } = surveyData[0];
-  //     const { latitude } = surveyData[0];
-  //     const { longitude } = surveyData[0];
-  //     const { fname } = surveyData[0];
-  //     const { lname } = surveyData[0];
-
-  //     expect(height).toEqual('Test');
-  //     expect(majorEvents).toEqual('this');
-  //     expect(name).toEqual('is.');
-  //     expect(substance).toEqual('Succeed');
-  //     expect(AssessmentandEvaluationSurgical).toEqual('it');
-  //     expect(chronic_condition_hypertension).toEqual('must');
-  //     expect(yearsLivedinthecommunity).toEqual(null);
-  //     expect(latitude).toEqual(3);
-  //     expect(longitude).toEqual(4);
-  //     expect(fname).toEqual('Greetings__');
-  //     expect(lname).toEqual('Tester');
-  //     expect(result).toBeDefined();
-  //   });
-  // });
 
   it('should return the the updated object - geo query', async () => {
     const queryParams = {
