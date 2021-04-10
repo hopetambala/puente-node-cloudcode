@@ -63,14 +63,14 @@ Parse.Cloud.define('geoQuery', (request) => {
   * @param {string} parseParam Name of Parameter in Column
   * @returns Count of Query
   */
- Parse.Cloud.define('countService', (request) => {
+Parse.Cloud.define('countService', (request) => {
   const model = classes.patient.ParseClass;
   const service = services.batch;
   return service.countService(
     model,
     request.params.parseColumn,
-    request.params.parseParam
-  )
+    request.params.parseParam,
+  );
 });
 
 /** ******************************************
@@ -83,8 +83,9 @@ Parse.Cloud.define('geoQuery', (request) => {
                 - this contains a latitude/longitude which will post the location
   ******************************************* */
 Parse.Cloud.define('postObjectsToClass', (request) => new Promise((resolve, reject) => {
-  const SurveyData = Parse.Object.extend(request.params.parseClass);
-  const surveyPoint = new SurveyData();
+  const surveyPoint = new Parse.Object(request.params.parseClass);
+  const userObject = new Parse.Object('_User');
+
   let parseFilePhoto;
   let parseFileSignature;
 
@@ -127,6 +128,11 @@ Parse.Cloud.define('postObjectsToClass', (request) => new Promise((resolve, reje
   const point = new Parse.GeoPoint(localObject.latitude, localObject.longitude);
   surveyPoint.set('location', point);
 
+  if(request.params.parseUser) {
+    userObject.id = String(request.params.parseUser);
+    surveyPoint.set('parseUser', userObject);
+  }
+
   surveyPoint.save().then((results) => {
     resolve(results);
   }, (error) => {
@@ -144,18 +150,16 @@ Parse.Cloud.define('postObjectsToClass', (request) => new Promise((resolve, reje
     parseParentClassID - ID of the parseParentClass Object to associate the new post with
   ******************************************* */
 Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((resolve, reject) => {
-  const Child = Parse.Object.extend(request.params.parseClass);
-  const Parent = Parse.Object.extend(request.params.parseParentClass);
+  const supplementaryForm = new Parse.Object(request.params.parseClass);
+  const residentIdForm = new Parse.Object(request.params.parseParentClass);
+  const userObject = new Parse.Object('_User');
 
-  const child = new Child();
-  const parent = new Parent();
-
-  // Create child points
+  // Create supplementaryForm points
   const { localObject } = request.params;
   for (const key in localObject) {
     const obj = localObject[key];
     if (!obj.includes('data:image/jpg;base64,')) {
-      child.set(String(key), obj);
+      supplementaryForm.set(String(key), obj);
     } else {
       const photoFileLocalObject = new Parse.File('picture.png', { base64: obj });
       // put this inside if {
@@ -165,15 +169,20 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
         // The file either could not be read, or could not be saved to Parse.
         console.log(error); // eslint-disable-line
       });
-      child.set(String(key), photoFileLocalObject);
+      supplementaryForm.set(String(key), photoFileLocalObject);
     }
   }
 
-  // Add the parent as a value in the child
-  parent.id = String(request.params.parseParentClassID);
-  child.set('client', parent);
+  // Add the residentIdForm as a value in the supplementaryForm
+  residentIdForm.id = String(request.params.parseParentClassID);
 
-  child.save().then((results) => {
+  supplementaryForm.set('client', residentIdForm);
+  if(request.params.parseUser) {
+    userObject.id = String(request.params.parseUser);
+    supplementaryForm.set('parseUser', userObject);
+  }
+
+  supplementaryForm.save().then((results) => {
     resolve(results);
   }, (error) => {
     reject(error);
