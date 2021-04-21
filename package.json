@@ -74,6 +74,9 @@
     "coverageDirectory": "./coverage/",
     "collectCoverage": true
   },
+  "pre-commit": [
+    "test-local"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hopetambala/puente-node-cloudcode.git"
