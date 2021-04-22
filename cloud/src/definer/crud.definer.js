@@ -32,6 +32,27 @@ Parse.Cloud.define('basicQuery', (request) => {
 });
 
 /** ******************************************
+  BASIC QUERY
+  Input Paramaters:
+    model - Class to search
+    qry - number of records to skip when returned
+    limit - max number of records to return
+    parseColumn - Column to search for values
+    parseParam - value to be searched in columns
+  ******************************************* */
+  Parse.Cloud.define('searchPersonQuery', (request) => {
+    const model = classes.patient.ParseClass;
+    const service = services.batch;
+    return service.searchPersonQuery(
+      model,
+      request.params.qry,
+      request.params.limit,
+      request.params.parseColumn,
+      request.params.parseParam,
+    );
+  });
+
+/** ******************************************
   GEO QUERY
   Input Paramaters:
     parseColumn - Column to search for values
