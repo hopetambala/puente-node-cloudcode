@@ -1,6 +1,6 @@
 // Have not tested yet
 const Set = {
-  setUserAsAdmin: function setUserAsAdmin() {
+  setUserAsAdmin: function setUserAsAdmin(request) {
     return new Promise((resolve, reject) => {
     // Parse.Cloud.define("setUserAdmin", function(request, response) {
       let user;

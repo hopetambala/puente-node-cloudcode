@@ -107,8 +107,7 @@ describe('crud testing', () => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
 
-      let i;
-      for (i in jsonValues) {
+      Object.keys(jsonValues).forEach((i) => {
         // ensure all are related to original surveyData form
         const { client } = jsonValues[i];
         const type = client.__type; // eslint-disable-line
@@ -147,7 +146,7 @@ describe('crud testing', () => {
           const { yearsLivedinthecommunity } = jsonValues[i];
           expect(yearsLivedinthecommunity).toEqual('day!');
         }
-      }
+      });
       expect(result).toBeDefined();
     });
   });

@@ -3,7 +3,6 @@ const {
   PARSE_ENV, PARSE_APP_ID, PARSE_JAVASCRIPT_KEY, PARSE_SERVER_URL,
 } = require('./env.config');
 
-console.log( PARSE_ENV, PARSE_APP_ID, PARSE_JAVASCRIPT_KEY, PARSE_SERVER_URL)
 if (PARSE_ENV === 'staging') {
   // PASTE HERE YOUR Back4App APPLICATION ID AND YOUR JavaScript KEY
   Parse.initialize(PARSE_APP_ID, PARSE_JAVASCRIPT_KEY);
@@ -14,20 +13,19 @@ if (PARSE_ENV === 'staging') {
 }
 
 Parse.Cloud.run('genericQuery').then((response) => {
-    console.log(`Total objects queried: ${response.length}`);
-    response.forEach((surveyData) => {
-        console.log(totalUpdated)
-        const survey = surveyData.toJSON();
-        const postParams = {
-            parseClass: 'SurveyData',
-            parseClassID: survey.objectId,
-            localObject: {
-                searchIndex: `${survey.fname || ''} ${survey.lname || ''}`
-            }
-        }
-        Parse.Cloud.run('updateObject', postParams).then(() => {
-        }, () => {
-            console.log(`Failed to update ObjectID: ${survey.objectId}`);
-        })
+  console.log(`Total objects queried: ${response.length}`); // eslint-disable-line
+  response.forEach((surveyData) => {
+    const survey = surveyData.toJSON();
+    const postParams = {
+      parseClass: 'SurveyData',
+      parseClassID: survey.objectId,
+      localObject: {
+        searchIndex: `${survey.fname || ''} ${survey.lname || ''}`,
+      },
+    };
+    Parse.Cloud.run('updateObject', postParams).then(() => {
+    }, () => {
+      console.log(`Failed to update ObjectID: ${survey.objectId}`); // eslint-disable-line
     });
-})
+  });
+});
