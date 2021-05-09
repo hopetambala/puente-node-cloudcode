@@ -60,7 +60,10 @@
     "reinstall": "rm -rf node_modules/ && npm install",
     "gh-prune": "git fetch -p && for branch in `git branch -vv | grep ': gone]' | awk '{print $1}'`; do git branch -D $branch; done",
     "release": "standard-version",
-    "snyk-protect": "snyk protect"
+    "snyk-protect": "snyk protect",
+    "update-surveyData-local": "env-cmd -f .env.dev node scripts/update-surveyData.js",
+    "update-surveyData": "env-cmd -f .env.staging node scripts/update-surveyData.js"
+    
   },
   "engines": {
     "node": ">=4.3"
