@@ -67,7 +67,7 @@ Parse.Cloud.define('countService', (request) => {
   const model = classes.patient.ParseClass;
   const service = services.batch;
   return service.countService(
-    model,
+    request.params.ParseClass,
     request.params.parseColumn,
     request.params.parseParam,
   );
