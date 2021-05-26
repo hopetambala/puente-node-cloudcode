@@ -90,7 +90,7 @@ const Batch = {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         const Model = Parse.Object.extend(modelObject);
-        let pipeline = []
+        let pipeline = [];
         switch (modelObject) {
           case 'SurveyData':
             pipeline = [
@@ -108,25 +108,25 @@ const Batch = {
               {
                 group: {
                   objectId: ['$yearsLivedinthecommunity', '$yearsLivedinThisHouse',
-                  '$waterAccess','$typeofWaterdoyoudrink','$bathroomAccess','$latrineAccess',
-                  '$clinicAccess','$conditionoFloorinyourhouse','$conditionoRoofinyourhouse',
-                  '$medicalproblemswheredoyougo','$dentalproblemswheredoyougo',
-                  '$biggestproblemofcommunity','$timesperweektrashcollected',
-                  '$wheretrashleftbetweenpickups','$numberofIndividualsLivingintheHouse',
-                  '$numberofChildrenLivinginHouseUndertheAgeof5','$houseownership',
-                  '$stoveType','$govAssistance','$foodSecurity','$electricityAccess',
-                  '$houseMaterial'],
+                    '$waterAccess', '$typeofWaterdoyoudrink', '$bathroomAccess', '$latrineAccess',
+                    '$clinicAccess', '$conditionoFloorinyourhouse', '$conditionoRoofinyourhouse',
+                    '$medicalproblemswheredoyougo', '$dentalproblemswheredoyougo',
+                    '$biggestproblemofcommunity', '$timesperweektrashcollected',
+                    '$wheretrashleftbetweenpickups', '$numberofIndividualsLivingintheHouse',
+                    '$numberofChildrenLivinginHouseUndertheAgeof5', '$houseownership',
+                    '$stoveType', '$govAssistance', '$foodSecurity', '$electricityAccess',
+                    '$houseMaterial'],
                 },
               },
             ];
-            break
+            break;
           case 'Vitals':
             pipeline = [
               {
                 group: {
-                  objectId: ['$height', '$weight','$respRate','$bmi', '$bloodPressure',
-                  '$bloodSugar','$bloodOxygen','$temp','$pulse','$hemoglobinLevels',
-                  '$painLevels'],
+                  objectId: ['$height', '$weight', '$respRate', '$bmi', '$bloodPressure',
+                    '$bloodSugar', '$bloodOxygen', '$temp', '$pulse', '$hemoglobinLevels',
+                    '$painLevels'],
                 },
               },
             ];
@@ -135,8 +135,8 @@ const Batch = {
             pipeline = [
               {
                 group: {
-                  objectId: ['$altitude','$city','$communityName','$createdAt','$latitude',
-                  '$longitude','$name','$province','$relatedPeople'],
+                  objectId: ['$altitude', '$city', '$communityName', '$createdAt', '$latitude',
+                    '$longitude', '$name', '$province', '$relatedPeople'],
                 },
               },
             ];
@@ -152,7 +152,7 @@ const Batch = {
         }
 
         const query = new Parse.Query(Model);
-        console.log(modelObject, "PIPELIINE:", pipeline)
+        console.log(modelObject, 'PIPELIINE:', pipeline);
         query.equalTo(parseColumn, parseParam);
         query.aggregate(pipeline).then((results) => {
           resolve(results.length);
