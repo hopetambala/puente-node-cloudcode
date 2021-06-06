@@ -202,13 +202,13 @@ Parse.Cloud.define('addUserPushToken', (request) => new Promise((resolve, reject
   const query = new Parse.Query(Parse.User);
   query.get(userId)
     .then((userObj) => {
-      userObj.set('expoPushToken', expoPushToken)
+      userObj.set('expoPushToken', expoPushToken);
       userObj.save(null, { useMasterKey: true }).then((updatedUser) => {
-        resolve(updatedUser)
+        resolve(updatedUser);
       }, (error1) => {
         // unable to update user object
-        reject(error1)
-      })
+        reject(error1);
+      });
     }, (error2) => {
       // unable to find userId
       reject(error2);

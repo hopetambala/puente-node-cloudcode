@@ -41,9 +41,9 @@ describe('role testing', () => {
   it('should add a push token to the existing user', async () => {
     const credentials = {
       userId: adminRoleID,
-      expoPushToken: 'TestExpoPushToken'
+      expoPushToken: 'TestExpoPushToken',
     };
-    return cloudFunctions.signup(credentials).then((result) => {
+    return cloudFunctions.addUserPushToken(credentials).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
 

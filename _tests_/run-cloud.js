@@ -76,6 +76,9 @@ const cloudFunctions = {
   organizationVerified: (params) => Parse.Cloud
     .run('organizationVerified', params)
     .then((response) => response),
+  addUserPushToken: (params) => Parse.Cloud
+    .run('addUserPushToken', params)
+    .then((response) => response),
 };
 
 module.exports = { cloudFunctions };
