@@ -186,3 +186,31 @@ Parse.Cloud.define('deleteUser', (request) => new Promise((resolve, reject) => {
       reject(error);
     });
 }));
+
+/** ******************************************
+ADD USER PUSH TOKEN
+Adds the users expo push notification to the user object
+
+Input Paramaters:
+  userId - objectId for the user
+  expoPushToken - expo's generated push token for the user (frontend)
+******************************************* */
+Parse.Cloud.define('addUserPushToken', (request) => new Promise((resolve, reject) => {
+  const { userId, expoPushToken } = request.params;
+  const user = new Parse.User();
+  user.set('id', userId);
+  const query = new Parse.Query(Parse.User);
+  query.get(userId)
+    .then((userObj) => {
+      userObj.set('expoPushToken', expoPushToken);
+      userObj.save(null, { useMasterKey: true }).then((updatedUser) => {
+        resolve(updatedUser);
+      }, (error1) => {
+        // unable to update user object
+        reject(error1);
+      });
+    }, (error2) => {
+      // unable to find userId
+      reject(error2);
+    });
+}));
