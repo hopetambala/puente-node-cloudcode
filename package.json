@@ -13,7 +13,7 @@
     "http": "0.0.0",
     "lodash": "4.17.19",
     "mailgun-js": "0.22.0",
-    "parse": "1.11.1",
+    "parse": "2.0.0",
     "parse-dashboard": "2.1.0",
     "parse-server": "4.3.0",
     "parse-server-simple-mailgun-adapter": "1.0.1",
