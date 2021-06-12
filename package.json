@@ -44,7 +44,7 @@
     "mongodb": "3.5.8",
     "nodemon": "2.0.3",
     "pre-commit": "1.2.2",
-    "randomstring": "1.1.5",
+    "randomstring": "1.2.1",
     "standard-version": "8.0.2",
     "supertest": "4.0.2"
   },
