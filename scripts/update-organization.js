@@ -66,10 +66,7 @@ function getParameters(keyword) {
   console.log(`${keyword} the current organization and new organization you wish to update with.`); // eslint-disable-line
   prompt.get(['currentValue', 'newValue'], (err, result) => {
     if (err) { console.log(err); } // eslint-disable-line
-    const checkedResult = checkCorrect(result);
-    if (checkedResult === 0) {
-      getParameters('Re-enter');
-    }
+    checkCorrect(result);
     return 0;
   });
 }
