@@ -119,10 +119,10 @@ Parse.Cloud.define('postObjectsToClass', (request) => new Promise((resolve, reje
 
   // add key/value from the local object to SurveyPoint
   const { localObject } = request.params;
-  for (const key in localObject) {
+  Object.keys(localObject).forEach((key) => {
     const obj = localObject[key];
     surveyPoint.set(String(key), obj);
-  }
+  });
 
   // Add GeoPoint location
   const point = new Parse.GeoPoint(localObject.latitude, localObject.longitude);
@@ -156,7 +156,7 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
 
   // Create supplementaryForm points
   const { localObject } = request.params;
-  for (const key in localObject) {
+  Object.keys(localObject).forEach((key) => {
     const obj = localObject[key];
     if (!obj.includes('data:image/jpg;base64,')) {
       supplementaryForm.set(String(key), obj);
@@ -171,7 +171,7 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
       });
       supplementaryForm.set(String(key), photoFileLocalObject);
     }
-  }
+  });
 
   // Add the residentIdForm as a value in the supplementaryForm
   residentIdForm.id = String(request.params.parseParentClassID);
@@ -256,8 +256,8 @@ Parse.Cloud.define('postObjectsToAnyClassWithRelation', (request) => new Promise
   // create the Parse object if it is the first variable added to the
   // object
   const { localObject } = request.params;
-  for (const i in localObject) {
-    const object = localObject[i];
+  Object.keys(localObject).forEach((key) => {
+    const object = localObject[key];
 
     if (object.tag === 'Vitals') {
       if (vitalsObj === false) {
@@ -302,7 +302,7 @@ Parse.Cloud.define('postObjectsToAnyClassWithRelation', (request) => new Promise
       }
       environmentalHealth.set(String(object.key), object.value);
     }
-  }
+  });
 
   // store the Parse objects that were asspciated with local object
   const arr = [];
@@ -378,10 +378,10 @@ Parse.Cloud.define('updateObject', (request) => new Promise((resolve, reject) =>
   query.get(request.params.parseClassID).then((result) => {
     // update object with new attributes
     const { localObject } = request.params;
-    for (const key in localObject) {
+    Object.keys(localObject).forEach((key) => {
       const obj = localObject[key];
       result.set(String(key), obj);
-    }
+    });
     // Add GeoPoint location
     const point = new Parse.GeoPoint(localObject.latitude, localObject.longitude);
     result.set('location', point);
