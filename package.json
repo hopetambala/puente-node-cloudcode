@@ -27,7 +27,7 @@
     "@babel/core": "7.9.0",
     "@babel/node": "7.8.7",
     "@babel/preset-env": "7.9.5",
-    "@shelf/jest-mongodb": "1.1.5",
+    "@shelf/jest-mongodb": "2.0.1",
     "babel-jest": "25.4.0",
     "case": "1.6.3",
     "chai": "4.2.0",
