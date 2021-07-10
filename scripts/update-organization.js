@@ -6,7 +6,7 @@ const {
 } = require('./env.config');
 
 console.log(PARSE_ENV, PARSE_APP_ID, PARSE_JAVASCRIPT_KEY, PARSE_SERVER_URL); // eslint-disable-line
-if (PARSE_ENV === 'staging') {
+if (PARSE_ENV === 'staging' || PARSE_ENV === 'prod') {
   Parse.initialize(PARSE_APP_ID, PARSE_JAVASCRIPT_KEY);
   Parse.serverURL = PARSE_SERVER_URL;
 } else {
