@@ -148,18 +148,43 @@ Parse.Cloud.define('postObjectsToClass', (request) => new Promise((resolve, reje
     localObject - Continas key value pairs that will be posted to the class
                 - this contains a latitude/longitude which will post the location
     parseParentClassID - ID of the parseParentClass Object to associate the new post with
+    loopParentID - Custom Form that the looped form originates from
+    loop - bool t/f whether looped data contained in form
   ******************************************* */
 Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((resolve, reject) => {
   const supplementaryForm = new Parse.Object(request.params.parseClass);
   const residentIdForm = new Parse.Object(request.params.parseParentClass);
   const userObject = new Parse.Object('_User');
+  const loopParentForm = new Parse.Object(request.params.parseClass)
 
   // Create supplementaryForm points
-  const { localObject } = request.params;
+  const { localObject, loop } = request.params;
+  // create looped json to ensure that data is submitted as multiple forms
+  let loopedJson = {};
+  let newFieldsArray = [];
   for (const key in localObject) {
     const obj = localObject[key];
     if (!obj.includes('data:image/jpg;base64,')) {
-      supplementaryForm.set(String(key), obj);
+      if (loop === true && String(key) === 'fields') {
+        obj.forEach((field, index) => {
+          if (!field.title.includes('__loop')) {
+            newFieldsArray = newFieldsArray.concat(field)
+          } else {
+            const originalKey = field.title.split('__loop');
+            console.log("orig key with loop in it", originalKey)
+            // check if loop already used
+            if (originalKey[1] in Object.keys(loopedJson)) {
+              loopedJson[originalKey[1]][originalKey[0]] = field.answer;
+            } else {
+              loopedJson[originalKey[1]] = {}
+              loopedJson[originalKey[1]][originalKey[0]] = field.answer;
+            }
+          }
+        });
+        supplementaryForm.set(String(key), newFieldsArray)
+      } else {
+        supplementaryForm.set(String(key), obj);
+      }
     } else {
       const photoFileLocalObject = new Parse.File('picture.png', { base64: obj });
       // put this inside if {
@@ -173,17 +198,59 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
     }
   }
 
+  console.log("looped JSON",loopedJson);
+
   // Add the residentIdForm as a value in the supplementaryForm
   residentIdForm.id = String(request.params.parseParentClassID);
 
   supplementaryForm.set('client', residentIdForm);
+
+  if(request.params.loopParentID) {
+    loopParentForm.id = String(request.params.loopParentID)
+    supplementaryForm.set('loopClient', loopParentForm)
+  }
+  
   if (request.params.parseUser) {
     userObject.id = String(request.params.parseUser);
     supplementaryForm.set('parseUser', userObject);
   }
 
   supplementaryForm.save().then((results) => {
-    resolve(results);
+    if (loop === true && Object.keys(loopedJson).length > 0) {
+
+      console.log("inside if statement")
+    }
+    return results;
+  }).then((mainObject) => {
+    // post looped objects 
+    if (loop === true && Object.keys(loopedJson).length > 0) {
+      Object.entries(loopedJson).forEach(([key,value]) => {
+        // get looped data and adjust the fields Array for each loopp
+        newFieldsArray.forEach((element) => {
+          if(String(element.title) in (value)) {
+            element.answer = value[element.title]
+          }
+        });
+        let newLocalObject = request.params.localObject;
+        newLocalObject.fields = newFieldsArray
+        const postParams = {
+          parseParentClassID: request.params.parseParentClassID,
+          parseParentClass: request.params.parseParentClass,
+          parseUser: request.params.parseUser,
+          parseClass: request.params.parseClass,
+          photoFile: request.params.photoFile,
+          localObject: newLocalObject,
+          loop: false,
+          loopParentID: JSON.parse(JSON.stringify(mainObject)).objectId
+        };
+        Parse.Cloud.run('postObjectsToClassWithRelation', postParams).then((result) => {
+          console.log(result); // eslint-disable-line
+        }, (error) => {
+          reject(error);
+        });
+    })
+  }
+  resolve(mainObject)
   }, (error) => {
     reject(error);
   });
