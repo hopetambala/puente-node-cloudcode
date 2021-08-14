@@ -119,10 +119,10 @@ Parse.Cloud.define('postObjectsToClass', (request) => new Promise((resolve, reje
 
   // add key/value from the local object to SurveyPoint
   const { localObject } = request.params;
-  for (const key in localObject) {
+  Object.keys(localObject).forEach((key) => {
     const obj = localObject[key];
     surveyPoint.set(String(key), obj);
-  }
+  });
 
   // Add GeoPoint location
   const point = new Parse.GeoPoint(localObject.latitude, localObject.longitude);
@@ -155,33 +155,32 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
   const supplementaryForm = new Parse.Object(request.params.parseClass);
   const residentIdForm = new Parse.Object(request.params.parseParentClass);
   const userObject = new Parse.Object('_User');
-  const loopParentForm = new Parse.Object(request.params.parseClass)
+  const loopParentForm = new Parse.Object(request.params.parseClass);
 
   // Create supplementaryForm points
   const { localObject, loop } = request.params;
   // create looped json to ensure that data is submitted as multiple forms
-  let loopedJson = {};
+  const loopedJson = {};
   let newFieldsArray = [];
-  for (const key in localObject) {
+  Object.keys(localObject).forEach((key) => {
     const obj = localObject[key];
     if (!obj.includes('data:image/jpg;base64,')) {
       if (loop === true && String(key) === 'fields') {
-        obj.forEach((field, index) => {
+        obj.forEach((field, index) => { // eslint-disable-line
           if (!field.title.includes('__loop')) {
-            newFieldsArray = newFieldsArray.concat(field)
+            newFieldsArray = newFieldsArray.concat(field);
           } else {
             const originalKey = field.title.split('__loop');
-            console.log("orig key with loop in it", originalKey)
             // check if loop already used
             if (originalKey[1] in Object.keys(loopedJson)) {
               loopedJson[originalKey[1]][originalKey[0]] = field.answer;
             } else {
-              loopedJson[originalKey[1]] = {}
+              loopedJson[originalKey[1]] = {};
               loopedJson[originalKey[1]][originalKey[0]] = field.answer;
             }
           }
         });
-        supplementaryForm.set(String(key), newFieldsArray)
+        supplementaryForm.set(String(key), newFieldsArray);
       } else {
         supplementaryForm.set(String(key), obj);
       }
@@ -196,43 +195,35 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
       });
       supplementaryForm.set(String(key), photoFileLocalObject);
     }
-  }
-
-  console.log("looped JSON",loopedJson);
+  });
 
   // Add the residentIdForm as a value in the supplementaryForm
   residentIdForm.id = String(request.params.parseParentClassID);
 
   supplementaryForm.set('client', residentIdForm);
 
-  if(request.params.loopParentID) {
-    loopParentForm.id = String(request.params.loopParentID)
-    supplementaryForm.set('loopClient', loopParentForm)
+  if (request.params.loopParentID) {
+    loopParentForm.id = String(request.params.loopParentID);
+    supplementaryForm.set('loopClient', loopParentForm);
   }
-  
+
   if (request.params.parseUser) {
     userObject.id = String(request.params.parseUser);
     supplementaryForm.set('parseUser', userObject);
   }
 
-  supplementaryForm.save().then((results) => {
+  supplementaryForm.save().then((results) => results).then((mainObject) => {
+    // post looped objects
     if (loop === true && Object.keys(loopedJson).length > 0) {
-
-      console.log("inside if statement")
-    }
-    return results;
-  }).then((mainObject) => {
-    // post looped objects 
-    if (loop === true && Object.keys(loopedJson).length > 0) {
-      Object.entries(loopedJson).forEach(([key,value]) => {
+      Object.entries(loopedJson).forEach(([key, value]) => { // eslint-disable-line
         // get looped data and adjust the fields Array for each loopp
         newFieldsArray.forEach((element) => {
-          if(String(element.title) in (value)) {
-            element.answer = value[element.title]
+          if (String(element.title) in (value)) {
+            element.answer = value[element.title]; // eslint-disable-line
           }
         });
-        let newLocalObject = request.params.localObject;
-        newLocalObject.fields = newFieldsArray
+        const newLocalObject = request.params.localObject;
+        newLocalObject.fields = newFieldsArray;
         const postParams = {
           parseParentClassID: request.params.parseParentClassID,
           parseParentClass: request.params.parseParentClass,
@@ -241,16 +232,16 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
           photoFile: request.params.photoFile,
           localObject: newLocalObject,
           loop: false,
-          loopParentID: JSON.parse(JSON.stringify(mainObject)).objectId
+          loopParentID: JSON.parse(JSON.stringify(mainObject)).objectId,
         };
         Parse.Cloud.run('postObjectsToClassWithRelation', postParams).then((result) => {
           console.log(result); // eslint-disable-line
         }, (error) => {
           reject(error);
         });
-    })
-  }
-  resolve(mainObject)
+      });
+    }
+    resolve(mainObject);
   }, (error) => {
     reject(error);
   });
@@ -323,8 +314,8 @@ Parse.Cloud.define('postObjectsToAnyClassWithRelation', (request) => new Promise
   // create the Parse object if it is the first variable added to the
   // object
   const { localObject } = request.params;
-  for (const i in localObject) {
-    const object = localObject[i];
+  Object.keys(localObject).forEach((key) => {
+    const object = localObject[key];
 
     if (object.tag === 'Vitals') {
       if (vitalsObj === false) {
@@ -369,7 +360,7 @@ Parse.Cloud.define('postObjectsToAnyClassWithRelation', (request) => new Promise
       }
       environmentalHealth.set(String(object.key), object.value);
     }
-  }
+  });
 
   // store the Parse objects that were asspciated with local object
   const arr = [];
@@ -445,10 +436,10 @@ Parse.Cloud.define('updateObject', (request) => new Promise((resolve, reject) =>
   query.get(request.params.parseClassID).then((result) => {
     // update object with new attributes
     const { localObject } = request.params;
-    for (const key in localObject) {
+    Object.keys(localObject).forEach((key) => {
       const obj = localObject[key];
       result.set(String(key), obj);
-    }
+    });
     // Add GeoPoint location
     const point = new Parse.GeoPoint(localObject.latitude, localObject.longitude);
     result.set('location', point);
