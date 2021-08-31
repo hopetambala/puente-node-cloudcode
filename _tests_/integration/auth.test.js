@@ -38,6 +38,19 @@ describe('role testing', () => {
     });
   });
 
+  it('should add a push token to the existing user', async () => {
+    const credentials = {
+      userId: adminRoleID,
+      expoPushToken: 'TestExpoPushToken',
+    };
+    return cloudFunctions.addUserPushToken(credentials).then((result) => {
+      const jsonString = JSON.stringify(result);
+      const jsonValues = JSON.parse(jsonString);
+
+      expect(jsonValues.expoPushToken).toEqual('TestExpoPushToken');
+    });
+  });
+
   it('should add a user to same orginzation with contributor role', async () => {
     const credentials = {
       firstname: 'Jon',
