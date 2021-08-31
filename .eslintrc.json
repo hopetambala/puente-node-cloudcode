@@ -1,0 +1,33 @@
+{
+    "env": {
+        "browser": true,
+        "commonjs": true,
+        "es6": true
+    },
+    "extends": [
+        "airbnb-base"
+    ],
+    "globals": {
+        "Atomics": "readonly",
+        "SharedArrayBuffer": "readonly",
+        "Parse":false
+    },
+    "parserOptions": {
+        "ecmaVersion": 2018
+    },
+    "rules": {
+    },
+    "overrides": [
+        {
+          "files": [
+            "**/*.spec.js",
+            "**/*.spec.jsx",
+            "**/*.test.js",
+            "**/*.test.jsx"
+          ],
+          "env": {
+            "jest": true
+          }
+        }
+      ]
+}

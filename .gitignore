@@ -1,2 +1,6 @@
-node_modules/
-logs/*
+node_modules
+logs
+*.DS_Store
+/coverage
+.parse.local
+.env.prod

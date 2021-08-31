@@ -10,7 +10,11 @@ services:
 install:
   - npm install -g codecov
 
+before_script:
+  - sleep 15
+  - mongo mydb_test --eval 'db.createUser({user:"travis",pwd:"test",roles:["readWrite"]});'
+
 script:
   - npm ci --no-optional
-  - npm run test 
+  - npm run start-with-dash & npm run test-local
   - codecov
