@@ -1,7 +1,6 @@
 {
   "name": "puente_cloud",
   "version": "1.6.0",
-  "description": "[Instructions](https://docs.back4app.com/docs/integrations/command-line-interface/setting-up-cloud-code-2/)",
   "main": "index.js",
   "directories": {
     "test": "tests"
@@ -18,6 +17,7 @@
     "parse-server": "4.3.0",
     "parse-server-simple-mailgun-adapter": "1.0.1",
     "path": "0.12.7",
+    "prompt": "^1.1.0",
     "request": "2.88.0",
     "request-promise": "4.2.5",
     "simple2e": "1.0.2"
@@ -60,7 +60,10 @@
     "reinstall": "rm -rf node_modules/ && npm install",
     "gh-prune": "git fetch -p && for branch in `git branch -vv | grep ': gone]' | awk '{print $1}'`; do git branch -D $branch; done",
     "release": "standard-version",
-    "snyk-protect": "snyk protect"
+    "snyk-protect": "snyk protect",
+    "update-org-local": "env-cmd -f .env.dev node scripts/update-organization.js",
+    "update-org-staging": "env-cmd -f .env.staging node scripts/update-organization.js",
+    "update-org": "env-cmd -f .env.prod node scripts/update-organization.js"
   },
   "engines": {
     "node": ">=4.3"
@@ -81,7 +84,7 @@
     "type": "git",
     "url": "git+https://github.com/hopetambala/puente-node-cloudcode.git"
   },
-  "author": "Hope Tambala <hopetambala@puente-dr.com> (hopetambala.com)",
+  "author": "Hope Tambala <hopetambala@puente-dr.org> (hopetambala.com)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/hopetambala/puente-node-cloudcode/issues"
