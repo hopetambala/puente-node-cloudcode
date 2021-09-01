@@ -1,7 +1,7 @@
 const Loop = require('./loop/loop.js');
 
 const utils = {
-    Loop: Loop
-}
+  Loop,
+};
 
 module.exports = utils;

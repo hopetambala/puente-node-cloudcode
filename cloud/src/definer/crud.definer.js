@@ -157,7 +157,7 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
   const residentIdForm = new Parse.Object(request.params.parseParentClass);
   const userObject = new Parse.Object('_User');
   const loopParentForm = new Parse.Object(request.params.parseClass);
-  console.log("utils", utils)
+
   // Create supplementaryForm points
   const { localObject, loop } = request.params;
   // create looped json to ensure that data is submitted as multiple forms
@@ -167,7 +167,8 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
     const obj = localObject[key];
     if (!obj.includes('data:image/jpg;base64,')) {
       if (loop === true && String(key) === 'fields') {
-        [ loopedJson, newFieldsArray ] = utils.Loop.buildLoopFieldsParameter(obj, key, supplementaryForm, loopedJson, newFieldsArray)
+        [loopedJson, newFieldsArray] = utils.Loop.buildLoopFieldsParameter(obj,
+          key, supplementaryForm, loopedJson, newFieldsArray);
       } else {
         supplementaryForm.set(String(key), obj);
       }
@@ -202,11 +203,11 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
   supplementaryForm.save().then((results) => results).then((mainObject) => {
     // post looped objects
     if (loop === true && Object.keys(loopedJson).length > 0) {
-      utils.Loop.postLoopedForm(loopedJson,newFieldsArray, request,mainObject).then((result) => {
-        console.log(result)
+      utils.Loop.postLoopedForm(loopedJson, newFieldsArray, request, mainObject).then((result) => {
+        console.log(result); // eslint-disable-line
       }, (error) => {
         reject(error);
-      })
+      });
     }
     resolve(mainObject);
   }, (error) => {
