@@ -1,5 +1,6 @@
 const classes = require('../classes');
 const services = require('../services');
+const utils = require('../_utils');
 
 /** ******************************************
 GENERIC QUERY
@@ -156,31 +157,17 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
   const residentIdForm = new Parse.Object(request.params.parseParentClass);
   const userObject = new Parse.Object('_User');
   const loopParentForm = new Parse.Object(request.params.parseClass);
-
+  console.log("utils", utils)
   // Create supplementaryForm points
   const { localObject, loop } = request.params;
   // create looped json to ensure that data is submitted as multiple forms
-  const loopedJson = {};
+  let loopedJson = {};
   let newFieldsArray = [];
   Object.keys(localObject).forEach((key) => {
     const obj = localObject[key];
     if (!obj.includes('data:image/jpg;base64,')) {
       if (loop === true && String(key) === 'fields') {
-        obj.forEach((field, index) => { // eslint-disable-line
-          if (!field.title.includes('__loop')) {
-            newFieldsArray = newFieldsArray.concat(field);
-          } else {
-            const originalKey = field.title.split('__loop');
-            // check if loop already used
-            if (originalKey[1] in Object.keys(loopedJson)) {
-              loopedJson[originalKey[1]][originalKey[0]] = field.answer;
-            } else {
-              loopedJson[originalKey[1]] = {};
-              loopedJson[originalKey[1]][originalKey[0]] = field.answer;
-            }
-          }
-        });
-        supplementaryForm.set(String(key), newFieldsArray);
+        [ loopedJson, newFieldsArray ] = utils.Loop.buildLoopFieldsParameter(obj, key, supplementaryForm, loopedJson, newFieldsArray)
       } else {
         supplementaryForm.set(String(key), obj);
       }
@@ -215,31 +202,11 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
   supplementaryForm.save().then((results) => results).then((mainObject) => {
     // post looped objects
     if (loop === true && Object.keys(loopedJson).length > 0) {
-      Object.entries(loopedJson).forEach(([key, value]) => { // eslint-disable-line
-        // get looped data and adjust the fields Array for each loopp
-        newFieldsArray.forEach((element) => {
-          if (String(element.title) in (value)) {
-            element.answer = value[element.title]; // eslint-disable-line
-          }
-        });
-        const newLocalObject = request.params.localObject;
-        newLocalObject.fields = newFieldsArray;
-        const postParams = {
-          parseParentClassID: request.params.parseParentClassID,
-          parseParentClass: request.params.parseParentClass,
-          parseUser: request.params.parseUser,
-          parseClass: request.params.parseClass,
-          photoFile: request.params.photoFile,
-          localObject: newLocalObject,
-          loop: false,
-          loopParentID: JSON.parse(JSON.stringify(mainObject)).objectId,
-        };
-        Parse.Cloud.run('postObjectsToClassWithRelation', postParams).then((result) => {
-          console.log(result); // eslint-disable-line
-        }, (error) => {
-          reject(error);
-        });
-      });
+      utils.Loop.postLoopedForm(loopedJson,newFieldsArray, request,mainObject).then((result) => {
+        console.log(result)
+      }, (error) => {
+        reject(error);
+      })
     }
     resolve(mainObject);
   }, (error) => {
