@@ -1,6 +1,5 @@
 const { MongoClient } = require('mongodb');
 const { cloudFunctions } = require('../run-cloud');
-// hello world
 
 test('Hello World exists', async () => {
   expect(cloudFunctions.hello()).toBeDefined();
@@ -44,17 +43,14 @@ describe('crud testing', () => {
         longitude: 5,
       },
     };
-    return cloudFunctions.postObjectsToClass(postParams).then((result) => {
-      const jsonString = JSON.stringify(result);
-      const jsonValues = JSON.parse(jsonString);
-
-      expect(jsonValues.fname).toEqual('Greetings__');
-      expect(jsonValues.lname).toEqual('Tester');
-      expect(jsonValues.latitude).toEqual(4);
-      expect(jsonValues.longitude).toEqual(5);
-      expect(jsonValues.picture).toBeDefined();
-      expect(jsonValues.signature).toBeDefined();
-      expect(jsonValues.location).toBeDefined();
+    return cloudFunctions.postObjectsToClass(postParams).then(result => {
+      expect(result.get('fname')).toEqual('Greetings__');
+      expect(result.get('lname')).toEqual('Tester');
+      expect(result.get('latitude')).toEqual(4);
+      expect(result.get('longitude')).toEqual(5);
+      expect(result.get('signature')).toBeDefined();
+      expect(result.get('picture')).toBeDefined();
+      expect(result.get('location')).toBeDefined();
 
       postID1 = result.id;
     });

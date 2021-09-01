@@ -125,8 +125,12 @@ Parse.Cloud.define('postObjectsToClass', (request) => new Promise((resolve, reje
   }
 
   // Add GeoPoint location
-  const point = new Parse.GeoPoint(localObject.latitude, localObject.longitude);
-  surveyPoint.set('location', point);
+
+  if (localObject?.latitude && localObject?.longitude){
+    const point = new Parse.GeoPoint(localObject.latitude, localObject.longitude);
+    surveyPoint.set('location', point);
+  }
+ 
 
   if (request.params.parseUser) {
     userObject.id = String(request.params.parseUser);
