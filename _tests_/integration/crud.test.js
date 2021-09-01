@@ -286,18 +286,18 @@ describe('crud testing', () => {
     });
   });
 
-  it('should remove the original posted object', async () => {
-    const removeParams = {
-      parseClass: 'SurveyData',
-      objectIDinparseClass: postID1,
-    };
+  // it('should remove the original posted object', async () => {
+  //   const removeParams = {
+  //     parseClass: 'SurveyData',
+  //     objectIDinparseClass: postID1,
+  //   };
 
-    return cloudFunctions.removeObjectsinClass(removeParams).then((result) => {
-      const jsonString = JSON.stringify(result);
-      const jsonValues = JSON.parse(jsonString);
+  //   return cloudFunctions.removeObjectsinClass(removeParams).then((result) => {
+  //     const jsonString = JSON.stringify(result);
+  //     const jsonValues = JSON.parse(jsonString);
 
-      expect(jsonValues.objectId).toEqual(postID1);
-      expect(result).toBeDefined();
-    });
-  });
+  //     expect(jsonValues.objectId).toEqual(postID1);
+  //     expect(result).toBeDefined();
+  //   });
+  // });
 });
