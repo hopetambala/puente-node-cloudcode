@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.7.0](https://github.com/hopetambala/puente-node-cloudcode/compare/v1.5.0...v1.7.0) (2021-09-01)
+
+
+### Features
+
+* add deep linking betweent user and survey ([4b78dc5](https://github.com/hopetambala/puente-node-cloudcode/commit/4b78dc5213ffae6d65f751c47054153488cf63df))
+* add deleteUser function ([a63bf26](https://github.com/hopetambala/puente-node-cloudcode/commit/a63bf26b32b3986e1c3844324001bf49c7cfe9b7))
+* added expoPushToken function to udpate user ([87b2f1b](https://github.com/hopetambala/puente-node-cloudcode/commit/87b2f1b2a0415b5872ee541d7b23ae6273458a11))
+* count service to get unqiue surrveydata created ([89337d0](https://github.com/hopetambala/puente-node-cloudcode/commit/89337d0bfa0b65c7b138afce978143ef0069a713))
+* pictures on any forms work ([79d0a3d](https://github.com/hopetambala/puente-node-cloudcode/commit/79d0a3d0dc9a0954e68549523c5806dd6a1ce37d))
+* update all dependencies! ([eab407c](https://github.com/hopetambala/puente-node-cloudcode/commit/eab407c0a9332736d906c3ecbf1bc99be119897e))
+
+
+### Bug Fixes
+
+*  tests PLATFORM-332 ([a494930](https://github.com/hopetambala/puente-node-cloudcode/commit/a4949300a30c3aa264043acfa2b033e828762a97))
+* **deps:** update dependency lodash to v4.17.21 [security] ([ea8908a](https://github.com/hopetambala/puente-node-cloudcode/commit/ea8908a6b8349b16ee55f7275d6f27bf94648881))
+* package.json & package-lock.json to reduce vulnerabilities ([7f43954](https://github.com/hopetambala/puente-node-cloudcode/commit/7f4395439f3cb7b61ed005aa476817ba814dea42))
+* sort basic query results ([c20a12a](https://github.com/hopetambala/puente-node-cloudcode/commit/c20a12a37debffa8edbf585b982a9e0ba8dc53be))
+* testing ([2fdb6cd](https://github.com/hopetambala/puente-node-cloudcode/commit/2fdb6cd2663725b0a938573dee968fee8eae5641))
+
 ## [1.6.0](https://github.com/hopetambala/puente-node-cloudcode/compare/v1.5.0...v1.6.0) (2021-03-20)
 
 
