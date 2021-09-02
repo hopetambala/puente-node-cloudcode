@@ -28,7 +28,7 @@ function queryAndUpdateSurveyData(params) {
       const survey = form.toJSON();
       const { newField } = params;
       const oldValue = survey[params.currentField];
-      if (oldValue !== undefined) {
+      if (oldValue !== undefined && survey[newField] === undefined) {
         const newLocalObject = {};
         newLocalObject[newField] = [oldValue];
         const postParams = {
