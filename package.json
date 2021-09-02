@@ -61,7 +61,10 @@
     "reinstall": "rm -rf node_modules/ && npm install",
     "gh-prune": "git fetch -p && for branch in `git branch -vv | grep ': gone]' | awk '{print $1}'`; do git branch -D $branch; done",
     "release": "standard-version",
-    "snyk-protect": "snyk protect"
+    "snyk-protect": "snyk protect",
+    "update-fieldDatatype-local": "env-cmd -f .env.dev node scripts/update-fieldDatatype.js",
+    "update-fieldDatatype-staging": "env-cmd -f .env.staging node scripts/update-fieldDatatype.js",
+    "update-fieldDatatype": "env-cmd -f .env.prod node scripts/update-fieldDatatype.js"
   },
   "engines": {
     "node": ">=4.3"

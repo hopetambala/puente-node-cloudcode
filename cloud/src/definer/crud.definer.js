@@ -18,7 +18,7 @@ Parse.Cloud.define('genericFormQuery', (request) => {
   let queryModel;
   const { model } = request.params;
 
-  if(model === 'SurveyData') {
+  if (model === 'SurveyData') {
     queryModel = classes.patient.ParseClass;
   } else if (model === 'Vitals') {
     queryModel = classes.Vitals.ParseClass;
@@ -27,7 +27,6 @@ Parse.Cloud.define('genericFormQuery', (request) => {
   } else if (model === 'MedicalAssessment') {
     queryModel = classes.MedicalAssessment.ParseClass;
   }
-  console.log("queryModel", queryModel)
 
   const service = services.batch;
   return service.genericQuery(queryModel);
