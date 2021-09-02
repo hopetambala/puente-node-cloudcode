@@ -17,6 +17,7 @@ if (PARSE_ENV === 'staging' || PARSE_ENV === 'prod') {
 prompt.start();
 
 function queryAndUpdateSurveyData(params) {
+    console.log(params.form)
   const basicFormQueryParams = {
     model: params.form
   };
@@ -25,19 +26,30 @@ function queryAndUpdateSurveyData(params) {
       console.log(`Total objects queried: ${response.length}`); // eslint-disable-line
       console.log('If total objects queried is 3000, node-cloud may have maxxed out and the process will need to be reran.'); // eslint-disable-line
     response.forEach((form) => {
+      // const survey = form.toJSON();
+      // // console.log("test")
+      // // console.log(survey)
+      // console.log(survey[params.currentField])
+      // let newLocalObject = {}
+      // newLocalObject[newField] = [survey[params.currentField]]
+      // // console.log("new local object: ", newLocalObject)
+      
       const survey = form.toJSON();
       const newField = params.newField;
-      let newLocalObject = {}
-      localObject[newField] = [survey[params.currentField]]
-      const postParams = {
-        parseClass: params.form,
-        parseClassID: survey.objectId,
-        localObject: newLocalObject
-      };
-      Parse.Cloud.run('updateObject', postParams).then(() => {
-      }, () => {
-          console.log(`Failed to update ObjectID: ${survey.objectId}`); // eslint-disable-line
-      });
+      const oldValue = survey[params.currentField]
+      if (oldValue !== undefined) {
+        let newLocalObject = {}
+        newLocalObject[newField] = [oldValue]
+        const postParams = {
+          parseClass: params.form,
+          parseClassID: survey.objectId,
+          localObject: newLocalObject
+        };
+        Parse.Cloud.run('updateObject', postParams).then(() => {
+        }, () => {
+            console.log(`Failed to update ObjectID: ${survey.objectId}`); // eslint-disable-line
+        });
+      }
     });
   });
 }
