@@ -12,6 +12,29 @@ Parse.Cloud.define('genericQuery', () => {
 });
 
 /** ******************************************
+GENERIC QUERY
+******************************************* */
+Parse.Cloud.define('genericFormQuery', (request) => {
+  // const model = classes.patient.ParseClass;
+  let queryModel;
+  const { model } = request.params;
+
+  if (model === 'SurveyData') {
+    queryModel = classes.patient.ParseClass;
+  } else if (model === 'Vitals') {
+    queryModel = classes.Vitals.ParseClass;
+  } else if (model === 'HistoryEnvironmentalHealth') {
+    queryModel = classes.HistoryEnvironmentalHealth.ParseClass;
+  } else if (model === 'MedicalAssessment') {
+    queryModel = classes.MedicalAssessment.ParseClass;
+  }
+
+  const service = services.batch;
+  return service.genericQuery(queryModel);
+});
+
+
+/** ******************************************
   BASIC QUERY
   Input Paramaters:
     parseObject - Class to search
