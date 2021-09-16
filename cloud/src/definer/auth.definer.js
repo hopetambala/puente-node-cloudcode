@@ -64,12 +64,12 @@ Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
           role.save(null, { useMasterKey: true });
           resolve(aclUser);
         }).catch((error) => {
-          console.log(`Error: ${error.code} ${error.message}`);
+          console.log(`Error: ${error.code} ${error.message}`); // eslint-disable-line
           reject(error);
         });
       });
     }).catch((error) => {
-      console.log(`Error: ${error.code} ${error.message}`);
+      console.log(`Error: ${error.code} ${error.message}`); // eslint-disable-line
       reject(error);
     });
   }).catch((error) => {

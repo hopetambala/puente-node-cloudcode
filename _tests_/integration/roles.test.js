@@ -56,10 +56,10 @@ describe('role testing', () => {
     const jsonValues = JSON.parse(jsonString);
 
     let count = 0;
-    for (const i in jsonValues) {
+    Object.keys(jsonValues).forEach((key) => {
       count += 1;
-      expect(jsonValues[i]).toBeDefined();
-    }
+      expect(jsonValues[key]).toBeDefined();
+    });
     expect(count).toEqual(3);
   }));
 
