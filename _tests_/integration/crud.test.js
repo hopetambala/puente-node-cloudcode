@@ -43,7 +43,7 @@ describe('crud testing', () => {
         longitude: 5,
       },
     };
-    return cloudFunctions.postObjectsToClass(postParams).then(result => {
+    return cloudFunctions.postObjectsToClass(postParams).then((result) => {
       expect(result.get('fname')).toEqual('Greetings__');
       expect(result.get('lname')).toEqual('Tester');
       expect(result.get('latitude')).toEqual(4);

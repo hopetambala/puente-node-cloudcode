@@ -31,14 +31,23 @@ function queryAndUpdateSurveyData(params) {
       if (oldValue !== undefined && survey[newField] === undefined) {
         const newLocalObject = {};
         newLocalObject[newField] = [oldValue];
+        let parseClass;
+        if (params.form === 'patient') {
+          parseClass = 'SurveyData';
+        } else if (params.form === 'MedicalAssessment') {
+          parseClass = 'EvaluationMedical';
+        } else {
+          parseClass = params.form;
+        }
+
         const postParams = {
-          parseClass: params.form,
+          parseClass,
           parseClassID: survey.objectId,
           localObject: newLocalObject,
         };
         Parse.Cloud.run('updateObject', postParams).then(() => {
-        }, () => {
-            console.log(`Failed to update ObjectID: ${survey.objectId}`); // eslint-disable-line
+        }, (error) => {
+            console.log(`Failed to update ObjectID: ${survey.objectId}\nError: ${error}`); // eslint-disable-line
         });
       }
     });
