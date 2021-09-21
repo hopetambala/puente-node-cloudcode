@@ -85,13 +85,9 @@ Parse.Cloud.define('countService', (request) => {
   ******************************************* */
 Parse.Cloud.define('postObjectsToClass', (request) => new Promise((resolve, reject) => {
   const surveyPoint = new Parse.Object(request.params.parseClass);
-  const userObject = new Parse.Object('_User');
-
-  let parseFilePhoto;
-  let parseFileSignature;
 
   if (request.params.photoFile) {
-    parseFilePhoto = new Parse.File('memberProfPic.png', { base64: request.params.photoFile });
+    const parseFilePhoto = new Parse.File('memberProfPic.png', { base64: request.params.photoFile });
 
     // put this inside if {
     parseFilePhoto.save().then(() => {
@@ -105,7 +101,7 @@ Parse.Cloud.define('postObjectsToClass', (request) => new Promise((resolve, reje
   }
 
   if (request.params.signature) {
-    parseFileSignature = new Parse.File('signature.png', { base64: request.params.signature });
+    const parseFileSignature = new Parse.File('signature.png', { base64: request.params.signature });
 
     // put this inside if {
     parseFileSignature.save().then(() => {
@@ -126,14 +122,14 @@ Parse.Cloud.define('postObjectsToClass', (request) => new Promise((resolve, reje
   });
 
   // Add GeoPoint location
-
-  if (localObject.latitude && localObject.longitude){
+  if (localObject.latitude && localObject.longitude) {
     const point = new Parse.GeoPoint(localObject.latitude, localObject.longitude);
     surveyPoint.set('location', point);
   }
- 
+
 
   if (request.params.parseUser) {
+    const userObject = new Parse.Object('_User');
     userObject.id = String(request.params.parseUser);
     surveyPoint.set('parseUser', userObject);
   }

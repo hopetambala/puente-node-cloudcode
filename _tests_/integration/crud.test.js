@@ -31,7 +31,7 @@ describe('crud testing', () => {
     await db.close();
   });
 
-  it('should post object object to SurveyData', async () => {
+  it('should post object to SurveyData', async () => {
     const postParams = {
       parseClass: 'SurveyData',
       signature: 'Test',
@@ -43,7 +43,7 @@ describe('crud testing', () => {
         longitude: 5,
       },
     };
-    return cloudFunctions.postObjectsToClass(postParams).then(result => {
+    return cloudFunctions.postObjectsToClass(postParams).then((result) => {
       expect(result.get('fname')).toEqual('Greetings__');
       expect(result.get('lname')).toEqual('Tester');
       expect(result.get('latitude')).toEqual(4);
@@ -111,7 +111,7 @@ describe('crud testing', () => {
         const objectID = client.objectId;
         expect(type).toEqual('Pointer');
         expect(className).toEqual('SurveyData');
-        expect(objectID).toEqual(postID1);
+        expect(objectID).toEqual(`${postID1}`);
 
         // testing other attributes are correctly added
         if ('height' in jsonValues[key]) {
