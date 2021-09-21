@@ -152,7 +152,6 @@ const Batch = {
         }
 
         const query = new Parse.Query(Model);
-        console.log(modelObject, 'PIPELIINE:', pipeline);
         query.equalTo(parseColumn, parseParam);
         query.aggregate(pipeline).then((results) => {
           resolve(results.length);

@@ -65,10 +65,10 @@ Parse.Cloud.define('geoQuery', (request) => {
   * @returns Count of Query
   */
 Parse.Cloud.define('countService', (request) => {
-  const model = classes.patient.ParseClass;
+  const model = request.params.ParseClass !== undefined ? request.params.ParseClass : classes.patient.ParseClass;
   const service = services.batch;
   return service.countService(
-    request.params.ParseClass,
+    model,
     request.params.parseColumn,
     request.params.parseParam,
   );
@@ -127,7 +127,7 @@ Parse.Cloud.define('postObjectsToClass', (request) => new Promise((resolve, reje
 
   // Add GeoPoint location
 
-  if (localObject?.latitude && localObject?.longitude){
+  if (localObject.latitude && localObject.longitude){
     const point = new Parse.GeoPoint(localObject.latitude, localObject.longitude);
     surveyPoint.set('location', point);
   }
