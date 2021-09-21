@@ -31,7 +31,7 @@ describe('crud testing', () => {
     await db.close();
   });
 
-  it('should post object object to SurveyData', async () => {
+  it('should post object to SurveyData', async () => {
     const postParams = {
       parseClass: 'SurveyData',
       signature: 'Test',
@@ -43,7 +43,7 @@ describe('crud testing', () => {
         longitude: 5,
       },
     };
-    return cloudFunctions.postObjectsToClass(postParams).then(result => {
+    return cloudFunctions.postObjectsToClass(postParams).then((result) => {
       expect(result.get('fname')).toEqual('Greetings__');
       expect(result.get('lname')).toEqual('Tester');
       expect(result.get('latitude')).toEqual(4);
@@ -103,47 +103,46 @@ describe('crud testing', () => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
 
-      let i;
-      for (i in jsonValues) {
+      Object.keys(jsonValues).forEach((key) => {
         // ensure all are related to original surveyData form
-        const { client } = jsonValues[i];
+        const { client } = jsonValues[key];
         const type = client.__type; // eslint-disable-line
         const { className } = client;
         const objectID = client.objectId;
         expect(type).toEqual('Pointer');
         expect(className).toEqual('SurveyData');
-        expect(objectID).toEqual(postID1);
+        expect(objectID).toEqual(`${postID1}`);
 
         // testing other attributes are correctly added
-        if ('height' in jsonValues[i]) {
-          const { height } = jsonValues[i];
+        if ('height' in jsonValues[key]) {
+          const { height } = jsonValues[key];
           expect(height).toEqual('4');
         }
-        if ('majorEvents' in jsonValues[i]) {
-          const { majorEvents } = jsonValues[i];
+        if ('majorEvents' in jsonValues[key]) {
+          const { majorEvents } = jsonValues[key];
           expect(majorEvents).toEqual(null);
         }
-        if ('name' in jsonValues[i]) {
-          const { name } = jsonValues[i];
+        if ('name' in jsonValues[key]) {
+          const { name } = jsonValues[key];
           expect(name).toEqual('Greetings__');
         }
-        if ('substance' in jsonValues[i]) {
-          const { substance } = jsonValues[i];
+        if ('substance' in jsonValues[key]) {
+          const { substance } = jsonValues[key];
           expect(substance).toEqual('Tester');
         }
-        if ('AssessmentandEvaluationSurgical' in jsonValues[i]) {
-          const { AssessmentandEvaluationSurgical } = jsonValues[i];
+        if ('AssessmentandEvaluationSurgical' in jsonValues[key]) {
+          const { AssessmentandEvaluationSurgical } = jsonValues[key];
           expect(AssessmentandEvaluationSurgical).toEqual('Have');
         }
-        if ('chronic_condition_hypertension' in jsonValues[i]) {
-          const chronicConditionHypertension = jsonValues[i].chronic_condition_hypertension;
+        if ('chronic_condition_hypertension' in jsonValues[key]) {
+          const chronicConditionHypertension = jsonValues[key].chronic_condition_hypertension;
           expect(chronicConditionHypertension).toEqual('swell');
         }
-        if ('yearsLivedinthecommunity' in jsonValues[i]) {
-          const { yearsLivedinthecommunity } = jsonValues[i];
+        if ('yearsLivedinthecommunity' in jsonValues[key]) {
+          const { yearsLivedinthecommunity } = jsonValues[key];
           expect(yearsLivedinthecommunity).toEqual('day!');
         }
-      }
+      });
       expect(result).toBeDefined();
     });
   });
