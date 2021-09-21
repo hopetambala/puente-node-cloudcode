@@ -149,6 +149,15 @@ const Batch = {
                 },
               },
             ];
+            break;
+          default:
+            pipeline = [
+              {
+                group: {
+                  objectId: [],
+                },
+              },
+            ];
         }
 
         const query = new Parse.Query(Model);

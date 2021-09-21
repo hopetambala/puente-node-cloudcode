@@ -65,7 +65,7 @@ Parse.Cloud.define('geoQuery', (request) => {
   * @returns Count of Query
   */
 Parse.Cloud.define('countService', (request) => {
-  const model = request.params.ParseClass !== undefined ? request.params.ParseClass : classes.patient.ParseClass;
+  const model = request.params.ParseClass !== undefined ? request.params.ParseClass : classes.patient.ParseClass; // eslint-disable-line
   const service = services.batch;
   return service.countService(
     model,
