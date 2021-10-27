@@ -9,15 +9,15 @@
  *
  *********************************************** */
 const Forms = {
-postForms: function postForms(idForms, supForms) {
-  return new Promise((resolve, reject) => {
-    if (idForms !== null && idForms !== undefined) {
-      idForms.forEach((postParams, index, array) => {
-        if (!('householdId' in postParams.localObject)) {
-          const offlineObjectID = postParams.localObject.objectId;
-          const idParams = postParams;
-          delete idParams.localObject.objectId;
-          Parse.Cloud.run('postObjectsToClass',idParams).then((object) => {
+  postForms: function postForms(idForms, supForms) {
+    return new Promise((resolve, reject) => {
+      if (idForms !== null && idForms !== undefined) {
+        idForms.forEach((postParams, index, array) => {
+          if (!('householdId' in postParams.localObject)) {
+            const offlineObjectID = postParams.localObject.objectId;
+            const idParams = postParams;
+            delete idParams.localObject.objectId;
+            Parse.Cloud.run('postObjectsToClass', idParams).then((object) => {
               const objectSanitized = JSON.parse(JSON.stringify(object));
               const parseObjectID = objectSanitized.objectId;
               if (supForms !== null && supForms !== undefined) {
@@ -25,26 +25,26 @@ postForms: function postForms(idForms, supForms) {
                   if (supForm.parseParentClassID === offlineObjectID) {
                     const supParams = supForm;
                     supParams.parseParentClassID = parseObjectID;
-                    Parse.Cloud.run('postObjectsToClassWithRelation',supParams).then(() => {
+                    Parse.Cloud.run('postObjectsToClassWithRelation', supParams).then(() => {
                     }, (error) => {
                       reject(error);
                     });
                   }
                 });
               }
-          }, (error) => {
-            reject(error);
-          });
-        }
-        if (index === array.length - 1) resolve();
-      });
-    } else {
-      resolve(true);
-    }
-  });
-},
+            }, (error) => {
+              reject(error);
+            });
+          }
+          if (index === array.length - 1) resolve();
+        });
+      } else {
+        resolve(true);
+      }
+    });
+  },
 
-/** ***********************************************
+  /** ***********************************************
  * Function to post offline sup forms tied to existing id forms
  * @name postSupForms
  * @example
@@ -55,24 +55,24 @@ postForms: function postForms(idForms, supForms) {
 
  *
  *********************************************** */
-postSupForms: function postSupForms(supForms, offlineUniqueId) {
-  return new Promise((resolve, reject) => {
-    if (supForms !== null && supForms !== undefined) {
-      supForms.forEach((supForm, index, array) => {
+  postSupForms: function postSupForms(supForms, offlineUniqueId) {
+    return new Promise((resolve, reject) => {
+      if (supForms !== null && supForms !== undefined) {
+        supForms.forEach((supForm, index, array) => {
         // supplementary forms not tied to an offline ID form
-        if (!supForm.parseParentClassID.includes(offlineUniqueId)) {
-          Parse.Cloud.run('postObjectsToClassWithRelation',supForm).then(() => {
-          }, (error) => {
-            reject(error);
-          });
-        }
-        if (index === array.length - 1) resolve();
-      });
-    } else {
-      resolve(true);
-    }
-  });
-}
-}
+          if (!supForm.parseParentClassID.includes(offlineUniqueId)) {
+            Parse.Cloud.run('postObjectsToClassWithRelation', supForm).then(() => {
+            }, (error) => {
+              reject(error);
+            });
+          }
+          if (index === array.length - 1) resolve();
+        });
+      } else {
+        resolve(true);
+      }
+    });
+  },
+};
 
 module.exports = Forms;

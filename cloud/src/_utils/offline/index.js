@@ -4,9 +4,9 @@ const HouseholdRelation = require('./household_relations');
 
 
 const Offline = {
-    Forms,
-    Household,
-    HouseholdRelation,
+  Forms,
+  Household,
+  HouseholdRelation,
 };
 
 module.exports = Offline;

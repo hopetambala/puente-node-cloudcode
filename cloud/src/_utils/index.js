@@ -4,7 +4,7 @@ const Offline = require('./offline');
 
 const utils = {
   Loop,
-  Offline
+  Offline,
 };
 
 module.exports = utils;
