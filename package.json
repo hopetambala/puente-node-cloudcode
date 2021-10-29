@@ -52,6 +52,7 @@
   "scripts": {
     "dashboard": "parse-dashboard --dev --appId myAppId --masterKey myMasterKey --serverURL http://localhost:1337/parse --appName PuenteCloudCode",
     "test": "env-cmd -f .env.dev jest",
+    "test-github-actions":"jest",
     "test-staging": "env-cmd -f .env.staging jest && codecov",
     "start": "node -r esm index.js",
     "start-with-dash": "concurrently \"npm run start\" \"npm run dashboard\"",
@@ -75,9 +76,6 @@
     "coverageDirectory": "./coverage/",
     "collectCoverage": true
   },
-  "pre-commit": [
-    "test"
-  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hopetambala/puente-node-cloudcode.git"
