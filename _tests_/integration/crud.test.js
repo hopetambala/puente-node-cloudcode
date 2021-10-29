@@ -1,18 +1,6 @@
 const { MongoClient } = require('mongodb');
 const { cloudFunctions } = require('../run-cloud');
 
-test('Hello World exists', async () => {
-  expect(cloudFunctions.hello()).toBeDefined();
-});
-
-test('Post Exists', async () => {
-  expect(cloudFunctions.postObjectsToClass()).toBeDefined();
-});
-
-test('generic Query Exists', async () => {
-  expect(cloudFunctions.genericQuery()).toBeDefined();
-});
-
 describe('crud testing', () => {
   let connection;
   let db;
@@ -32,28 +20,28 @@ describe('crud testing', () => {
   });
 
   it('should post object to SurveyData', async () => {
-    const postParams = {
+    let postParams = {
       parseClass: 'SurveyData',
       signature: 'Test',
       photoFile: 'TestPicture',
+      parseUser:'undefined',
       localObject: {
         fname: 'Greetings__',
         lname: 'Tester',
         latitude: 4,
         longitude: 5,
+        surveyingOrganization:"Puente",
       },
-    };
+    }
     return cloudFunctions.postObjectsToClass(postParams).then((result) => {
-      expect(result.get('fname')).toEqual('Greetings__');
       expect(result.get('lname')).toEqual('Tester');
       expect(result.get('latitude')).toEqual(4);
       expect(result.get('longitude')).toEqual(5);
       expect(result.get('signature')).toBeDefined();
       expect(result.get('picture')).toBeDefined();
       expect(result.get('location')).toBeDefined();
-
       postID1 = result.id;
-    });
+    })
   });
 
   it('should post an object to class with relation to original post with a variety of classes', async () => {
