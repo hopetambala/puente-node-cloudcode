@@ -37,9 +37,12 @@ jobs:
     - name: Install Puente CloudCode Dependencies
       run: |
         npm install
+    - name: Lint
+      run: |
+        npm run lint
     - name: Start App and Test Jest
       run: |
-        npm run start  &
+        npm run start &
         sleep 40 &&
         npm run test-github-actions 
 

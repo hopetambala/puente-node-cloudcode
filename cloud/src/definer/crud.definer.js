@@ -1,8 +1,7 @@
+const cloneDeep = require('lodash/cloneDeep');
 const classes = require('../classes');
 const services = require('../services');
 const utils = require('../_utils');
-
-const cloneDeep = require ('lodash/cloneDeep');
 
 
 /** ******************************************
