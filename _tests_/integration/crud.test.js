@@ -20,19 +20,19 @@ describe('crud testing', () => {
   });
 
   it('should post object to SurveyData', async () => {
-    let postParams = {
+    const postParams = {
       parseClass: 'SurveyData',
       signature: 'Test',
       photoFile: 'TestPicture',
-      parseUser:'undefined',
+      parseUser: 'undefined',
       localObject: {
         fname: 'Greetings__',
         lname: 'Tester',
         latitude: 4,
         longitude: 5,
-        surveyingOrganization:"Puente",
+        surveyingOrganization: 'Puente',
       },
-    }
+    };
     return cloudFunctions.postObjectsToClass(postParams).then((result) => {
       expect(result.get('lname')).toEqual('Tester');
       expect(result.get('latitude')).toEqual(4);
@@ -41,7 +41,7 @@ describe('crud testing', () => {
       expect(result.get('picture')).toBeDefined();
       expect(result.get('location')).toBeDefined();
       postID1 = result.id;
-    })
+    });
   });
 
   it('should post an object to class with relation to original post with a variety of classes', async () => {
