@@ -1,5 +1,3 @@
-const { result } = require("lodash");
-
 const Batch = {
   /**
      * Performs a query based on the parameter defined in a column
@@ -15,6 +13,15 @@ const Batch = {
      * @returns Results of Query
      */
   basicQuery: function basicQuery(modelObject, offset, limit, parseColumn, parseParam) {
+    function checkIfAlreadyExist(accumulator, currentVal) {
+      return accumulator.some((item) => (item.get('fname') === currentVal.get('fname')
+          && item.get('lname') === currentVal.get('lname')
+          && item.get('sex') === currentVal.get('sex')
+          && item.get('marriageStatus') === currentVal.get('marriageStatus')
+          && item.get('educationLevel') === currentVal.get('educationLevel')
+      ));
+    }
+
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         const Model = Parse.Object.extend(modelObject);
@@ -23,7 +30,7 @@ const Batch = {
 
         query.skip(offset);
 
-        console.log('old limit is', limit);
+        console.log('old limit is', limit); //eslint-disable-line
 
         query.limit(3000);
 
@@ -32,20 +39,10 @@ const Batch = {
 
         query.find().then((records) => {
           const deDuplicatedRecords = records.reduce((accumulator, current) => {
-            if (checkIfAlreadyExist(current)) {
+            if (checkIfAlreadyExist(accumulator, current)) {
               return accumulator;
             }
             return [...accumulator, current];
-
-
-            function checkIfAlreadyExist(currentVal) {
-              return accumulator.some((item) => (item.get('fname') === currentVal.get('fname')
-                  && item.get('lname') === currentVal.get('lname')
-                  && item.get('sex') === currentVal.get('sex')
-                  && item.get('marriageStatus') === currentVal.get('marriageStatus')
-                  && item.get('educationLevel') === currentVal.get('educationLevel')
-              ));
-            }
           }, []);
           resolve(deDuplicatedRecords);
         }, (error) => {
@@ -93,11 +90,76 @@ const Batch = {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         const Model = Parse.Object.extend(modelObject);
-        const pipeline = [
-          { group: { objectId: ['$fname','$lname','$dob','$sex',
-          '$telephoneNumber','$marriageStatus','$educationLevel',
-          '$city','$communityname'] } }
-        ];
+        let pipeline = [];
+        switch (modelObject) {
+          case 'SurveyData':
+            pipeline = [
+              {
+                group: {
+                  objectId: ['$fname', '$lname', '$dob', '$sex',
+                    '$telephoneNumber', '$marriageStatus', '$educationLevel',
+                    '$city', '$communityname'],
+                },
+              },
+            ];
+            break;
+          case 'HistoryEnvironmentalHealth':
+            pipeline = [
+              {
+                group: {
+                  objectId: ['$yearsLivedinthecommunity', '$yearsLivedinThisHouse',
+                    '$waterAccess', '$typeofWaterdoyoudrink', '$bathroomAccess', '$latrineAccess',
+                    '$clinicAccess', '$conditionoFloorinyourhouse', '$conditionoRoofinyourhouse',
+                    '$medicalproblemswheredoyougo', '$dentalproblemswheredoyougo',
+                    '$biggestproblemofcommunity', '$timesperweektrashcollected',
+                    '$wheretrashleftbetweenpickups', '$numberofIndividualsLivingintheHouse',
+                    '$numberofChildrenLivinginHouseUndertheAgeof5', '$houseownership',
+                    '$stoveType', '$govAssistance', '$foodSecurity', '$electricityAccess',
+                    '$houseMaterial'],
+                },
+              },
+            ];
+            break;
+          case 'Vitals':
+            pipeline = [
+              {
+                group: {
+                  objectId: ['$height', '$weight', '$respRate', '$bmi', '$bloodPressure',
+                    '$bloodSugar', '$bloodOxygen', '$temp', '$pulse', '$hemoglobinLevels',
+                    '$painLevels'],
+                },
+              },
+            ];
+            break;
+          case 'Assets':
+            pipeline = [
+              {
+                group: {
+                  objectId: ['$altitude', '$city', '$communityName', '$createdAt', '$latitude',
+                    '$longitude', '$name', '$province', '$relatedPeople'],
+                },
+              },
+            ];
+            break;
+          case 'FormResults':
+            pipeline = [
+              {
+                group: {
+                  objectId: [],
+                },
+              },
+            ];
+            break;
+          default:
+            pipeline = [
+              {
+                group: {
+                  objectId: [],
+                },
+              },
+            ];
+        }
+
         const query = new Parse.Query(Model);
         query.equalTo(parseColumn, parseParam);
         query.aggregate(pipeline).then((results) => {
@@ -106,7 +168,7 @@ const Batch = {
           reject(error);
         });
       }, 1500);
-   });
+    });
   },
 };
 // export default batch;

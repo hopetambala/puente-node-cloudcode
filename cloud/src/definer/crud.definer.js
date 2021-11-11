@@ -1,5 +1,8 @@
+const cloneDeep = require('lodash/cloneDeep');
 const classes = require('../classes');
 const services = require('../services');
+const utils = require('../_utils');
+
 
 /** ******************************************
 GENERIC QUERY
@@ -63,14 +66,14 @@ Parse.Cloud.define('geoQuery', (request) => {
   * @param {string} parseParam Name of Parameter in Column
   * @returns Count of Query
   */
- Parse.Cloud.define('countService', (request) => {
-  const model = classes.patient.ParseClass;
+Parse.Cloud.define('countService', (request) => {
+  const model = request.params.ParseClass !== undefined ? request.params.ParseClass : classes.patient.ParseClass; // eslint-disable-line
   const service = services.batch;
   return service.countService(
     model,
     request.params.parseColumn,
-    request.params.parseParam
-  )
+    request.params.parseParam,
+  );
 });
 
 /** ******************************************
@@ -83,13 +86,10 @@ Parse.Cloud.define('geoQuery', (request) => {
                 - this contains a latitude/longitude which will post the location
   ******************************************* */
 Parse.Cloud.define('postObjectsToClass', (request) => new Promise((resolve, reject) => {
-  const SurveyData = Parse.Object.extend(request.params.parseClass);
-  const surveyPoint = new SurveyData();
-  let parseFilePhoto;
-  let parseFileSignature;
+  const surveyPoint = new Parse.Object(request.params.parseClass);
 
   if (request.params.photoFile) {
-    parseFilePhoto = new Parse.File('memberProfPic.png', { base64: request.params.photoFile });
+    const parseFilePhoto = new Parse.File('memberProfPic.png', { base64: request.params.photoFile });
 
     // put this inside if {
     parseFilePhoto.save().then(() => {
@@ -103,7 +103,7 @@ Parse.Cloud.define('postObjectsToClass', (request) => new Promise((resolve, reje
   }
 
   if (request.params.signature) {
-    parseFileSignature = new Parse.File('signature.png', { base64: request.params.signature });
+    const parseFileSignature = new Parse.File('signature.png', { base64: request.params.signature });
 
     // put this inside if {
     parseFileSignature.save().then(() => {
@@ -118,14 +118,23 @@ Parse.Cloud.define('postObjectsToClass', (request) => new Promise((resolve, reje
 
   // add key/value from the local object to SurveyPoint
   const { localObject } = request.params;
-  for (const key in localObject) {
+  Object.keys(localObject).forEach((key) => {
     const obj = localObject[key];
     surveyPoint.set(String(key), obj);
-  }
+  });
 
   // Add GeoPoint location
-  const point = new Parse.GeoPoint(localObject.latitude, localObject.longitude);
-  surveyPoint.set('location', point);
+  if (localObject.latitude && localObject.longitude) {
+    const point = new Parse.GeoPoint(localObject.latitude, localObject.longitude);
+    surveyPoint.set('location', point);
+  }
+
+
+  if (request.params.parseUser) {
+    const userObject = new Parse.Object('_User');
+    userObject.id = String(request.params.parseUser);
+    surveyPoint.set('parseUser', userObject);
+  }
 
   surveyPoint.save().then((results) => {
     resolve(results);
@@ -142,20 +151,29 @@ Parse.Cloud.define('postObjectsToClass', (request) => new Promise((resolve, reje
     localObject - Continas key value pairs that will be posted to the class
                 - this contains a latitude/longitude which will post the location
     parseParentClassID - ID of the parseParentClass Object to associate the new post with
+    loopParentID - Custom Form that the looped form originates from
+    loop - bool t/f whether looped data contained in form
   ******************************************* */
 Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((resolve, reject) => {
-  const Child = Parse.Object.extend(request.params.parseClass);
-  const Parent = Parse.Object.extend(request.params.parseParentClass);
+  const supplementaryForm = new Parse.Object(request.params.parseClass);
+  const residentIdForm = new Parse.Object(request.params.parseParentClass);
+  const userObject = new Parse.Object('_User');
+  const loopParentForm = new Parse.Object(request.params.parseClass);
 
-  const child = new Child();
-  const parent = new Parent();
-
-  // Create child points
-  const { localObject } = request.params;
-  for (const key in localObject) {
+  // Create supplementaryForm points
+  const { localObject, loop } = request.params;
+  // create looped json to ensure that data is submitted as multiple forms
+  let loopedJson = {};
+  let newFieldsArray = [];
+  Object.keys(localObject).forEach((key) => {
     const obj = localObject[key];
     if (!obj.includes('data:image/jpg;base64,')) {
-      child.set(String(key), obj);
+      if (loop === true && String(key) === 'fields') {
+        [loopedJson, newFieldsArray] = utils.Loop.buildLoopFieldsParameter(obj,
+          key, supplementaryForm, loopedJson, newFieldsArray);
+      } else {
+        supplementaryForm.set(String(key), obj);
+      }
     } else {
       const photoFileLocalObject = new Parse.File('picture.png', { base64: obj });
       // put this inside if {
@@ -165,16 +183,35 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
         // The file either could not be read, or could not be saved to Parse.
         console.log(error); // eslint-disable-line
       });
-      child.set(String(key), photoFileLocalObject);
+      supplementaryForm.set(String(key), photoFileLocalObject);
     }
+  });
+
+  // Add the residentIdForm as a value in the supplementaryForm
+  residentIdForm.id = String(request.params.parseParentClassID);
+
+  supplementaryForm.set('client', residentIdForm);
+
+  if (request.params.loopParentID) {
+    loopParentForm.id = String(request.params.loopParentID);
+    supplementaryForm.set('loopClient', loopParentForm);
   }
 
-  // Add the parent as a value in the child
-  parent.id = String(request.params.parseParentClassID);
-  child.set('client', parent);
+  if (request.params.parseUser) {
+    userObject.id = String(request.params.parseUser);
+    supplementaryForm.set('parseUser', userObject);
+  }
 
-  child.save().then((results) => {
-    resolve(results);
+  supplementaryForm.save().then((results) => results).then((mainObject) => {
+    // post looped objects
+    if (loop === true && Object.keys(loopedJson).length > 0) {
+      utils.Loop.postLoopedForm(loopedJson, newFieldsArray, request, mainObject).then((result) => {
+        console.log(result); // eslint-disable-line
+      }, (error) => {
+        reject(error);
+      });
+    }
+    resolve(mainObject);
   }, (error) => {
     reject(error);
   });
@@ -247,8 +284,8 @@ Parse.Cloud.define('postObjectsToAnyClassWithRelation', (request) => new Promise
   // create the Parse object if it is the first variable added to the
   // object
   const { localObject } = request.params;
-  for (const i in localObject) {
-    const object = localObject[i];
+  Object.keys(localObject).forEach((key) => {
+    const object = localObject[key];
 
     if (object.tag === 'Vitals') {
       if (vitalsObj === false) {
@@ -293,7 +330,7 @@ Parse.Cloud.define('postObjectsToAnyClassWithRelation', (request) => new Promise
       }
       environmentalHealth.set(String(object.key), object.value);
     }
-  }
+  });
 
   // store the Parse objects that were asspciated with local object
   const arr = [];
@@ -369,10 +406,10 @@ Parse.Cloud.define('updateObject', (request) => new Promise((resolve, reject) =>
   query.get(request.params.parseClassID).then((result) => {
     // update object with new attributes
     const { localObject } = request.params;
-    for (const key in localObject) {
+    Object.keys(localObject).forEach((key) => {
       const obj = localObject[key];
       result.set(String(key), obj);
-    }
+    });
     // Add GeoPoint location
     const point = new Parse.GeoPoint(localObject.latitude, localObject.longitude);
     result.set('location', point);
@@ -383,6 +420,169 @@ Parse.Cloud.define('updateObject', (request) => new Promise((resolve, reject) =>
     resolve(result);
   }, (error) => {
     // error
+    reject(error);
+  });
+}));
+
+function postOfflineRequest(request) {
+  return new Promise((resolve, reject) => {
+    const offlineFormRequest = new Parse.Object('offlineFormRequest');
+    offlineFormRequest.set('suveyingUser', request.params.surveyingUser);
+    offlineFormRequest.set('surveyingOrganization', request.params.surveyingOrganization);
+    if (request.params.parseUser) {
+      const userObject = new Parse.Object('_User');
+      userObject.id = String(request.params.parseUser);
+      offlineFormRequest.set('parseUser', userObject);
+    }
+
+    offlineFormRequest.set('forms', {
+      surveyData: request.params.surveyData,
+      supForms: request.params.supForms,
+      households: request.params.households,
+      householdsRelation: request.params.householdsRelation,
+      assetIdForms: request.params.assetIdForms,
+      assetSupForms: request.params.assetSupForms,
+    });
+
+    offlineFormRequest.set('appVersion', request.params.appVersion);
+    offlineFormRequest.set('phoneOS', request.params.phoneOS);
+    offlineFormRequest.save().then((results) => {
+      resolve(results);
+    }, (error) => {
+      reject(error);
+    });
+  });
+}
+
+function postOfflineForm(request) {
+  return new Promise((resolve, reject) => {
+    const offlineForm = new Parse.Object('offlineForm');
+    offlineForm.set('suveyingUser', request.surveyingUser);
+    offlineForm.set('surveyingOrganization', request.surveyingOrganization);
+    if (request.parseUser) {
+      const userObject = new Parse.Object('_User');
+      userObject.id = String(request.parseUser);
+      offlineForm.set('parseUser', userObject);
+    }
+    offlineForm.set('ParseClass', request.parseClass);
+
+    const offlineFormRequest = new Parse.Object('offlineFormRequest');
+    offlineFormRequest.id = String(request.offlineFormRequestId);
+    offlineForm.set('offlineRequest', offlineFormRequest);
+    offlineForm.set('localObject', request.localObject);
+    offlineForm.save().then((results) => {
+      resolve(results);
+    }, (error) => {
+      reject(error);
+    });
+  });
+}
+
+Parse.Cloud.define('postOfflineForms', (request) => new Promise((resolve, reject) => {
+  postOfflineRequest(request).then((offlineFormRequest) => {
+    const {
+      surveyData, supForms, households,
+      householdsRelation, assetIdForms,
+      assetSupForms, surveyingUser, surveyingOrganization,
+      parseUser,
+    } = request.params;
+    const offlineRequestId = JSON.parse(JSON.stringify(offlineFormRequest)).objectId;
+    if (surveyData) {
+      surveyData.forEach((idForm) => {
+        const idParams = idForm;
+        idParams.surveyingUser = surveyingUser;
+        idParams.surveyingOrganization = surveyingOrganization;
+        idParams.offlineFormRequestId = offlineRequestId;
+        postOfflineForm(idParams).then(() => {}, (error) => reject(error));
+      });
+    }
+    if (supForms) {
+      supForms.forEach((supForm) => {
+        const supParams = supForm;
+        supParams.surveyingUser = surveyingUser;
+        supParams.surveyingOrganization = surveyingOrganization;
+        supParams.offlineFormRequestId = offlineRequestId;
+        postOfflineForm(supParams).then(() => {}, (error) => reject(error));
+      });
+    }
+    if (households) {
+      households.forEach((household) => {
+        const householdParams = household;
+        householdParams.surveyingUser = surveyingUser;
+        householdParams.surveyingOrganization = surveyingOrganization;
+        householdParams.offlineFormRequestId = offlineRequestId;
+        householdParams.parseUser = parseUser;
+        postOfflineForm(householdParams).then(() => {}, (error) => reject(error));
+      });
+    }
+    if (householdsRelation) {
+      householdsRelation.forEach((householdRelation) => {
+        const householdRelationParams = householdRelation;
+        householdRelationParams.surveyingUser = surveyingUser;
+        householdRelationParams.surveyingOrganization = surveyingOrganization;
+        householdRelationParams.offlineFormRequestId = offlineRequestId;
+        householdRelationParams.parseUser = parseUser;
+        postOfflineForm(householdRelationParams).then(() => {}, (error) => reject(error));
+      });
+    }
+    if (assetIdForms) {
+      assetIdForms.forEach((assetID) => {
+        const assetIdParams = assetID;
+        assetIdParams.surveyingUser = surveyingUser;
+        assetIdParams.surveyingOrganization = surveyingOrganization;
+        assetIdParams.offlineFormRequestId = offlineRequestId;
+        postOfflineForm(assetIdParams).then(() => {}, (error) => reject(error));
+      });
+    }
+    if (assetSupForms) {
+      assetSupForms.forEach((assetSup) => {
+        const assetSupParams = assetSup;
+        assetSupParams.surveyingUser = surveyingUser;
+        assetSupParams.surveyingOrganization = surveyingOrganization;
+        assetSupParams.offlineFormRequestId = offlineRequestId;
+        postOfflineForm(assetSupParams).then(() => {}, (error) => reject(error));
+      });
+    }
+    // Post all resident offline data
+    // Deep copies needed to ensure no double submission when Parent objects' objectID
+    // changes from offline object ID like 'PatientId-xxxxxx' to Parse object ID
+    utils.Offline.Household.postHouseholds(households, householdsRelation,
+      surveyData, supForms).then(() => {
+      const householdsRelationCopy1 = cloneDeep(householdsRelation);
+      const idFormsCopy1 = cloneDeep(surveyData);
+      const supFormsCopy1 = cloneDeep(supForms);
+      utils.Offline.HouseholdRelation.postHouseholdRelations(householdsRelationCopy1,
+        idFormsCopy1, supFormsCopy1)
+        .then(() => {
+          const idFormsCopy2 = cloneDeep(surveyData);
+          const supFormsCopy2 = cloneDeep(supForms);
+          utils.Offline.Forms.postForms(idFormsCopy2, supFormsCopy2).then(() => {
+            const supFormsCopy3 = cloneDeep(supForms);
+            utils.Offline.Forms.postSupForms(supFormsCopy3, 'PatientID-').then(() => {
+            }, (error) => {
+              reject(error);
+            });
+          }, (error) => {
+            reject(error);
+          });
+        }, (error) => {
+          reject(error);
+        });
+    }, (error) => {
+      reject(error);
+    });
+
+    // Post asset offline data
+    utils.Offline.Forms.postForms(assetIdForms, assetSupForms).then(() => {
+      utils.Offline.Forms.postSupForms(assetSupForms, 'AssetID-').then(() => {
+        resolve(true);
+      }, (error) => {
+        reject(error);
+      });
+    }, (error) => {
+      reject(error);
+    });
+  }, (error) => {
     reject(error);
   });
 }));
