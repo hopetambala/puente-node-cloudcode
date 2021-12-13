@@ -35,7 +35,7 @@ Parse.Cloud.define('basicQuery', (request) => {
 });
 
 /** ******************************************
-  GEO QUERY
+  GEO QUERY 
   Input Paramaters:
     parseColumn - Column to search for values
     parseParam - value to be searched in columns
