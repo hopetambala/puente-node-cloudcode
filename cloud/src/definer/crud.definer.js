@@ -1,6 +1,8 @@
+const cloneDeep = require('lodash/cloneDeep');
 const classes = require('../classes');
 const services = require('../services');
 const utils = require('../_utils');
+
 
 /** ******************************************
 GENERIC QUERY
@@ -418,6 +420,169 @@ Parse.Cloud.define('updateObject', (request) => new Promise((resolve, reject) =>
     resolve(result);
   }, (error) => {
     // error
+    reject(error);
+  });
+}));
+
+function postOfflineRequest(request) {
+  return new Promise((resolve, reject) => {
+    const offlineFormRequest = new Parse.Object('offlineFormRequest');
+    offlineFormRequest.set('suveyingUser', request.params.surveyingUser);
+    offlineFormRequest.set('surveyingOrganization', request.params.surveyingOrganization);
+    if (request.params.parseUser) {
+      const userObject = new Parse.Object('_User');
+      userObject.id = String(request.params.parseUser);
+      offlineFormRequest.set('parseUser', userObject);
+    }
+
+    offlineFormRequest.set('forms', {
+      surveyData: request.params.surveyData,
+      supForms: request.params.supForms,
+      households: request.params.households,
+      householdsRelation: request.params.householdsRelation,
+      assetIdForms: request.params.assetIdForms,
+      assetSupForms: request.params.assetSupForms,
+    });
+
+    offlineFormRequest.set('appVersion', request.params.appVersion);
+    offlineFormRequest.set('phoneOS', request.params.phoneOS);
+    offlineFormRequest.save().then((results) => {
+      resolve(results);
+    }, (error) => {
+      reject(error);
+    });
+  });
+}
+
+function postOfflineForm(request) {
+  return new Promise((resolve, reject) => {
+    const offlineForm = new Parse.Object('offlineForm');
+    offlineForm.set('suveyingUser', request.surveyingUser);
+    offlineForm.set('surveyingOrganization', request.surveyingOrganization);
+    if (request.parseUser) {
+      const userObject = new Parse.Object('_User');
+      userObject.id = String(request.parseUser);
+      offlineForm.set('parseUser', userObject);
+    }
+    offlineForm.set('ParseClass', request.parseClass);
+
+    const offlineFormRequest = new Parse.Object('offlineFormRequest');
+    offlineFormRequest.id = String(request.offlineFormRequestId);
+    offlineForm.set('offlineRequest', offlineFormRequest);
+    offlineForm.set('localObject', request.localObject);
+    offlineForm.save().then((results) => {
+      resolve(results);
+    }, (error) => {
+      reject(error);
+    });
+  });
+}
+
+Parse.Cloud.define('postOfflineForms', (request) => new Promise((resolve, reject) => {
+  postOfflineRequest(request).then((offlineFormRequest) => {
+    const {
+      surveyData, supForms, households,
+      householdsRelation, assetIdForms,
+      assetSupForms, surveyingUser, surveyingOrganization,
+      parseUser,
+    } = request.params;
+    const offlineRequestId = JSON.parse(JSON.stringify(offlineFormRequest)).objectId;
+    if (surveyData) {
+      surveyData.forEach((idForm) => {
+        const idParams = idForm;
+        idParams.surveyingUser = surveyingUser;
+        idParams.surveyingOrganization = surveyingOrganization;
+        idParams.offlineFormRequestId = offlineRequestId;
+        postOfflineForm(idParams).then(() => {}, (error) => reject(error));
+      });
+    }
+    if (supForms) {
+      supForms.forEach((supForm) => {
+        const supParams = supForm;
+        supParams.surveyingUser = surveyingUser;
+        supParams.surveyingOrganization = surveyingOrganization;
+        supParams.offlineFormRequestId = offlineRequestId;
+        postOfflineForm(supParams).then(() => {}, (error) => reject(error));
+      });
+    }
+    if (households) {
+      households.forEach((household) => {
+        const householdParams = household;
+        householdParams.surveyingUser = surveyingUser;
+        householdParams.surveyingOrganization = surveyingOrganization;
+        householdParams.offlineFormRequestId = offlineRequestId;
+        householdParams.parseUser = parseUser;
+        postOfflineForm(householdParams).then(() => {}, (error) => reject(error));
+      });
+    }
+    if (householdsRelation) {
+      householdsRelation.forEach((householdRelation) => {
+        const householdRelationParams = householdRelation;
+        householdRelationParams.surveyingUser = surveyingUser;
+        householdRelationParams.surveyingOrganization = surveyingOrganization;
+        householdRelationParams.offlineFormRequestId = offlineRequestId;
+        householdRelationParams.parseUser = parseUser;
+        postOfflineForm(householdRelationParams).then(() => {}, (error) => reject(error));
+      });
+    }
+    if (assetIdForms) {
+      assetIdForms.forEach((assetID) => {
+        const assetIdParams = assetID;
+        assetIdParams.surveyingUser = surveyingUser;
+        assetIdParams.surveyingOrganization = surveyingOrganization;
+        assetIdParams.offlineFormRequestId = offlineRequestId;
+        postOfflineForm(assetIdParams).then(() => {}, (error) => reject(error));
+      });
+    }
+    if (assetSupForms) {
+      assetSupForms.forEach((assetSup) => {
+        const assetSupParams = assetSup;
+        assetSupParams.surveyingUser = surveyingUser;
+        assetSupParams.surveyingOrganization = surveyingOrganization;
+        assetSupParams.offlineFormRequestId = offlineRequestId;
+        postOfflineForm(assetSupParams).then(() => {}, (error) => reject(error));
+      });
+    }
+    // Post all resident offline data
+    // Deep copies needed to ensure no double submission when Parent objects' objectID
+    // changes from offline object ID like 'PatientId-xxxxxx' to Parse object ID
+    utils.Offline.Household.postHouseholds(households, householdsRelation,
+      surveyData, supForms).then(() => {
+      const householdsRelationCopy1 = cloneDeep(householdsRelation);
+      const idFormsCopy1 = cloneDeep(surveyData);
+      const supFormsCopy1 = cloneDeep(supForms);
+      utils.Offline.HouseholdRelation.postHouseholdRelations(householdsRelationCopy1,
+        idFormsCopy1, supFormsCopy1)
+        .then(() => {
+          const idFormsCopy2 = cloneDeep(surveyData);
+          const supFormsCopy2 = cloneDeep(supForms);
+          utils.Offline.Forms.postForms(idFormsCopy2, supFormsCopy2).then(() => {
+            const supFormsCopy3 = cloneDeep(supForms);
+            utils.Offline.Forms.postSupForms(supFormsCopy3, 'PatientID-').then(() => {
+            }, (error) => {
+              reject(error);
+            });
+          }, (error) => {
+            reject(error);
+          });
+        }, (error) => {
+          reject(error);
+        });
+    }, (error) => {
+      reject(error);
+    });
+
+    // Post asset offline data
+    utils.Offline.Forms.postForms(assetIdForms, assetSupForms).then(() => {
+      utils.Offline.Forms.postSupForms(assetSupForms, 'AssetID-').then(() => {
+        resolve(true);
+      }, (error) => {
+        reject(error);
+      });
+    }, (error) => {
+      reject(error);
+    });
+  }, (error) => {
     reject(error);
   });
 }));
