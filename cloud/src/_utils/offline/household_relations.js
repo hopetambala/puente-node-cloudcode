@@ -18,7 +18,7 @@ const HouseholdRelation = {
       if (householdsRelation !== null && householdsRelation !== undefined) {
         // post new households with relations to existing households
         householdsRelation.forEach((householdRelation, index, array) => {
-          if (!householdRelation.parseParentClassID.includes('Household-')) {
+          if (householdRelation.parseParentClassID.indexOf('Household-') < 0) {
             const householdRelationParams = householdRelation;
             const offlineHouseholdRelationID = householdRelationParams.localObject.objectId;
             delete householdRelationParams.localObject.objectId;

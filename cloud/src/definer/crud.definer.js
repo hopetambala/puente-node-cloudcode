@@ -167,7 +167,7 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
   let newFieldsArray = [];
   Object.keys(localObject).forEach((key) => {
     const obj = localObject[key];
-    if (!obj.includes('data:image/jpg;base64,')) {
+    if (obj.indexOf('data:image/jpg;base64,') < 0) {
       if (loop === true && String(key) === 'fields') {
         [loopedJson, newFieldsArray] = utils.Loop.buildLoopFieldsParameter(obj,
           key, supplementaryForm, loopedJson, newFieldsArray);

@@ -60,7 +60,7 @@ const Forms = {
       if (supForms !== null && supForms !== undefined) {
         supForms.forEach((supForm, index, array) => {
         // supplementary forms not tied to an offline ID form
-          if (!supForm.parseParentClassID.includes(offlineUniqueId)) {
+          if (supForm.parseParentClassID.indexOf(offlineUniqueId) < 0) {
             Parse.Cloud.run('postObjectsToClassWithRelation', supForm).then(() => {
             }, (error) => {
               reject(error);
