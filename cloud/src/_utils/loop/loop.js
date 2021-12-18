@@ -4,7 +4,7 @@ const Loop = {
   buildLoopFieldsParameter: function buildLoopFieldsParameter(obj, key,
     supplementaryForm, loopedJson, newFieldsArray) {
         obj.forEach((field, index) => { // eslint-disable-line
-      if (!field.title.includes('__loop')) {
+      if (field.title.indexOf('__loop') < 0) {
         newFieldsArray = newFieldsArray.concat(field); // eslint-disable-line
       } else {
         const originalKey = field.title.split('__loop');

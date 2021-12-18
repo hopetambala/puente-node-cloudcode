@@ -166,16 +166,16 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
   let loopedJson = {};
   let newFieldsArray = [];
   Object.keys(localObject).forEach((key) => {
-    const obj = localObject[key];
-    if (!obj.includes('data:image/jpg;base64,')) {
+    const value = localObject[key];
+    if (key !== 'photoFile') {
       if (loop === true && String(key) === 'fields') {
-        [loopedJson, newFieldsArray] = utils.Loop.buildLoopFieldsParameter(obj,
+        [loopedJson, newFieldsArray] = utils.Loop.buildLoopFieldsParameter(value,
           key, supplementaryForm, loopedJson, newFieldsArray);
       } else {
-        supplementaryForm.set(String(key), obj);
+        supplementaryForm.set(String(key), value);
       }
     } else {
-      const photoFileLocalObject = new Parse.File('picture.png', { base64: obj });
+      const photoFileLocalObject = new Parse.File('picture.png', { base64: value });
       // put this inside if {
       photoFileLocalObject.save().then(() => {
         // The file has been saved to Parse.
