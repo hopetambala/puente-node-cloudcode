@@ -1,0 +1,50 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.22.1
+ignore: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  SNYK-JS-LODASH-567746:
+    - concurrently > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - mailgun-js > async > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - parse-dashboard > graphql-playground-react > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - request-promise > request-promise-core > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - parse-dashboard > graphql-playground-react > redux > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - parse-dashboard > graphql-playground-react > webpack-bundle-analyzer > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - parse-server > @parse/push-adapter > @parse/node-gcm > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - parse-server-simple-mailgun-adapter > mailgun-js > async > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - parse-server > @parse/simple-mailgun-adapter > mailgun-js > async > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - parse-dashboard > codemirror-graphql > graphql-language-service-interface > graphql-config > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - parse-dashboard > graphql-playground-react > styled-components > babel-plugin-styled-components > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - parse-dashboard > codemirror-graphql > graphql-language-service-interface > graphql-config > graphql-import > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - parse-dashboard > codemirror-graphql > graphql-language-service-interface > graphql-language-service-utils > graphql-config > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - parse-dashboard > graphql-playground-react > codemirror-graphql > graphql-language-service-interface > graphql-config > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - parse-dashboard > codemirror-graphql > graphql-language-service-interface > graphql-language-service-utils > graphql-config > graphql-import > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - parse-dashboard > graphql-playground-react > codemirror-graphql > graphql-language-service-interface > graphql-config > graphql-import > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - parse-dashboard > graphql-playground-react > codemirror-graphql > graphql-language-service-interface > graphql-language-service-utils > graphql-config > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - parse-dashboard > graphql-playground-react > graphiql > codemirror-graphql > graphql-language-service-interface > graphql-config > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - parse-dashboard > graphql-playground-react > codemirror-graphql > graphql-language-service-interface > graphql-language-service-utils > graphql-config > graphql-import > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - parse-dashboard > graphql-playground-react > graphiql > codemirror-graphql > graphql-language-service-interface > graphql-config > graphql-import > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - parse-dashboard > graphql-playground-react > graphiql > codemirror-graphql > graphql-language-service-interface > graphql-language-service-utils > graphql-config > lodash:
+        patched: '2022-03-26T16:48:33.832Z'
+    - parse-dashboard > graphql-playground-react > graphiql > codemirror-graphql > graphql-language-service-interface > graphql-language-service-utils > graphql-config > graphql-import > lodash:
+        patched: '2022-03-26T16:48:33.832Z'

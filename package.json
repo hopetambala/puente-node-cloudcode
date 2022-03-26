@@ -12,7 +12,7 @@
     "express": "4.17.1",
     "http": "0.0.0",
     "json2csv": "^4.2.1",
-    "lodash": "4.17.19",
+    "lodash": "4.17.20",
     "mailgun-js": "0.22.0",
     "parse": "2.19.0",
     "parse-server": "4.4.0",
@@ -21,7 +21,8 @@
     "path": "0.12.7",
     "request": "2.88.0",
     "request-promise": "4.2.5",
-    "simple2e": "1.0.2"
+    "simple2e": "1.0.2",
+    "@snyk/protect": "latest"
   },
   "devDependencies": {
     "@babel/cli": "7.8.4",
@@ -62,7 +63,8 @@
     "reinstall": "rm -rf node_modules/ && npm install",
     "gh-prune": "git fetch -p && for branch in `git branch -vv | grep ': gone]' | awk '{print $1}'`; do git branch -D $branch; done",
     "release": "standard-version",
-    "snyk-protect": "snyk protect"
+    "snyk-protect": "snyk-protect",
+    "prepare": "npm run snyk-protect"
   },
   "engines": {
     "node": ">=4.3"
@@ -85,5 +87,6 @@
   "bugs": {
     "url": "https://github.com/hopetambala/puente-node-cloudcode/issues"
   },
-  "homepage": "https://github.com/hopetambala/puente-node-cloudcode#readme"
+  "homepage": "https://github.com/hopetambala/puente-node-cloudcode#readme",
+  "snyk": true
 }
