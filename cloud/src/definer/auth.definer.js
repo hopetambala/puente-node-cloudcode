@@ -1,3 +1,7 @@
+const { Organization } = require('../classes');
+const classes = require('../classes');
+
+
 /** ******************************************
 SIGN UP
 Receives user attributes and registers user
@@ -11,30 +15,36 @@ Input Paramaters:
   orginzation - nonprofit user belogns to
   role - role of user within organization
 ******************************************* */
-Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
+Parse.Cloud.define('signup', (request) => new Promise(async (resolve, reject) => {
   const user = new Parse.User();
-  user.set('firstname', String(request.params.firstname));
-  user.set('lastname', String(request.params.lastname));
-  // user.set('username', String(request.params.username));
-  user.set('password', String(request.params.password));
-  if (String(request.params.email) !== '') {
-    user.set('email', String(request.params.email));
-  }
-  user.set('organization', String(request.params.organization));
-  user.set('phonenumber', String(request.params.phonenumber));
 
-  if (request.params.phonenumber) {
-    user.set('username', String(request.params.phonenumber));
+  const {firstname,lastname, password, email, phonenumber, organization:organizationName } = request?.params
+
+  user.set('firstname', String(firstname));
+  user.set('lastname', String(lastname));
+  user.set('password', String(password));
+  if (String(email) !== '') {
+    user.set('email', String(email));
+  }
+  const organizationObj = await classes.Organization.create({
+    name:String(organizationName)
+  })
+  user.set('organization', String(organizationName));
+  user.set('organizationId', organizationObj)
+
+  user.set('phonenumber', String(phonenumber));
+  if (phonenumber) {
+    user.set('username', String(phonenumber));
   } else {
-    user.set('username', String(request.params.email));
+    user.set('username', String(email));
   }
 
   let userRole = '';
   // Query to count number of users for the organization passed into function
   const userQuery = new Parse.Query(Parse.User);
-  userQuery.equalTo('organization', String(request.params.organization));
+  userQuery.equalTo('organization', String(organizationName));
   userQuery.count().then((results) => {
-    // first user signed up, gets admin accesss
+    // First user of an organizaiton that's signed up, gets admin accesss
     if (results === 0) {
       user.set('role', 'administrator');
       user.set('adminVerified', true);
