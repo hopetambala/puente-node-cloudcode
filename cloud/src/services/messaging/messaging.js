@@ -12,7 +12,7 @@ const Messaging = {
    * @param {string[]} emailsToSendTo Name of Parameter in Column
    * @returns Results of Query
    */
-  sendMessage: async function sendMessage() {
+  sendMessage: async function sendMessage(path) {
     const { PUENTE_SMS_EMAIL_API_URL } = process.env;
     const payload = {
       emailSubject: 'Puente Time',
@@ -23,7 +23,7 @@ const Messaging = {
     };
 
     try {
-      const response = await axios.post(`${PUENTE_SMS_EMAIL_API_URL}/email`, payload);
+      const response = await axios.post(`${PUENTE_SMS_EMAIL_API_URL}/${path}`, payload);
       return response;
     } catch (e) {
       return e;

@@ -22,6 +22,10 @@ describe('role testing', () => {
       password: 'dracarys',
       email: 'bendtheknee@gmail.com',
       organization: 'got',
+      restParams: {
+        runMessaging: false,
+        path: 'email',
+      },
     };
     return cloudFunctions.signup(credentials).then((result) => {
       const jsonString = JSON.stringify(result);
@@ -59,6 +63,10 @@ describe('role testing', () => {
       email: 'iknownothing@gmail.com',
       organization: 'got',
       phonenumber: 1234567890,
+      // restParams: {
+      //   runMessaging: false,
+      //   path: 'email',
+      // },
     };
     return cloudFunctions.signup(credentials).then((result) => {
       const jsonString = JSON.stringify(result);
