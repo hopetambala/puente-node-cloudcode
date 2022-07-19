@@ -24,10 +24,6 @@ Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
     restParams,
   } = request.params;
 
-  const {
-    path,
-    runMessaging,
-  } = restParams;
 
   const user = new Parse.User();
   user.set('firstname', String(firstname));
@@ -66,7 +62,13 @@ Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
     // sign up user
     userUpdated.signUp().then(async (result) => {
       console.log(`User created successfully with name ${result.get('username')} and email: ${result.get('email')}`); // eslint-disable-line
-      if (runMessaging) await services.messaging.sendMessage(path);
+      const userObject = {
+        objectId: result.id,
+        firstname,
+        email,
+        phonenumber,
+      };
+      if (restParams) await services.messaging.sendMessage(restParams, userObject);
 
       const acl = new Parse.ACL();
       acl.setPublicReadAccess(true);

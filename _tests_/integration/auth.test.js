@@ -24,7 +24,6 @@ describe('role testing', () => {
       organization: 'got',
       restParams: {
         runMessaging: false,
-        path: 'email',
       },
     };
     return cloudFunctions.signup(credentials).then((result) => {
