@@ -171,6 +171,5 @@ const Batch = {
     });
   },
 };
-// export default batch;
 
 module.exports = Batch;

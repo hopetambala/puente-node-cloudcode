@@ -1,3 +1,5 @@
+const services = require('../services');
+
 /** ******************************************
 SIGN UP
 Receives user attributes and registers user
@@ -12,27 +14,37 @@ Input Paramaters:
   role - role of user within organization
 ******************************************* */
 Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
-  const user = new Parse.User();
-  user.set('firstname', String(request.params.firstname));
-  user.set('lastname', String(request.params.lastname));
-  // user.set('username', String(request.params.username));
-  user.set('password', String(request.params.password));
-  if (String(request.params.email) !== '') {
-    user.set('email', String(request.params.email));
-  }
-  user.set('organization', String(request.params.organization));
-  user.set('phonenumber', String(request.params.phonenumber));
+  const {
+    firstname,
+    lastname,
+    password,
+    email,
+    phonenumber,
+    organization,
+    restParams,
+  } = request.params;
 
-  if (request.params.phonenumber) {
-    user.set('username', String(request.params.phonenumber));
+
+  const user = new Parse.User();
+  user.set('firstname', String(firstname));
+  user.set('lastname', String(lastname));
+  user.set('password', String(password));
+  if (String(email) !== '') {
+    user.set('email', String(email));
+  }
+  user.set('organization', String(organization));
+  user.set('phonenumber', String(phonenumber));
+
+  if (phonenumber) {
+    user.set('username', String(phonenumber));
   } else {
-    user.set('username', String(request.params.email));
+    user.set('username', String(email));
   }
 
   let userRole = '';
   // Query to count number of users for the organization passed into function
   const userQuery = new Parse.Query(Parse.User);
-  userQuery.equalTo('organization', String(request.params.organization));
+  userQuery.equalTo('organization', String(organization));
   userQuery.count().then((results) => {
     // first user signed up, gets admin accesss
     if (results === 0) {
@@ -46,10 +58,18 @@ Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
       userRole = 'contributor';
     }
     return user;
-  }).then((userUpdated) => {
+  }).then(async (userUpdated) => {
     // sign up user
-    userUpdated.signUp().then((result) => {
+    userUpdated.signUp().then(async (result) => {
       console.log(`User created successfully with name ${result.get('username')} and email: ${result.get('email')}`); // eslint-disable-line
+      const userObject = {
+        objectId: result.id,
+        firstname,
+        email,
+        phonenumber,
+      };
+      if (restParams) await services.messaging.sendMessage(restParams, userObject);
+
       const acl = new Parse.ACL();
       acl.setPublicReadAccess(true);
       acl.setWriteAccess(result, true);
