@@ -9,7 +9,7 @@ const { PUENTE_SMS_EMAIL_API_URL: url } = process.env;
 
 async function sendEmail(apiURL, restParamsData, parseObject) {
   const { emailSubject, type } = restParamsData;
-  const { email:emailAddress, objectId, firstname } = parseObject
+  const { email: emailAddress, objectId, firstname } = parseObject;
 
   const payload = {
     emailSubject,
@@ -60,7 +60,6 @@ const Messaging = {
    * @returns Results of Query
    */
   sendMessage: async function sendMessage(restParams, parseObject) {
-    console.log('sendMessage',restParams )
     const {
       runMessaging,
       path,
