@@ -17,7 +17,7 @@
     "mailgun-js": "0.22.0",
     "parse": "2.19.0",
     "parse-dashboard": "^4.1.4",
-    "parse-server": "4.4.0",
+    "parse-server": "4.10.13",
     "parse-server-simple-mailgun-adapter": "1.0.1",
     "path": "0.12.7",
     "request": "2.88.0",
