@@ -7,13 +7,14 @@ const { PUENTE_SMS_EMAIL_API_URL: url } = process.env;
  * Too tightly coupled with just signup and password reset
  */
 
-async function sendEmail(apiURL, restParamData, parseObject, objectId = 'abc', fullName = 'Full Name') {
-  const { emailSubject, emailAddress, type } = restParamData;
+async function sendEmail(apiURL, restParamsData, parseObject) {
+  const { emailSubject, type } = restParamsData;
+  const { email:emailAddress, objectId, firstname } = parseObject
 
   const payload = {
     emailSubject,
     objectId,
-    userFullName: fullName,
+    userFullName: firstname,
     emailsToSendTo: [
       emailAddress,
     ],
@@ -23,8 +24,8 @@ async function sendEmail(apiURL, restParamData, parseObject, objectId = 'abc', f
   return axios.post(`${apiURL}/email`, payload);
 }
 
-async function sendText(apiURL, restParamData, parseObject) {
-  const { textTo: phoneNumber, type } = restParamData;
+async function sendText(apiURL, restParamsData, parseObject) {
+  const { textTo: phoneNumber, type } = restParamsData;
   const { objectId, firstname } = parseObject;
 
   let textBody = '';
@@ -58,12 +59,13 @@ const Messaging = {
    * @param {string} restParamData Data consisting of which
    * @returns Results of Query
    */
-  sendMessage: async function sendMessage(restParam, parseObject) {
+  sendMessage: async function sendMessage(restParams, parseObject) {
+    console.log('sendMessage',restParams )
     const {
       runMessaging,
       path,
       data,
-    } = restParam;
+    } = restParams;
 
     if (!runMessaging) return null;
 
