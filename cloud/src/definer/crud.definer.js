@@ -410,9 +410,13 @@ Parse.Cloud.define('updateObject', (request) => new Promise((resolve, reject) =>
       const obj = localObject[key];
       result.set(String(key), obj);
     });
+    
     // Add GeoPoint location
-    const point = new Parse.GeoPoint(localObject.latitude, localObject.longitude);
-    result.set('location', point);
+    if(localObject?.latitude) {
+      const point = new Parse.GeoPoint(localObject.latitude, localObject.longitude);
+      result.set('location', point);
+    }
+    
 
     return result;
   }).then((result) => result.save()).then((result) => {
