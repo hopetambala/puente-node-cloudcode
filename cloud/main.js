@@ -22,3 +22,9 @@ require('./src/definer/verification.definer');
  * Roles Creator and Manager
  ******************************************** */
 require('./src/definer/roles.definer');
+
+
+/** ********************************************
+ * Run Migrations
+ ******************************************** */
+ require('./src/definer/migrations.definer');
