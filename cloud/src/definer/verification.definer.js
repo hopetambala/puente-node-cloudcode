@@ -34,3 +34,14 @@ Parse.Cloud.define('queryRoles', () => new Promise((resolve, reject) => {
     reject(error);
   });
 }));
+
+Parse.Cloud.define('retrieveUserByObjectId', (request) => new Promise((resolve, reject) => {
+  setTimeout(() => {
+    const query = new Parse.Query(Parse.User);
+    query.get(request.params.objectId, { useMasterKey: true }).then((record) => {
+      resolve(record);
+    }, (error) => {
+      reject(error);
+    });
+  }, 1500);
+}));
