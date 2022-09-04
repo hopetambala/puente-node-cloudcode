@@ -45,4 +45,3 @@ Parse.Cloud.define('retrieveUserByObjectId', (request) => new Promise((resolve, 
     });
   }, 1500);
 }));
-

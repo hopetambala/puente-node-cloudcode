@@ -236,24 +236,24 @@ Parse.Cloud.define('addUserPushToken', (request) => new Promise((resolve, reject
 }));
 
 /**
- * 
+ *
  */
-Parse.Cloud.define("updateUser", async (request) => {
+Parse.Cloud.define('updateUser', async (request) => {
   const { objectId, userObject } = request.params;
-  var User = Parse.Object.extend(Parse.User);
-  var query = new Parse.Query(User);
-  let user = await query.get(objectId, { useMasterKey: true });
-  if (!user) new Error("No user found!");
+  const User = Parse.Object.extend(Parse.User);
+  const query = new Parse.Query(User);
+  const user = await query.get(objectId, { useMasterKey: true });
+  if (!user) return 'No user found!';
 
-  Object.keys(userObject).forEach((key)=>{
+  Object.keys(userObject).forEach((key) => {
     const obj = userObject[key];
     user.set(String(key), obj);
-  })
+  });
 
   try {
     user.save(null, { useMasterKey: true });
-      return JSON.parse(JSON.stringify(user))
+    return JSON.parse(JSON.stringify(user));
   } catch (e) {
-      return e.message;
+    return e.message;
   }
 });
