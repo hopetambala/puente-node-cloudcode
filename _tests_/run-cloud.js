@@ -79,6 +79,9 @@ const cloudFunctions = {
   addUserPushToken: (params) => Parse.Cloud
     .run('addUserPushToken', params)
     .then((response) => response),
+  updateUser: (params) => Parse.Cloud
+    .run('updateUser', params)
+    .then((response) => response),
 };
 
 module.exports = { cloudFunctions };
