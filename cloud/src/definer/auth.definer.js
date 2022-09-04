@@ -257,3 +257,27 @@ Parse.Cloud.define('updateUser', async (request) => {
     return e.message;
   }
 });
+
+Parse.Cloud.define('queryUser', async (request) => {
+  const { username } = request.params;
+  const User = Parse.Object.extend(Parse.User);
+  
+  const phonenumber = new Parse.Query(User);
+  const email = new Parse.Query(User);
+  const userName = new Parse.Query(User);
+
+  phonenumber.equalTo('phonenumber', username);
+  email.equalTo('email', username);
+  userName.equalTo('username', username);
+
+  const query = Parse.Query.or(phonenumber, email,userName);
+  const queriedUser = await query.first(null, { useMasterKey: true });
+
+  try {
+    const userQuery = new Parse.Query(Parse.User);
+    const user = await userQuery.get(queriedUser.id, { useMasterKey: true })
+    return JSON.parse(JSON.stringify(user));
+  } catch (e) {
+    return e.message;
+  }
+});
