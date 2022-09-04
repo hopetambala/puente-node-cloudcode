@@ -114,7 +114,7 @@ describe('role testing', () => {
     return cloudFunctions.signin(credentials).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
-      rollingUserObject = jsonValues
+      rollingUserObject = jsonValues;
 
       expect(jsonValues.firstname).toEqual('Jon');
       expect(jsonValues.lastname).toEqual('Snow');
@@ -128,13 +128,13 @@ describe('role testing', () => {
   });
 
   it('should update the user', async () => {
-    const originalUserObject = rollingUserObject
+    const originalUserObject = rollingUserObject;
 
     const params = {
       objectId: originalUserObject.objectId,
       userObject: {
-        firstname:"Ron",
-        lastname:'Flow'
+        firstname: 'Ron',
+        lastname: 'Flow',
       },
     };
 
