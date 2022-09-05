@@ -281,3 +281,15 @@ Parse.Cloud.define('queryUser', async (request) => {
     return e.message;
   }
 });
+
+Parse.Cloud.define('sendMessage', async (request) => {
+  const { user, restParamsData } = request.params;
+  restParamsData.runMessaging = true;
+
+  try {
+    const resp = await services.messaging.sendMessage(restParamsData, user);
+    return JSON.parse(JSON.stringify(resp));
+  } catch (e) {
+    return e.message;
+  }
+});

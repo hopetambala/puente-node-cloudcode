@@ -25,16 +25,16 @@ async function sendEmail(apiURL, restParamsData, parseObject) {
 }
 
 async function sendText(apiURL, restParamsData, parseObject) {
-  const { textTo: phoneNumber, type } = restParamsData;
+  const { textTo: phonenumber, type } = restParamsData;
   const { objectId, firstname } = parseObject;
 
   let textBody = '';
 
   if (type === 'signup') textBody = `Hello ${firstname}! Verify your Puente account at\nhttps://puente-manage.vercel.app/account/verify/redirect?objectId=${objectId}`;
-  if (type === 'passwordReset') textBody = `Hello ${firstname}! Reset your Puente password at\nhttps://puente-manage.vercel.app/account/reset?objectId=${objectId}`;
+  if (type === 'passwordReset') textBody = `Hello ${firstname}! Reset your Puente account at\nhttps://puente-manage.vercel.app/account/reset?objectId=${objectId}`;
 
   const payload = {
-    textTo: phoneNumber,
+    textTo: phonenumber,
     textBody,
   };
 
