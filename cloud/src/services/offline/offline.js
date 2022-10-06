@@ -99,7 +99,7 @@ const OfflineFactory = (records, type) => {
 
   if (type === 'households') return postHouseholdArray(households, metadata);
   if (type === 'assetForms') return postObjectsArray(assetForms, metadata);
-  if (type === 'residentForms') return postObjectsArray(residentForms, metadata).then((records)=> afterSurveyHouseholdHook(records));
+  if (type === 'residentForms') return postObjectsArray(residentForms, metadata).then((results) => afterSurveyHouseholdHook(results));
   if (type === 'residentSupplementaryForms') return postObjectsWithRelationshipsArray(residentSupplementaryForms, metadata);
   // if (type === 'householdRelations') return postObjectsWithRelationshipsArray(householdRelations)
   if (type === 'assetSupplementaryForms') return postObjectsWithRelationshipsArray(assetSupplementaryForms, metadata);

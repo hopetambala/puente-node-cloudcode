@@ -44,7 +44,7 @@ describe('crud testing', () => {
     });
   });
 
-  // it('should post an object to class with relation to original post with a variety of classes', async () => {
+  // it('should post an obj to class with relation to post with variety of classes', async () => {
   //   const postParams = {
   //     parseParentClass: 'SurveyData',
   //     parseParentClassID: postID1,
