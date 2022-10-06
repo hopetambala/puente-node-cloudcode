@@ -205,7 +205,9 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
   supplementaryForm.save().then((results) => results).then((mainObject) => {
     // post looped objects
     if (loop === true && Object.keys(loopedJson).length > 0) {
-      utils.Loop.postLoopedForm(loopedJson, newFieldsArray, request, mainObject).then((result) => {
+      utils.Loop.postLoopedForm(
+        loopedJson, newFieldsArray, request.params, mainObject,
+      ).then((result) => {
         console.log(result); // eslint-disable-line
       }, (error) => {
         reject(error);

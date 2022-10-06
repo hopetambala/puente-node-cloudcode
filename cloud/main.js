@@ -22,3 +22,8 @@ require('./src/definer/verification.definer');
  * Roles Creator and Manager
  ******************************************** */
 require('./src/definer/roles.definer');
+
+/** ********************************************
+ * Offline Uploader and Manager
+ ******************************************** */
+require('./src/definer/offline.definer');

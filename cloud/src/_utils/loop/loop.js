@@ -25,7 +25,7 @@ const Loop = {
     ];
   },
 
-  postLoopedForm: function postLoopedForm(loopedJson, newFieldsArray, request, mainObject) {
+  postLoopedForm: function postLoopedForm(loopedJson, newFieldsArray, requestParams, mainObject) {
     return new Promise((resolve, reject) => {
             Object.entries(loopedJson).forEach(([key, value]) => { // eslint-disable-line
         // get looped data and adjust the fields Array for each loopp
@@ -34,14 +34,14 @@ const Loop = {
                         element.answer = value[element.title]; // eslint-disable-line
           }
         });
-        const newLocalObject = request.params.localObject;
+        const newLocalObject = requestParams.localObject;
         newLocalObject.fields = newFieldsArray;
         const postParams = {
-          parseParentClassID: request.params.parseParentClassID,
-          parseParentClass: request.params.parseParentClass,
-          parseUser: request.params.parseUser,
-          parseClass: request.params.parseClass,
-          photoFile: request.params.photoFile,
+          parseParentClassID: requestParams.parseParentClassID,
+          parseParentClass: requestParams.parseParentClass,
+          parseUser: requestParams.parseUser,
+          parseClass: requestParams.parseClass,
+          photoFile: requestParams.photoFile,
           localObject: newLocalObject,
           loop: false,
           loopParentID: JSON.parse(JSON.stringify(mainObject)).objectId,
