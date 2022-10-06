@@ -44,96 +44,96 @@ describe('crud testing', () => {
     });
   });
 
-  it('should post an object to class with relation to original post with a variety of classes', async () => {
-    const postParams = {
-      parseParentClass: 'SurveyData',
-      parseParentClassID: postID1,
-      localObject: [
-        {
-          tag: 'Vitals',
-          key: 'height',
-          value: '4',
-        },
-        {
-          tag: 'HistoryMedical',
-          key: 'majorEvents',
-          value: null,
-        },
-        {
-          tag: 'Prescriptions',
-          key: 'name',
-          value: 'Greetings__',
-        },
-        {
-          tag: 'Allergies',
-          key: 'substance',
-          value: 'Tester',
-        },
-        {
-          tag: 'EvaluationSurgical',
-          key: 'AssessmentandEvaluationSurgical',
-          value: 'Have',
-        },
-        {
-          tag: 'EvaluationMedical',
-          key: 'chronic_condition_hypertension',
-          value: 'swell',
-        },
-        {
-          tag: 'HistoryEnvironmentalHealth',
-          key: 'yearsLivedinthecommunity',
-          value: 'day!',
-        },
-      ],
-    };
+  // it('should post an object to class with relation to original post with a variety of classes', async () => {
+  //   const postParams = {
+  //     parseParentClass: 'SurveyData',
+  //     parseParentClassID: postID1,
+  //     localObject: [
+  //       {
+  //         tag: 'Vitals',
+  //         key: 'height',
+  //         value: '4',
+  //       },
+  //       {
+  //         tag: 'HistoryMedical',
+  //         key: 'majorEvents',
+  //         value: null,
+  //       },
+  //       {
+  //         tag: 'Prescriptions',
+  //         key: 'name',
+  //         value: 'Greetings__',
+  //       },
+  //       {
+  //         tag: 'Allergies',
+  //         key: 'substance',
+  //         value: 'Tester',
+  //       },
+  //       {
+  //         tag: 'EvaluationSurgical',
+  //         key: 'AssessmentandEvaluationSurgical',
+  //         value: 'Have',
+  //       },
+  //       {
+  //         tag: 'EvaluationMedical',
+  //         key: 'chronic_condition_hypertension',
+  //         value: 'swell',
+  //       },
+  //       {
+  //         tag: 'HistoryEnvironmentalHealth',
+  //         key: 'yearsLivedinthecommunity',
+  //         value: 'day!',
+  //       },
+  //     ],
+  //   };
 
-    return cloudFunctions.postObjectsToAnyClassWithRelation(postParams).then((result) => {
-      const jsonString = JSON.stringify(result);
-      const jsonValues = JSON.parse(jsonString);
+  //   return cloudFunctions.postObjectsToAnyClassWithRelation(postParams).then((result) => {
+  //     const jsonString = JSON.stringify(result);
+  //     const jsonValues = JSON.parse(jsonString);
 
-      Object.keys(jsonValues).forEach((key) => {
-        // ensure all are related to original surveyData form
-        const { client } = jsonValues[key];
-        const type = client.__type; // eslint-disable-line
-        const { className } = client;
-        const objectID = client.objectId;
-        expect(type).toEqual('Pointer');
-        expect(className).toEqual('SurveyData');
-        expect(objectID).toEqual(`${postID1}`);
+  //     Object.keys(jsonValues).forEach((key) => {
+  //       // ensure all are related to original surveyData form
+  //       const { client } = jsonValues[key];
+  //       const type = client.__type; // eslint-disable-line
+  //       const { className } = client;
+  //       const objectID = client.objectId;
+  //       expect(type).toEqual('Pointer');
+  //       expect(className).toEqual('SurveyData');
+  //       expect(objectID).toEqual(`${postID1}`);
 
-        // testing other attributes are correctly added
-        if ('height' in jsonValues[key]) {
-          const { height } = jsonValues[key];
-          expect(height).toEqual('4');
-        }
-        if ('majorEvents' in jsonValues[key]) {
-          const { majorEvents } = jsonValues[key];
-          expect(majorEvents).toEqual(null);
-        }
-        if ('name' in jsonValues[key]) {
-          const { name } = jsonValues[key];
-          expect(name).toEqual('Greetings__');
-        }
-        if ('substance' in jsonValues[key]) {
-          const { substance } = jsonValues[key];
-          expect(substance).toEqual('Tester');
-        }
-        if ('AssessmentandEvaluationSurgical' in jsonValues[key]) {
-          const { AssessmentandEvaluationSurgical } = jsonValues[key];
-          expect(AssessmentandEvaluationSurgical).toEqual('Have');
-        }
-        if ('chronic_condition_hypertension' in jsonValues[key]) {
-          const chronicConditionHypertension = jsonValues[key].chronic_condition_hypertension;
-          expect(chronicConditionHypertension).toEqual('swell');
-        }
-        if ('yearsLivedinthecommunity' in jsonValues[key]) {
-          const { yearsLivedinthecommunity } = jsonValues[key];
-          expect(yearsLivedinthecommunity).toEqual('day!');
-        }
-      });
-      expect(result).toBeDefined();
-    });
-  });
+  //       // testing other attributes are correctly added
+  //       if ('height' in jsonValues[key]) {
+  //         const { height } = jsonValues[key];
+  //         expect(height).toEqual('4');
+  //       }
+  //       if ('majorEvents' in jsonValues[key]) {
+  //         const { majorEvents } = jsonValues[key];
+  //         expect(majorEvents).toEqual(null);
+  //       }
+  //       if ('name' in jsonValues[key]) {
+  //         const { name } = jsonValues[key];
+  //         expect(name).toEqual('Greetings__');
+  //       }
+  //       if ('substance' in jsonValues[key]) {
+  //         const { substance } = jsonValues[key];
+  //         expect(substance).toEqual('Tester');
+  //       }
+  //       if ('AssessmentandEvaluationSurgical' in jsonValues[key]) {
+  //         const { AssessmentandEvaluationSurgical } = jsonValues[key];
+  //         expect(AssessmentandEvaluationSurgical).toEqual('Have');
+  //       }
+  //       if ('chronic_condition_hypertension' in jsonValues[key]) {
+  //         const chronicConditionHypertension = jsonValues[key].chronic_condition_hypertension;
+  //         expect(chronicConditionHypertension).toEqual('swell');
+  //       }
+  //       if ('yearsLivedinthecommunity' in jsonValues[key]) {
+  //         const { yearsLivedinthecommunity } = jsonValues[key];
+  //         expect(yearsLivedinthecommunity).toEqual('day!');
+  //       }
+  //     });
+  //     expect(result).toBeDefined();
+  //   });
+  // });
 
   it('should update the originally posted item', async () => {
     const updateParams = {
