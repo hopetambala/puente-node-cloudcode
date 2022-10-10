@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.9.0](https://github.com/hopetambala/puente-node-cloudcode/compare/v1.5.0...v1.9.0) (2022-10-10)
+
+
+### Features
+
+* add deep linking betweent user and survey ([4b78dc5](https://github.com/hopetambala/puente-node-cloudcode/commit/4b78dc5213ffae6d65f751c47054153488cf63df))
+* add deleteUser function ([a63bf26](https://github.com/hopetambala/puente-node-cloudcode/commit/a63bf26b32b3986e1c3844324001bf49c7cfe9b7))
+* add send message api ([e5fc96b](https://github.com/hopetambala/puente-node-cloudcode/commit/e5fc96bdc3a447a66202a4a1347a370aff5a05de))
+* add text messaging ([0603393](https://github.com/hopetambala/puente-node-cloudcode/commit/06033934b9e8ceb9a0f8ada266970062927ef357))
+* add update user and retrieveUserByObjectId ([4c51560](https://github.com/hopetambala/puente-node-cloudcode/commit/4c51560a442e1e5acbccbe0999c56b9547150ee6))
+* added expoPushToken function to udpate user ([87b2f1b](https://github.com/hopetambala/puente-node-cloudcode/commit/87b2f1b2a0415b5872ee541d7b23ae6273458a11))
+* count service to get unqiue surrveydata created ([89337d0](https://github.com/hopetambala/puente-node-cloudcode/commit/89337d0bfa0b65c7b138afce978143ef0069a713))
+* handle looped form submission ([80d5741](https://github.com/hopetambala/puente-node-cloudcode/commit/80d5741e8b2982138ee4b877466e030822598cd7))
+* offline moved to node cloud ([30944b3](https://github.com/hopetambala/puente-node-cloudcode/commit/30944b3ca3536ef04763f77f6514d76eaba1ac20))
+* OFFLINE UPLOADER :tada: ([1374ef8](https://github.com/hopetambala/puente-node-cloudcode/commit/1374ef83fb9a5419ed8546960f7dbe44b7c52343))
+* pictures on any forms work ([79d0a3d](https://github.com/hopetambala/puente-node-cloudcode/commit/79d0a3d0dc9a0954e68549523c5806dd6a1ce37d))
+* refactor loop portion of crud to utils ([799837b](https://github.com/hopetambala/puente-node-cloudcode/commit/799837b1cf1354f394ee643e3c36d3dbb9016335))
+* update all dependencies! ([eab407c](https://github.com/hopetambala/puente-node-cloudcode/commit/eab407c0a9332736d906c3ecbf1bc99be119897e))
+* updated count service to include other parse models ([d5a393a](https://github.com/hopetambala/puente-node-cloudcode/commit/d5a393acd84708fc8559e5d91ecd2001d4441214))
+
+
+### Bug Fixes
+
+*  tests PLATFORM-332 ([a494930](https://github.com/hopetambala/puente-node-cloudcode/commit/a4949300a30c3aa264043acfa2b033e828762a97))
+* add afterSurveyHouseholdHook ([d260799](https://github.com/hopetambala/puente-node-cloudcode/commit/d26079979e814d051d164597cbb2d5bf4776f0f2))
+* checking if key is a photo ([6fdd4fd](https://github.com/hopetambala/puente-node-cloudcode/commit/6fdd4fdada93163489e16ad111f054fe62346f0e))
+* **deps:** update dependency lodash to v4.17.21 [security] ([ea8908a](https://github.com/hopetambala/puente-node-cloudcode/commit/ea8908a6b8349b16ee55f7275d6f27bf94648881))
+* lodash require ([0187a33](https://github.com/hopetambala/puente-node-cloudcode/commit/0187a337d815eb5d3af87228475089f4485fdbb2))
+* package.json & package-lock.json to reduce vulnerabilities ([7f43954](https://github.com/hopetambala/puente-node-cloudcode/commit/7f4395439f3cb7b61ed005aa476817ba814dea42))
+* reason why tests were always failing ([c820b93](https://github.com/hopetambala/puente-node-cloudcode/commit/c820b936dc00e4e6d17bcffd9c75f18a243ce7a3))
+* remove all .includes from codebase ([467caca](https://github.com/hopetambala/puente-node-cloudcode/commit/467cacaeea27dcf64f5dcfbb4b36d11046adf3e2))
+* sort basic query results ([c20a12a](https://github.com/hopetambala/puente-node-cloudcode/commit/c20a12a37debffa8edbf585b982a9e0ba8dc53be))
+* testing ([2fdb6cd](https://github.com/hopetambala/puente-node-cloudcode/commit/2fdb6cd2663725b0a938573dee968fee8eae5641))
+
 ## [1.8.0](https://github.com/hopetambala/puente-node-cloudcode/compare/v1.5.0...v1.8.0) (2021-12-18)
 
 
