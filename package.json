@@ -1,6 +1,6 @@
 {
   "name": "puente_cloud",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "[Instructions](https://docs.back4app.com/docs/integrations/command-line-interface/setting-up-cloud-code-2/)",
   "main": "index.js",
   "directories": {
@@ -57,10 +57,10 @@
     "test-staging": "env-cmd -f .env.staging jest && codecov",
     "start": "node -r esm index.js",
     "start:hot-reload": "nodemon index.js",
-    "start-local:dev": "concurrently \"env-cmd -f .env.dev npm run start:hot-reload\" \"npm run dashboard\"",
-    "start-local:prod": "concurrently \"env-cmd -f .env.prod npm run start:hot-reload\" \"npm run dashboard\"",
+    "start-local-dev": "concurrently \"env-cmd -f .env.dev npm run start:hot-reload\" \"npm run dashboard\"",
+    "start-local-prod": "concurrently \"env-cmd -f .env.prod npm run start:hot-reload\" \"npm run dashboard\"",
     "lint": "eslint '**/*.{js,jsx}' --quiet",
-    "lint:fix": "eslint '**/*.{js,jsx}' --fix",
+    "lint-fix": "eslint '**/*.{js,jsx}' --fix",
     "reinstall": "rm -rf node_modules/ && rm -rf package-lock.json && npm install",
     "gh-prune": "git fetch -p && for branch in `git branch -vv | grep ': gone]' | awk '{print $1}'`; do git branch -D $branch; done",
     "release": "standard-version",
