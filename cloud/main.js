@@ -27,4 +27,4 @@ require('./src/definer/roles.definer');
 /** ********************************************
  * Run Migrations
  ******************************************** */
- require('./src/definer/migrations.definer');
+require('./src/definer/migrations.definer');

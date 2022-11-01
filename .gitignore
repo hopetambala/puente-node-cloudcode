@@ -4,3 +4,4 @@ logs
 /coverage
 .parse.local
 .env.prod
+env

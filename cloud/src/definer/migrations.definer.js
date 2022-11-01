@@ -9,13 +9,13 @@ const data = require('../data');
     lat/long - latitude/longitude, query results will always be within 5 miles of these values
   ******************************************* */
 Parse.Cloud.define('migration-up', (request) => {
-  const migrationName = request.params.migrationName
+  const { migrationName } = request.params;
   const migration = data[migrationName];
   return migration.up();
 });
 
 Parse.Cloud.define('migration-down', (request) => {
-  const migrationName = request.params.migrationName
+  const { migrationName } = request.params;
   const migration = data[migrationName];
   return migration.down();
 });
