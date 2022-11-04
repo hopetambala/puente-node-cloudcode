@@ -23,26 +23,27 @@ const postObject = async (survey) => {
       .catch((err) => console.log(err)); //eslint-disable-line
   }
 
-  Object.keys(localObject).forEach((key) => surveyPoint.set(key, localObject[key]));
-
-  const { latitude, longitude } = localObject;
-  if (latitude && longitude) {
-    const point = new Parse.GeoPoint(latitude, longitude);
-    surveyPoint.set('location', point);
+  if (Array.isArray(localObject.location)) {
+    const { location } = localObject;
+    const point = new Parse.GeoPoint(parseFloat(location[0]), parseFloat(location[1]));
+    localObject.location = point;
   }
 
-  if (parseUser) {
+  Object.keys(localObject).forEach((key) => surveyPoint.set(key, localObject[key]));
+
+  if (typeof parseUser !== 'undefined' && parseUser) {
     const userObject = new Parse.Object('_User');
     userObject.id = String(survey.parseUser);
     surveyPoint.set('parseUser', userObject);
   }
 
-  return surveyPoint.save().then((result) => result).catch((error) => error);
+  return surveyPoint.save().then((result) => result).catch((error) => {
+    console.error('Error: postObject',error); //eslint-disable-line
+  });
 };
 
 const postObjectWithRelationships = async (survey) => {
   const supplementaryForm = new Parse.Object(survey.parseClass);
-  const userObject = new Parse.Object('_User');
   const loopParentForm = new Parse.Object(survey.parseClass);
 
   const { localObject, loop } = survey;
@@ -76,12 +77,16 @@ const postObjectWithRelationships = async (survey) => {
     supplementaryForm.set('loopClient', loopParentForm);
   }
 
-  if (survey.parseUser) {
+  if (typeof survey.parseUser !== 'undefined' && survey.parseUser) {
+    const userObject = new Parse.Object('_User');
     userObject.id = String(survey.parseUser);
     supplementaryForm.set('parseUser', userObject);
   }
 
-  const results = await supplementaryForm.save();
+  const results = await supplementaryForm.save().catch((error) => {
+    console.error('Error: postObjectWithRelationships',error); //eslint-disable-line
+  });
+
   const mainObject = results;
   if (loop && Object.keys(loopedJson).length > 0) {
     await utils.Loop.postLoopedForm(loopedJson, newFieldsArray, survey, mainObject);

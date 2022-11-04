@@ -23,6 +23,30 @@ const afterSurveyHouseholdHook = async (records) => {
   }
 };
 
+const afterSupplementaryFormHook = async (records, parentClass = 'SurveyData') => {
+  const data = records.map(async (record) => {
+    const supplementaryForm = record;
+    const parentPointer = await supplementaryForm.get('parseParentClassObjectIdOffline');
+    if (!parentPointer) return supplementaryForm;
+
+    const parentQuery = new Parse.Query(parentClass);
+    parentQuery.equalTo('objectIdOffline', parentPointer);
+    const parent = await parentQuery.first({ useMasterKey: true });
+
+    if (!parent) return supplementaryForm;
+    supplementaryForm.set('client', parent);
+    return supplementaryForm.save().catch((error) => console.error('Error: afterSupplementaryFormHook', error));
+  });
+
+  try {
+    return Promise.all(data);
+  } catch (error) {
+			console.error(`Got an error ${error.code} : ${error.message}`); //eslint-disable-line
+    return [];
+  }
+};
+
 module.exports = {
   afterSurveyHouseholdHook,
+  afterSupplementaryFormHook,
 };
