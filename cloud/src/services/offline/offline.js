@@ -2,7 +2,7 @@ const { afterSurveyHouseholdHook, afterSupplementaryFormHook } = require('../pos
 const post = require('../post/post');
 
 const postObjectsArray = (data, metadata) => {
-  if (!data) return [];
+  if (!data) return Promise.all([]);
   const promises = data.map(async (obj) => {
     const record = obj;
     record.localObject = {
@@ -37,7 +37,7 @@ const postObjectsArray = (data, metadata) => {
 };
 
 const postObjectsWithRelationshipsArray = async (data, metadata) => {
-  if (!data) return [];
+  if (!data) return Promise.all([]);
   const promises = data.map(async (obj) => {
     const record = obj;
     record.localObject = {
