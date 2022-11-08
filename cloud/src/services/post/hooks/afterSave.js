@@ -35,7 +35,7 @@ const afterSupplementaryFormHook = async (records, parentClass = 'SurveyData') =
 
     if (!parent) return supplementaryForm;
     supplementaryForm.set('client', parent);
-    return supplementaryForm.save().catch((error) => console.error('Error: afterSupplementaryFormHook', error));
+    return supplementaryForm.save().catch((error) => console.error('Error: afterSupplementaryFormHook', error)); //eslint-disable-line
   });
 
   try {
