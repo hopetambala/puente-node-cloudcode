@@ -1,4 +1,4 @@
-const { removeOrganizationModels } = require('./down');
+const { removeOrganizationModels, removeSurveyDataRelation, removeUserRelation } = require('./down');
 const { addOrganizationModel, createAffiliatedOrganizationField, changeSurveyDataTable } = require('./up');
 
 /**
@@ -33,6 +33,8 @@ class PLATFORM590 {
          */
 
     await removeOrganizationModels();
+    await removeSurveyDataRelation();
+    await removeUserRelation();
   }
 }
 
