@@ -1,8 +1,8 @@
-const { afterSurveyHouseholdHook } = require('../post/hooks/afterSave');
+const { afterSurveyHouseholdHook, afterSupplementaryFormHook } = require('../post/hooks/afterSave');
 const post = require('../post/post');
 
 const postObjectsArray = (data, metadata) => {
-  if (!data) return [];
+  if (!data) return Promise.all([]);
   const promises = data.map(async (obj) => {
     const record = obj;
     record.localObject = {
@@ -31,12 +31,13 @@ const postObjectsArray = (data, metadata) => {
   try {
     return Promise.all(promises);
   } catch (error) {
+    console.error('Error: postObjectsArray' ,error); //eslint-disable-line
     return error;
   }
 };
 
 const postObjectsWithRelationshipsArray = async (data, metadata) => {
-  if (!data) return [];
+  if (!data) return Promise.all([]);
   const promises = data.map(async (obj) => {
     const record = obj;
     record.localObject = {
@@ -58,6 +59,7 @@ const postObjectsWithRelationshipsArray = async (data, metadata) => {
     const posts = await Promise.all(promises);
     return posts;
   } catch (error) {
+    console.error('Error: postObjectsWithRelationshipsArray',error); //eslint-disable-line
     return error;
   }
 };
@@ -82,6 +84,7 @@ const postHouseholdArray = (data, metadata) => {
   try {
     return Promise.all(promises);
   } catch (error) {
+    console.error('Error: postHouseholdArray',error); //eslint-disable-line
     return error;
   }
 };
@@ -99,19 +102,19 @@ const OfflineFactory = (records, type) => {
   if (type === 'households') return postHouseholdArray(households, metadata);
   if (type === 'assetForms') return postObjectsArray(assetForms, metadata);
   if (type === 'residentForms') return postObjectsArray(residentForms, metadata).then((results) => afterSurveyHouseholdHook(results));
-  if (type === 'residentSupplementaryForms') return postObjectsWithRelationshipsArray(residentSupplementaryForms, metadata);
-  if (type === 'assetSupplementaryForms') return postObjectsWithRelationshipsArray(assetSupplementaryForms, metadata);
+  if (type === 'residentSupplementaryForms') return postObjectsWithRelationshipsArray(residentSupplementaryForms, metadata).then((results) => afterSupplementaryFormHook(results, 'SurveyData'));
+  if (type === 'assetSupplementaryForms') return postObjectsWithRelationshipsArray(assetSupplementaryForms, metadata).then((results) => afterSupplementaryFormHook(results, 'Assets'));
   return [];
 };
 
 const Offline = {
   upload: async function upload(records) {
     try {
-      const households = await Promise.resolve(OfflineFactory(records, 'households'));
-      const residentForms = await Promise.resolve(OfflineFactory(records, 'residentForms'));
-      const assetForms = await Promise.resolve(OfflineFactory(records, 'assetForms'));
-      const residentSupplementaryForms = await Promise.resolve(OfflineFactory(records, 'residentSupplementaryForms'));
-      const assetSupplementaryForms = await Promise.resolve(OfflineFactory(records, 'assetSupplementaryForms'));
+      const households = await OfflineFactory(records, 'households');
+      const residentForms = await OfflineFactory(records, 'residentForms');
+      const assetForms = await OfflineFactory(records, 'assetForms');
+      const residentSupplementaryForms = await OfflineFactory(records, 'residentSupplementaryForms');
+      const assetSupplementaryForms = await OfflineFactory(records, 'assetSupplementaryForms');
       return {
         residentForms,
         assetForms,
@@ -120,7 +123,7 @@ const Offline = {
         assetSupplementaryForms,
       };
     } catch (err) {
-      console.log(err); //eslint-disable-line
+      console.error('Error: Offline',err); //eslint-disable-line
       return err;
     }
   },
