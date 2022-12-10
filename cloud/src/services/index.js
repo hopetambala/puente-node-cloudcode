@@ -4,14 +4,16 @@ const Aggregate = require('./aggregate/aggregate.js');
 const Post = require('./post/post.js');
 const Messaging = require('./messaging/messaging.js');
 const Offline = require('./offline/offline.js');
+const Logging = require('./logging/logging');
 
-const services = {};
-
-services.batch = Batch;
-services.roles = Roles;
-services.aggregate = Aggregate;
-services.post = Post;
-services.messaging = Messaging;
-services.offline = Offline;
+const services = {
+  Logging,
+  batch: Batch,
+  roles: Roles,
+  aggregate: Aggregate,
+  post: Post,
+  messaging: Messaging,
+  offline: Offline,
+};
 
 module.exports = services;
