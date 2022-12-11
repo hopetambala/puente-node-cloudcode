@@ -8,7 +8,7 @@ const Slack = {
     const { PARSE_ENV, SLACK_DEV_CHANNEL, SLACK_PROD_CHANNEL } = process.env;
 
     const channelFactory = {
-      'platform-alerts': PARSE_ENV === 'prod' ? SLACK_PROD_CHANNEL: SLACK_DEV_CHANNEL,
+      'platform-alerts': PARSE_ENV === 'prod' ? SLACK_PROD_CHANNEL : SLACK_DEV_CHANNEL,
     };
 
 
@@ -19,7 +19,7 @@ const Slack = {
       });
     } catch (err) {
       if (err.code === ErrorCode.PlatformError) {
-        console.error(err.data);
+        console.error(err.data); //eslint-disable-line
         return err;
       }
       console.error('Error: Slack sendMessage',err); //eslint-disable-line
