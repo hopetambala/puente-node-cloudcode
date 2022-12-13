@@ -44,96 +44,121 @@ describe('crud testing', () => {
     });
   });
 
-  // it('should post an obj to class with relation to post with variety of classes', async () => {
-  //   const postParams = {
-  //     parseParentClass: 'SurveyData',
-  //     parseParentClassID: postID1,
-  //     localObject: [
-  //       {
-  //         tag: 'Vitals',
-  //         key: 'height',
-  //         value: '4',
-  //       },
-  //       {
-  //         tag: 'HistoryMedical',
-  //         key: 'majorEvents',
-  //         value: null,
-  //       },
-  //       {
-  //         tag: 'Prescriptions',
-  //         key: 'name',
-  //         value: 'Greetings__',
-  //       },
-  //       {
-  //         tag: 'Allergies',
-  //         key: 'substance',
-  //         value: 'Tester',
-  //       },
-  //       {
-  //         tag: 'EvaluationSurgical',
-  //         key: 'AssessmentandEvaluationSurgical',
-  //         value: 'Have',
-  //       },
-  //       {
-  //         tag: 'EvaluationMedical',
-  //         key: 'chronic_condition_hypertension',
-  //         value: 'swell',
-  //       },
-  //       {
-  //         tag: 'HistoryEnvironmentalHealth',
-  //         key: 'yearsLivedinthecommunity',
-  //         value: 'day!',
-  //       },
-  //     ],
-  //   };
+  it('should post object to Supplementary Class with Relation to SurveyData', async () => {
+    const postParams = {
+      parseParentClass: 'SurveyData',
+      parseParentClassID: postID1,
+      parseClass: 'Vitals',
+      signature: 'Test',
+      photoFile: 'TestPicture',
+      parseUser: 'undefined',
+      localObject: {
+        height: '6',
+        weight: '2',
+        bmi: '30',
+        bloodPressure: '100/100',
+        latitude: 4,
+        longitude: 5,
+        surveyingOrganization: 'Puente',
+      },
+    };
+    return cloudFunctions.postObjectsToClassWithRelation(postParams).then((result) => {
+      expect(result.get('height')).toEqual('6');
+      expect(result.get('weight')).toEqual('2');
+      expect(result.get('bloodPressure')).toEqual('100/100');
+    });
+  });
 
-  //   return cloudFunctions.postObjectsToAnyClassWithRelation(postParams).then((result) => {
-  //     const jsonString = JSON.stringify(result);
-  //     const jsonValues = JSON.parse(jsonString);
+  it('should post an obj to class with relation to post with variety of classes', async () => {
+    const postParams = {
+      parseParentClass: 'SurveyData',
+      parseParentClassID: postID1,
+      localObject: [
+        {
+          tag: 'Vitals',
+          key: 'height',
+          value: '4',
+        },
+        {
+          tag: 'HistoryMedical',
+          key: 'majorEvents',
+          value: null,
+        },
+        {
+          tag: 'Prescriptions',
+          key: 'name',
+          value: 'Greetings__',
+        },
+        {
+          tag: 'Allergies',
+          key: 'substance',
+          value: 'Tester',
+        },
+        {
+          tag: 'EvaluationSurgical',
+          key: 'AssessmentandEvaluationSurgical',
+          value: 'Have',
+        },
+        {
+          tag: 'EvaluationMedical',
+          key: 'chronic_condition_hypertension',
+          value: 'swell',
+        },
+        {
+          tag: 'HistoryEnvironmentalHealth',
+          key: 'yearsLivedinthecommunity',
+          value: 'day!',
+        },
+      ],
+    };
 
-  //     Object.keys(jsonValues).forEach((key) => {
-  //       // ensure all are related to original surveyData form
-  //       const { client } = jsonValues[key];
-  //       const type = client.__type; // eslint-disable-line
-  //       const { className } = client;
-  //       const objectID = client.objectId;
-  //       expect(type).toEqual('Pointer');
-  //       expect(className).toEqual('SurveyData');
-  //       expect(objectID).toEqual(`${postID1}`);
+    return cloudFunctions.postObjectsToAnyClassWithRelation(postParams).then((result) => {
+      const jsonString = JSON.stringify(result);
+      const jsonValues = JSON.parse(jsonString);
 
-  //       // testing other attributes are correctly added
-  //       if ('height' in jsonValues[key]) {
-  //         const { height } = jsonValues[key];
-  //         expect(height).toEqual('4');
-  //       }
-  //       if ('majorEvents' in jsonValues[key]) {
-  //         const { majorEvents } = jsonValues[key];
-  //         expect(majorEvents).toEqual(null);
-  //       }
-  //       if ('name' in jsonValues[key]) {
-  //         const { name } = jsonValues[key];
-  //         expect(name).toEqual('Greetings__');
-  //       }
-  //       if ('substance' in jsonValues[key]) {
-  //         const { substance } = jsonValues[key];
-  //         expect(substance).toEqual('Tester');
-  //       }
-  //       if ('AssessmentandEvaluationSurgical' in jsonValues[key]) {
-  //         const { AssessmentandEvaluationSurgical } = jsonValues[key];
-  //         expect(AssessmentandEvaluationSurgical).toEqual('Have');
-  //       }
-  //       if ('chronic_condition_hypertension' in jsonValues[key]) {
-  //         const chronicConditionHypertension = jsonValues[key].chronic_condition_hypertension;
-  //         expect(chronicConditionHypertension).toEqual('swell');
-  //       }
-  //       if ('yearsLivedinthecommunity' in jsonValues[key]) {
-  //         const { yearsLivedinthecommunity } = jsonValues[key];
-  //         expect(yearsLivedinthecommunity).toEqual('day!');
-  //       }
-  //     });
-  //     expect(result).toBeDefined();
-  //   });
-  // });
+      Object.keys(jsonValues).forEach((key) => {
+        // ensure all are related to original surveyData form
+        const { client } = jsonValues[key];
+        const type = client.__type; // eslint-disable-line
+        const { className } = client;
+        const objectID = client.objectId;
+        expect(type).toEqual('Pointer');
+        expect(className).toEqual('SurveyData');
+        expect(objectID).toEqual(`${postID1}`);
+
+        // testing other attributes are correctly added
+        if ('height' in jsonValues[key]) {
+          const { height } = jsonValues[key];
+          expect(height).toEqual('4');
+        }
+        if ('majorEvents' in jsonValues[key]) {
+          const { majorEvents } = jsonValues[key];
+          expect(majorEvents).toEqual(null);
+        }
+        if ('name' in jsonValues[key]) {
+          const { name } = jsonValues[key];
+          expect(name).toEqual('Greetings__');
+        }
+        if ('substance' in jsonValues[key]) {
+          const { substance } = jsonValues[key];
+          expect(substance).toEqual('Tester');
+        }
+        if ('AssessmentandEvaluationSurgical' in jsonValues[key]) {
+          const { AssessmentandEvaluationSurgical } = jsonValues[key];
+          expect(AssessmentandEvaluationSurgical).toEqual('Have');
+        }
+        if ('chronic_condition_hypertension' in jsonValues[key]) {
+          const chronicConditionHypertension = jsonValues[key].chronic_condition_hypertension;
+          expect(chronicConditionHypertension).toEqual('swell');
+        }
+        if ('yearsLivedinthecommunity' in jsonValues[key]) {
+          const { yearsLivedinthecommunity } = jsonValues[key];
+          expect(yearsLivedinthecommunity).toEqual('day!');
+        }
+      });
+      expect(result).toBeDefined();
+    });
+  });
 
   it('should update the originally posted item', async () => {
     const updateParams = {

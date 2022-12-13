@@ -68,7 +68,9 @@ Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
         email,
         phonenumber,
       };
-      if (restParams) await services.messaging.sendMessage(restParams, userObject);
+      if (restParams) {
+        await services.Messaging.TextEmailMessaging.sendMessage(restParams, userObject);
+      }
 
       const acl = new Parse.ACL();
       acl.setPublicReadAccess(true);
@@ -287,7 +289,7 @@ Parse.Cloud.define('sendMessage', async (request) => {
   restParamsData.runMessaging = true;
 
   try {
-    const resp = await services.messaging.sendMessage(restParamsData, user);
+    const resp = await services.Messaging.TextEmailMessaging.sendMessage(restParamsData, user);
     return JSON.parse(JSON.stringify(resp));
   } catch (e) {
     return e.message;
