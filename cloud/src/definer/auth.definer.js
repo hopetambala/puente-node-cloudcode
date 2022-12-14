@@ -1,4 +1,5 @@
 const services = require('../services');
+const modules = require('../module');
 
 /** ******************************************
 SIGN UP
@@ -68,7 +69,9 @@ Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
         email,
         phonenumber,
       };
-      if (restParams) await services.messaging.sendMessage(restParams, userObject);
+      if (restParams) {
+        await services.Messaging.TextEmailMessaging.sendMessage(restParams, userObject);
+      }
 
       const acl = new Parse.ACL();
       acl.setPublicReadAccess(true);
@@ -93,7 +96,7 @@ Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
       reject(error);
     });
   }).catch((error) => {
-    console.log(`Error: ${error.code} ${error.message}`); // eslint-disable-line
+    modules.Error.logError(`Error: ${error.code} ${error.message}`);
     reject(error);
   });
 }));
@@ -125,14 +128,14 @@ Parse.Cloud.define('signin', (request, response) => new Promise((resolve, reject
           console.log(`User logged in successful with email: ${result.get('email')}`); // eslint-disable-line
           resolve(result);
         }, (error2) => {
-          console.log(`Error: ${error2.code} ${error2.message}`); // eslint-disable-line
+          modules.Error.logError(`Error: ${error2.code} ${error2.message}`);
           response.error(reject(error2));
         });
       }, (error3) => {
-        console.log(`Error: ${error3.code} ${error3.message}`); // eslint-disable-line
+        modules.Error.logError(`Error: ${error3.code} ${error3.message}`);
         response.error(reject(error3));
       });
-      console.log(`Error: ${error1.code} ${error1.message}`); // eslint-disable-line
+      modules.Error.logError(`Error: ${error1.code} ${error1.message}`);
       response.error(reject(error1));
     });
 }));
@@ -287,7 +290,7 @@ Parse.Cloud.define('sendMessage', async (request) => {
   restParamsData.runMessaging = true;
 
   try {
-    const resp = await services.messaging.sendMessage(restParamsData, user);
+    const resp = await services.Messaging.TextEmailMessaging.sendMessage(restParamsData, user);
     return JSON.parse(JSON.stringify(resp));
   } catch (e) {
     return e.message;

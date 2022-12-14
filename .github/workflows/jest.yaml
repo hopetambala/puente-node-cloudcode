@@ -1,48 +1,53 @@
 name: Jest Tests
 
 env:
-  PARSE_ENV               : "dev"
-  PARSE_APP_ID            : "myAppId"
-  PARSE_JAVASCRIPT_KEY    : "_PLACEHOLDER_"
-  PARSE_SERVER_URL        : "http://localhost:1337/parse"
+  PARSE_ENV: "dev"
+  PARSE_APP_ID: "myAppId"
+  PARSE_JAVASCRIPT_KEY: "_PLACEHOLDER_"
+  PARSE_SERVER_URL: "http://localhost:1337/parse"
+  PUENTE_ENV: "dev"
+  PUENTE_SMS_EMAIL_API_URL: "http://puentes-messaging-microservice.com"
+  PUENTE_MANAGE_URL: "https://sample-puente-manage.app/"
+  SLACK_TOKEN: ""
+  SLACK_DEV_CHANNEL: ""
+  SLACK_PROD_CHANNEL: ""
 
 on:
   push:
-    branches:    
+    branches:
       - master
       - dev
   pull_request:
-    branches: 
-    - master
-    - dev
+    branches:
+      - master
+      - dev
 jobs:
   jest-testing:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [12.x,14.x]
+        node-version: [14.x, 16.x]
     services:
       mongodb:
         image: mongo:4.4
         ports:
           - 27017:27017
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
-    - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - name: Install Puente CloudCode Dependencies
-      run: |
-        npm install
-    - name: Lint
-      run: |
-        npm run lint
-    - name: Start App and Test Jest
-      run: |
-        npm run start &
-        sleep 40 &&
-        npm run test-github-actions 
-
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install Puente CloudCode Dependencies
+        run: |
+          npm install
+      - name: Lint
+        run: |
+          npm run lint
+      - name: Start App and Test Jest
+        run: |
+          npm run start &
+          sleep 40 &&
+          npm run test-github-actions

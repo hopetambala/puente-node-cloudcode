@@ -1,19 +1,20 @@
 {
   "name": "puente_cloud",
-  "version": "1.9.0",
+  "version": "1.10.2",
   "description": "[Instructions](https://docs.back4app.com/docs/integrations/command-line-interface/setting-up-cloud-code-2/)",
   "main": "index.js",
   "directories": {
     "test": "tests"
   },
   "dependencies": {
+    "@slack/web-api": "^6.8.0",
     "axios": "^0.27.2",
     "concurrently": "5.2.0",
     "esm": "3.2.25",
     "express": "4.17.1",
     "http": "0.0.0",
     "json2csv": "^4.2.1",
-    "lodash": "4.17.19",
+    "lodash": "^4.17.19",
     "mailgun-js": "0.22.0",
     "parse": "2.19.0",
     "parse-dashboard": "^4.1.4",
@@ -52,12 +53,13 @@
   },
   "scripts": {
     "dashboard": "parse-dashboard --dev --appId myAppId --masterKey myMasterKey --serverURL http://localhost:1337/parse --appName PuenteCloudCode",
-    "test": "env-cmd -f .env.dev jest",
     "test-github-actions": "jest",
+    "test": "env-cmd -f .env.dev jest",
     "test-staging": "env-cmd -f .env.staging jest && codecov",
     "start": "node -r esm index.js",
     "start:hot-reload": "nodemon index.js",
     "start-local-dev": "concurrently \"env-cmd -f .env.dev npm run start:hot-reload\" \"npm run dashboard\"",
+    "start-local-staging": "concurrently \"env-cmd -f .env.staging npm run start:hot-reload\" \"npm run dashboard\"",
     "start-local-prod": "concurrently \"env-cmd -f .env.prod npm run start:hot-reload\" \"npm run dashboard\"",
     "lint": "eslint '**/*.{js,jsx}' --quiet",
     "lint-fix": "eslint '**/*.{js,jsx}' --fix",

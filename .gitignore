@@ -3,4 +3,6 @@ logs
 *.DS_Store
 /coverage
 .parse.local
+.env.staging
 .env.prod
+

@@ -1,5 +1,6 @@
 const cloneDeep = require('lodash/cloneDeep');
 const classes = require('../classes');
+const modules = require('../module');
 const services = require('../services');
 const utils = require('../_utils');
 
@@ -85,63 +86,73 @@ Parse.Cloud.define('countService', (request) => {
     localObject - Continas key value pairs that will be posted to the class
                 - this contains a latitude/longitude which will post the location
   ******************************************* */
-Parse.Cloud.define('postObjectsToClass', (request) => new Promise((resolve, reject) => {
-  const surveyPoint = new Parse.Object(request.params.parseClass);
+Parse.Cloud.define('postObjectsToClass', (request) => {
+  const {
+    photoFile,
+    signature,
+    localObject,
+    parseUser,
+    parseClass,
+  } = request.params;
 
-  if (request.params.photoFile) {
-    const parseFilePhoto = new Parse.File('memberProfPic.png', { base64: request.params.photoFile });
+  if (!Object.keys(request.params).length) {
+    const err = 'Error: no request params';
+    modules.Error.logError(err);
+    return err;
+  }
 
-    // put this inside if {
+  const surveyPoint = new Parse.Object(parseClass);
+
+  if (photoFile) {
+    const parseFilePhoto = new Parse.File('memberProfPic.png', { base64: photoFile });
+
     parseFilePhoto.save().then(() => {
-      // The file has been saved to Parse.
     }, (error) => {
-      // The file either could not be read, or could not be saved to Parse.
       console.log(error); // eslint-disable-line
     });
 
     surveyPoint.set('picture', parseFilePhoto);
   }
 
-  if (request.params.signature) {
-    const parseFileSignature = new Parse.File('signature.png', { base64: request.params.signature });
+  if (signature) {
+    const parseFileSignature = new Parse.File('signature.png', { base64: signature });
 
-    // put this inside if {
     parseFileSignature.save().then(() => {
-      // The file has been saved to Parse.
     }, (error) => {
-      // The file either could not be read, or could not be saved to Parse.
-      console.log(error); // eslint-disable-line
+      console.error(error); // eslint-disable-line
     });
 
     surveyPoint.set('signature', parseFileSignature);
   }
 
-  // add key/value from the local object to SurveyPoint
-  const { localObject } = request.params;
   Object.keys(localObject).forEach((key) => {
     const obj = localObject[key];
     surveyPoint.set(String(key), obj);
   });
 
-  // Add GeoPoint location
   if (localObject.latitude && localObject.longitude) {
     const point = new Parse.GeoPoint(localObject.latitude, localObject.longitude);
     surveyPoint.set('location', point);
   }
 
-
-  if (request.params.parseUser) {
+  if (parseUser) {
     const userObject = new Parse.Object('_User');
-    userObject.id = String(request.params.parseUser);
+    userObject.id = String(parseUser);
     surveyPoint.set('parseUser', userObject);
   }
 
-  surveyPoint.save().then((results) => {
-    resolve(results);
-  }, (error) => {
-    reject(error);
-  });
-}));
+  try {
+    const survey = surveyPoint.save().then((result) => result).catch((error) => {
+      const err = `Error: postObjectsToClass ${error}`;
+      modules.Error.logError(err);
+    });
+    return survey;
+  } catch (error) {
+    const err = `Error: postObjectsToClass ${error}`;
+    modules.Error.logError(err);
+    return error;
+  }
+});
 
 /** ******************************************
   POST OBJECTS TO CLASS WITH RELATION
@@ -155,14 +166,23 @@ Parse.Cloud.define('postObjectsToClass', (request) => new Promise((resolve, reje
     loop - bool t/f whether looped data contained in form
   ******************************************* */
 Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((resolve, reject) => {
-  const supplementaryForm = new Parse.Object(request.params.parseClass);
-  const residentIdForm = new Parse.Object(request.params.parseParentClass);
+  const {
+    parseParentClass,
+    parseParentClassID,
+    parseClass,
+    localObject,
+    loop,
+    loopParentID,
+    parseUser,
+  } = request.params;
+
+  const supplementaryForm = new Parse.Object(parseClass);
+  const residentIdForm = new Parse.Object(parseParentClass);
   const userObject = new Parse.Object('_User');
-  const loopParentForm = new Parse.Object(request.params.parseClass);
+  const loopParentForm = new Parse.Object(parseClass);
 
   // Create supplementaryForm points
-  const { localObject, loop } = request.params;
-  // create looped json to ensure that data is submitted as multiple forms
+  // Create looped json to ensure that data is submitted as multiple forms
   let loopedJson = {};
   let newFieldsArray = [];
   Object.keys(localObject).forEach((key) => {
@@ -176,11 +196,8 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
       }
     } else {
       const photoFileLocalObject = new Parse.File('picture.png', { base64: value });
-      // put this inside if {
       photoFileLocalObject.save().then(() => {
-        // The file has been saved to Parse.
       }, (error) => {
-        // The file either could not be read, or could not be saved to Parse.
         console.log(error); // eslint-disable-line
       });
       supplementaryForm.set(String(key), photoFileLocalObject);
@@ -188,35 +205,41 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
   });
 
   // Add the residentIdForm as a value in the supplementaryForm
-  residentIdForm.id = String(request.params.parseParentClassID);
+  residentIdForm.id = String(parseParentClassID);
 
   supplementaryForm.set('client', residentIdForm);
 
-  if (request.params.loopParentID) {
-    loopParentForm.id = String(request.params.loopParentID);
+  if (loopParentID) {
+    loopParentForm.id = String(loopParentID);
     supplementaryForm.set('loopClient', loopParentForm);
   }
 
-  if (request.params.parseUser) {
-    userObject.id = String(request.params.parseUser);
+  if (parseUser) {
+    userObject.id = String(parseUser);
     supplementaryForm.set('parseUser', userObject);
   }
 
-  supplementaryForm.save().then((results) => results).then((mainObject) => {
-    // post looped objects
-    if (loop === true && Object.keys(loopedJson).length > 0) {
-      utils.Loop.postLoopedForm(
-        loopedJson, newFieldsArray, request.params, mainObject,
-      ).then((result) => {
-        console.log(result); // eslint-disable-line
-      }, (error) => {
-        reject(error);
-      });
-    }
-    resolve(mainObject);
-  }, (error) => {
-    reject(error);
-  });
+  try {
+    const survey = supplementaryForm.save().then((result) => result).then(async (mainObject) => {
+      if (loop === true && Object.keys(loopedJson).length > 0) {
+        await utils.Loop.postLoopedForm(loopedJson, newFieldsArray, request.params, mainObject)
+          .then((result) => result)
+          .catch((error) => {
+            const err = `Error: loopedForm ${error}`;
+            modules.Error.logError(err);
+          });
+      }
+      return mainObject;
+    }).catch((error) => {
+      const err = `Error: postObjectsToClassWithRelation ${error}`;
+      modules.Error.logError(err);
+    });
+
+    return resolve(survey);
+  } catch (error) {
+    modules.Error.logError(error);
+    return reject(error);
+  }
 }));
 
 /** ******************************************

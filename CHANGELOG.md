@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.10.2](https://github.com/hopetambala/puente-node-cloudcode/compare/v1.10.1...v1.10.2) (2022-12-14)
+
+### [1.10.1](https://github.com/hopetambala/puente-node-cloudcode/compare/v1.10.0...v1.10.1) (2022-12-13)
+
+## [1.10.0](https://github.com/hopetambala/puente-node-cloudcode/compare/v1.9.0...v1.10.0) (2022-12-13)
+
+
+### Features
+
+* add slackbot to posting ([b5a9af4](https://github.com/hopetambala/puente-node-cloudcode/commit/b5a9af4ea4843e7339532dfb4ed896abb71804be))
+
+
+### Bug Fixes
+
+* offline post survey hook ([33db521](https://github.com/hopetambala/puente-node-cloudcode/commit/33db521fa976f1f0f8fe322f8c4449d9a1ab25be))
+* return statement if no data ([47db31d](https://github.com/hopetambala/puente-node-cloudcode/commit/47db31db0f0975c8c2b2c683fd3388d05337aa74))
+
 ## [1.9.0](https://github.com/hopetambala/puente-node-cloudcode/compare/v1.5.0...v1.9.0) (2022-10-10)
 
 
