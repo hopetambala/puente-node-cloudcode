@@ -43,7 +43,7 @@
     "fs": "0.0.1-security",
     "jasmine": "3.5.0",
     "jasmine-node": "3.0.0",
-    "jest": "25.4.0",
+    "jest": "29.3.1",
     "mongodb": "3.5.8",
     "nodemon": "2.0.3",
     "pre-commit": "1.2.2",
