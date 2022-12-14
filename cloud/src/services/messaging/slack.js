@@ -5,10 +5,10 @@ const web = new WebClient(token);
 
 const Slack = {
   sendMessage: async function sendMessage(channel, text) {
-    const { PARSE_ENV, SLACK_DEV_CHANNEL, SLACK_PROD_CHANNEL } = process.env;
+    const { PUENTE_ENV, SLACK_DEV_CHANNEL, SLACK_PROD_CHANNEL } = process.env;
 
     const channelFactory = {
-      'platform-alerts': PARSE_ENV === 'prod' ? SLACK_PROD_CHANNEL : SLACK_DEV_CHANNEL,
+      'platform-alerts': PUENTE_ENV === 'prod' ? SLACK_PROD_CHANNEL : SLACK_DEV_CHANNEL,
     };
 
 
