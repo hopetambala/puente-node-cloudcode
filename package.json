@@ -31,7 +31,7 @@
     "@babel/node": "7.8.7",
     "@babel/preset-env": "7.9.5",
     "@shelf/jest-mongodb": "1.1.5",
-    "babel-jest": "25.4.0",
+    "babel-jest": "25.5.1",
     "case": "1.6.3",
     "chai": "4.2.0",
     "chalk": "2.4.2",
