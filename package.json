@@ -1,6 +1,6 @@
 {
   "name": "puente_cloud",
-  "version": "1.10.2",
+  "version": "1.10.3",
   "description": "[Instructions](https://docs.back4app.com/docs/integrations/command-line-interface/setting-up-cloud-code-2/)",
   "main": "index.js",
   "directories": {

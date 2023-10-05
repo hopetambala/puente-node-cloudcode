@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.10.3](https://github.com/hopetambala/puente-node-cloudcode/compare/v1.10.2...v1.10.3) (2023-10-05)
+
 ### [1.10.2](https://github.com/hopetambala/puente-node-cloudcode/compare/v1.10.1...v1.10.2) (2022-12-14)
 
 ### [1.10.1](https://github.com/hopetambala/puente-node-cloudcode/compare/v1.10.0...v1.10.1) (2022-12-13)
