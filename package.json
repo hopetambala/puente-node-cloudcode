@@ -26,10 +26,10 @@
     "simple2e": "1.0.2"
   },
   "devDependencies": {
-    "@babel/cli": "7.8.4",
-    "@babel/core": "7.9.0",
-    "@babel/node": "7.8.7",
-    "@babel/preset-env": "7.9.5",
+    "@babel/cli": "7.25.9",
+    "@babel/core": "7.25.9",
+    "@babel/node": "7.25.9",
+    "@babel/preset-env": "7.25.9",
     "@shelf/jest-mongodb": "1.1.5",
     "babel-jest": "25.4.0",
     "case": "1.6.3",
