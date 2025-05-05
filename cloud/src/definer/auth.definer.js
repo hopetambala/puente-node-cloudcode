@@ -69,9 +69,6 @@ Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
         email,
         phonenumber,
       };
-      if (restParams) {
-        await services.Messaging.TextEmailMessaging.sendMessage(restParams, userObject);
-      }
 
       const acl = new Parse.ACL();
       acl.setPublicReadAccess(true);
