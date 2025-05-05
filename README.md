@@ -32,16 +32,16 @@ https://docs.parseplatform.org/cloudcode/guide/
 You will need a `.env.staging` and a `.env.dev` file at the root of the project repo with all the necessary environment variables to run the project with all of its dependencies. The dev file here is for the local Node.js/Express server running Parse. The staging variable provided here is for a demo server running on Back4App. For production work, make sure to ask the project lead developer for an `.env.production` file as it contains the production project credentials.
 
 ### Build
-1. Install or update npm (`sudo apt install npm`, `npm install -g npm`)
+1. Install or update yarn (`sudo apt install yarn`, `npm install -g yarn`)
 2. Clone Puente-Node-Cloudcode repo `git clone https://github.com/hopetambala/puente-node-cloudcode.git` or fork this repo
 3. `cd puente-node-cloudcode`
-4. Run `npm install`
+4. Run `yarn install`
 
 ### Run in Two Terminals
 After installation
 1. Open one terminal instance and do following: `sudo mongod` to start mongo instance.(Look at the below guide on how to setup `mongod` on your machine
-2. In another terminal, serve the application locally by running `npm run start`.
-3. (Optionally), if you want to start the application with the dashboard, run `npm run start-with-dash`
+2. In another terminal, serve the application locally by running `yarn run start`.
+3. (Optionally), if you want to start the application with the dashboard, run `yarn run start-with-dash`
 
 Changes made in your code will be automatically reloaded on http://localhost:4040/dashboard.
 
@@ -53,19 +53,19 @@ This application is built with [Parse Server](https://reactjs.org) and [Back4App
 
 Here are some quick commands to get started in Node:
 
-- `npm install`: Install Node dependencies.
-- `npm run start`: Start the development server.
-- `npm run start-with-dash`: Start the server with Parse Dashboard.
-- `npm run test`: Run the test suit on Puente's Staging Parse Server.
-- `npm run test-local`: Run the test suit using your local Parse Server.
-- `npm run lint`: Run the ESLinter.
-- `npm run lint-fix`: Run the ESLinter
+- `yarn install`: Install Node dependencies.
+- `yarn run start`: Start the development server.
+- `yarn run start-with-dash`: Start the server with Parse Dashboard.
+- `yarn run test`: Run the test suit on Puente's Staging Parse Server.
+- `yarn run test-local`: Run the test suit using your local Parse Server.
+- `yarn run lint`: Run the ESLinter.
+- `yarn run lint-fix`: Run the ESLinter
 
 
 Here are some custom commands for this specific project (after you install):
 
-- `npm release`: Create a release of this web application
-- `npm gh-prune`: Remove deleted remote branches on local machine.
+- `yarn release`: Create a release of this web application
+- `yarn gh-prune`: Remove deleted remote branches on local machine.
 
 ### Back4app
 
@@ -80,7 +80,7 @@ To get ramped onto the project with Back4App these following steps must be taken
 
 ### Jest
 
-You need two terminals to do testing in Jest. One terminal should be running `npm run start` or `npm run start-with-dash` to have the application running. The other terminal will use `npm run test`.
+You need two terminals to do testing in Jest. One terminal should be running `yarn run start` or `yarn run start-with-dash` to have the application running. The other terminal will use `yarn run test`.
 
 ### JSBin
 Checkout our pre-setup [JSBin](https://jsbin.com/gizeteg/edit?js,console) to play with our sample server
