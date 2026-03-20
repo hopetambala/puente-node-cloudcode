@@ -1,20 +1,9 @@
-const { MongoClient } = require('mongodb');
 const { cloudFunctions } = require('../run-cloud');
 
 describe('role testing', () => {
-  let connection;
-  let db;
   let adminRoleID;
   let contribRoleID;
   let rollingUserObject;
-
-  beforeAll(async () => {
-    connection = await MongoClient.connect(process.env.MONGO_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    db = connection.db();
-  });
 
   it('should add a user with admin role', async () => {
     const credentials = {
@@ -164,10 +153,5 @@ describe('role testing', () => {
     ];
 
     return removeParams.map((user) => cloudFunctions.deleteUser(user));
-  });
-
-  afterAll(async () => {
-    await connection.close();
-    await db.close();
   });
 });

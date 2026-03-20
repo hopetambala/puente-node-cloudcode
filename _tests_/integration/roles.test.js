@@ -1,24 +1,8 @@
-const { MongoClient } = require('mongodb');
 const { cloudFunctions } = require('../run-cloud');
 
 describe('role testing', () => {
-  let connection;
-  let db;
   let adminRoleID;
   let contribRoleID;
-
-  beforeAll(async () => {
-    connection = await MongoClient.connect(process.env.MONGO_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    db = await connection.db();
-  });
-
-  afterAll(async () => {
-    await connection.close();
-    await db.close();
-  });
 
   beforeEach(async () => {
     jest.setTimeout(10000);
