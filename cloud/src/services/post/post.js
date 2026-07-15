@@ -68,9 +68,16 @@ const postObjectWithRelationships = async (survey) => {
     }
   });
 
-  // Old way of doing offline
-  // residentIdForm.id = String(survey.parseParentClassID);
-  // supplementaryForm.set('client', residentIdForm);
+  // A real (already-synced) parent id can be pointed at directly. Local ids
+  // minted offline (PatientID-/AssetID-) don't exist in Parse yet — those are
+  // resolved after upload by afterSupplementaryFormHook via objectIdOffline.
+  const parentId = survey.parseParentClassID ? String(survey.parseParentClassID) : '';
+  const parentIsOfflineLocal = parentId.includes('PatientID-') || parentId.includes('AssetID-');
+  if (parentId && !parentIsOfflineLocal && survey.parseParentClass) {
+    const parentForm = new Parse.Object(survey.parseParentClass);
+    parentForm.id = parentId;
+    supplementaryForm.set('client', parentForm);
+  }
 
   if (survey.loopParentID) {
     loopParentForm.id = String(survey.loopParentID);

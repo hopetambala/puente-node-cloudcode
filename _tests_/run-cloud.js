@@ -82,6 +82,9 @@ const cloudFunctions = {
   updateUser: (params) => Parse.Cloud
     .run('updateUser', params)
     .then((response) => response),
+  uploadOfflineForms: (params) => Parse.Cloud
+    .run('uploadOfflineForms', params)
+    .then((response) => response),
 };
 
 module.exports = { cloudFunctions };

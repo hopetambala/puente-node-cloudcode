@@ -33,7 +33,11 @@ const afterSupplementaryFormHook = async (records, parentClass = 'SurveyData') =
     parentQuery.equalTo('objectIdOffline', parentPointer);
     const parent = await parentQuery.first({ useMasterKey: true });
 
-    if (!parent) return supplementaryForm;
+    if (!parent) {
+      // eslint-disable-next-line no-console
+      console.error(`afterSupplementaryFormHook: ORPHANED ${supplementaryForm.className} ${supplementaryForm.id} — no ${parentClass} found with objectIdOffline=${parentPointer}; client pointer NOT set`);
+      return supplementaryForm;
+    }
     supplementaryForm.set('client', parent);
     return supplementaryForm.save().catch((error) => console.error('Error: afterSupplementaryFormHook', error)); //eslint-disable-line
   });
