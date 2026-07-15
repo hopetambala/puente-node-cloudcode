@@ -1,23 +1,7 @@
-const { MongoClient } = require('mongodb');
 const { cloudFunctions } = require('../run-cloud');
 
 describe('crud testing', () => {
-  let connection;
-  let db;
   let postID1;
-
-  beforeAll(async () => {
-    connection = await MongoClient.connect(process.env.MONGO_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    db = await connection.db();
-  });
-
-  afterAll(async () => {
-    await connection.close();
-    await db.close();
-  });
 
   it('should post object to SurveyData', async () => {
     const postParams = {

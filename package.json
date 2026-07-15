@@ -3,6 +3,9 @@
   "version": "1.10.3",
   "description": "[Instructions](https://docs.back4app.com/docs/integrations/command-line-interface/setting-up-cloud-code-2/)",
   "main": "index.js",
+  "pre-commit": [
+    "lint"
+  ],
   "directories": {
     "test": "tests"
   },
@@ -30,7 +33,6 @@
     "@babel/core": "7.9.0",
     "@babel/node": "7.8.7",
     "@babel/preset-env": "7.9.5",
-    "@shelf/jest-mongodb": "1.1.5",
     "babel-jest": "25.4.0",
     "case": "1.6.3",
     "chai": "4.2.0",
@@ -44,7 +46,7 @@
     "jasmine": "3.5.0",
     "jasmine-node": "3.0.0",
     "jest": "25.4.0",
-    "mongodb": "3.5.8",
+    "mongodb-memory-server": "^8.15.0",
     "nodemon": "2.0.3",
     "pre-commit": "1.2.2",
     "randomstring": "1.1.5",
@@ -54,7 +56,7 @@
   "scripts": {
     "dashboard": "parse-dashboard --dev --appId myAppId --masterKey myMasterKey --serverURL http://localhost:1337/parse --appName PuenteCloudCode",
     "test-github-actions": "jest",
-    "test": "env-cmd -f .env.dev jest",
+    "test": "env-cmd -f .env.dev jest --forceExit",
     "test-staging": "env-cmd -f .env.staging jest && codecov",
     "start": "node -r esm index.js",
     "start:hot-reload": "nodemon index.js",
@@ -73,9 +75,11 @@
     "coveragePathIgnorePatterns": [
       "/node_modules/"
     ],
-    "preset": "@shelf/jest-mongodb",
     "coverageDirectory": "./coverage/",
-    "collectCoverage": true
+    "collectCoverage": true,
+    "globalSetup": "./_tests_/setup/globalSetup.js",
+    "globalTeardown": "./_tests_/setup/globalTeardown.js",
+    "testTimeout": 30000
   },
   "repository": {
     "type": "git",

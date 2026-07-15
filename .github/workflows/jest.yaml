@@ -23,31 +23,26 @@ on:
       - dev
 jobs:
   jest-testing:
-    runs-on: ubuntu-latest
+    # ubuntu-22.04: mongodb-memory-server 8.x mis-detects newer runners and
+    # downloads OpenSSL 1.1 mongod builds that can't start there
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        node-version: [14.x, 16.x]
-    services:
-      mongodb:
-        image: mongo:4.4
-        ports:
-          - 27017:27017
+        node-version: [18.x, 20.x]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
       - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Install Puente CloudCode Dependencies
-        run: |
-          npm install
+
+      - name: Install Dependencies
+        run: npm install
+
       - name: Lint
-        run: |
-          npm run lint
-      - name: Start App and Test Jest
-        run: |
-          npm run start &
-          sleep 40 &&
-          npm run test-github-actions
+        run: npm run lint
+
+      - name: Test
+        run: npm test -- --no-coverage
