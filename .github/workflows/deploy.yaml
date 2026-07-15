@@ -1,0 +1,74 @@
+name: Deploy to Back4App
+
+# Deploys cloud code to the production Back4App app on merge to master.
+# Gated on the Jest suite passing first. Requires two repo secrets:
+#   B4A_ACCOUNT_KEY       — a Back4App account key (Dashboard → Account Keys)
+#   B4A_PRODUCTION_APP_ID — the production app's Application ID
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  PARSE_ENV: "dev"
+  PARSE_APP_ID: "myAppId"
+  PARSE_JAVASCRIPT_KEY: "_PLACEHOLDER_"
+  PARSE_SERVER_URL: "http://localhost:1337/parse"
+  PUENTE_ENV: "dev"
+  PUENTE_SMS_EMAIL_API_URL: "http://puentes-messaging-microservice.com"
+  PUENTE_MANAGE_URL: "https://sample-puente-manage.app/"
+  SLACK_TOKEN: ""
+  SLACK_DEV_CHANNEL: ""
+  SLACK_PROD_CHANNEL: ""
+
+jobs:
+  # Gate: never deploy code that fails the suite, even on a direct push to master
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+      - run: npm install
+      - run: npm run lint
+      - run: npm test -- --no-coverage
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install b4a CLI
+        run: |
+          curl -sL -o /usr/local/bin/b4a \
+            https://github.com/back4app/parse-cli/releases/download/release_3.3.1/b4a_linux
+          chmod +x /usr/local/bin/b4a
+          b4a version
+
+      - name: Configure Back4App account key
+        env:
+          B4A_ACCOUNT_KEY: ${{ secrets.B4A_ACCOUNT_KEY }}
+        run: |
+          if [ -z "$B4A_ACCOUNT_KEY" ]; then
+            echo "::error::B4A_ACCOUNT_KEY secret is not set"; exit 1
+          fi
+          mkdir -p "$HOME/.back4app"
+          printf 'machine parsecli.back4app.com\n\tlogin default\n\tpassword %s\n' \
+            "$B4A_ACCOUNT_KEY" > "$HOME/.back4app/netrc"
+          chmod 600 "$HOME/.back4app/netrc"
+
+      - name: Link production app
+        env:
+          B4A_PRODUCTION_APP_ID: ${{ secrets.B4A_PRODUCTION_APP_ID }}
+        run: |
+          if [ -z "$B4A_PRODUCTION_APP_ID" ]; then
+            echo "::error::B4A_PRODUCTION_APP_ID secret is not set"; exit 1
+          fi
+          printf '{\n  "applications": {\n    "production": {\n      "applicationId": "%s"\n    }\n  }\n}\n' \
+            "$B4A_PRODUCTION_APP_ID" > .parse.local
+
+      - name: Deploy cloud code
+        run: b4a deploy production -d "GHA ${GITHUB_SHA::7}"
