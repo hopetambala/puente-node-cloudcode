@@ -76,6 +76,25 @@ To get ramped onto the project with Back4App these following steps must be taken
 - Run `b4a add` and choose the project you've created in Back4app Web Service
 - Run `b4a develop` to see changes live with Back4app Web Service
 
+### Deployment
+
+Production deploys are **automated**: merging to `master` runs the Jest suite
+and, if it passes, deploys cloud code to the production Back4App app
+(`.github/workflows/deploy.yaml`). No manual step is needed.
+
+Two repository secrets drive it (Settings → Secrets and variables → Actions):
+
+- `B4A_ACCOUNT_KEY` — a Back4App account key (Dashboard → your avatar →
+  Account Keys → create)
+- `B4A_PRODUCTION_APP_ID` — the production app's Application ID
+
+**Manual deploy** (fallback, e.g. to staging) still works with the CLI from the
+project root, once `b4a add` has linked the target app:
+
+```
+b4a deploy production   # or: staging
+```
+
 ## Testing
 
 ### Jest
