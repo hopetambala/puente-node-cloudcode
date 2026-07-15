@@ -23,7 +23,9 @@ on:
       - dev
 jobs:
   jest-testing:
-    runs-on: ubuntu-latest
+    # ubuntu-22.04: mongodb-memory-server 8.x mis-detects newer runners and
+    # downloads OpenSSL 1.1 mongod builds that can't start there
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         node-version: [18.x, 20.x]
