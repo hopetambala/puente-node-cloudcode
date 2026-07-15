@@ -7,7 +7,9 @@ module.exports = {
       dbName: 'jest',
     },
     binary: {
-      version: '4.0.3',
+      // 6.0.x has OpenSSL 3 builds — 4.x needed libcrypto 1.1, which
+      // GitHub's ubuntu-latest runners no longer ship
+      version: '6.0.14',
       skipMD5: true,
     },
     autoStart: false,
