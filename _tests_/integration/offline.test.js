@@ -221,3 +221,127 @@ describe('offline uploader surveyor attribution', () => {
     expect(person.get('appVersion')).toEqual('9.9.9-sync');
   });
 });
+
+describe('offline upload response contract', () => {
+  // The mobile app treats any payload missing one of these five arrays as a
+  // failed sync and keeps its local queue (puente-reactnative-collect
+  // modules/offline/post). Changing this shape strands field devices in
+  // permanent retry — this test is the server half of that contract.
+  it('success payload carries all five categories as arrays', async () => {
+    const result = await cloudFunctions.uploadOfflineForms({
+      residentForms: [],
+      households: [],
+      assetForms: [],
+      assetSupplementaryForms: [],
+      residentSupplementaryForms: [],
+      metadata,
+    });
+
+    ['residentForms', 'residentSupplementaryForms', 'households',
+      'assetForms', 'assetSupplementaryForms'].forEach((key) => {
+      expect(Array.isArray(result[key])).toBe(true);
+    });
+  });
+});
+
+describe('offline upload idempotency', () => {
+  // A batch that partially fails leaves the whole queue on-device; the retry
+  // re-sends records that already saved. Re-syncing the same offline id must
+  // not create a duplicate.
+  const emptyBatch = () => ({
+    residentForms: [],
+    households: [],
+    assetForms: [],
+    assetSupplementaryForms: [],
+    residentSupplementaryForms: [],
+    metadata,
+  });
+
+  const countByMarker = async (parseClass, marker) => {
+    const query = new Parse.Query(parseClass);
+    query.equalTo('testMarker', marker);
+    return query.count();
+  };
+
+  it('re-syncing a resident form with the same offline id does not duplicate it', async () => {
+    const batch = () => ({
+      ...emptyBatch(),
+      residentForms: [{
+        parseClass: 'SurveyData',
+        parseUser: 'undefined',
+        localObject: {
+          objectId: 'PatientID-idem-1',
+          fname: 'Idem',
+          lname: 'Potent',
+          surveyingOrganization: 'Puente',
+          testMarker: 'idem-resident',
+        },
+      }],
+    });
+
+    await cloudFunctions.uploadOfflineForms(batch());
+    await cloudFunctions.uploadOfflineForms(batch());
+
+    expect(await countByMarker('SurveyData', 'idem-resident')).toEqual(1);
+  });
+
+  it('re-syncing a household with the same offline id does not duplicate it', async () => {
+    const batch = () => ({
+      ...emptyBatch(),
+      households: [{
+        parseClass: 'Household',
+        parseUser: 'undefined',
+        localObject: {
+          objectId: 'Household-idem-1',
+          latitude: 18.5,
+          testMarker: 'idem-household',
+        },
+      }],
+    });
+
+    await cloudFunctions.uploadOfflineForms(batch());
+    await cloudFunctions.uploadOfflineForms(batch());
+
+    expect(await countByMarker('Household', 'idem-household')).toEqual(1);
+  });
+
+  it('accepts SupID- local ids on supplementary forms: strips to objectIdOffline, links, and dedupes', async () => {
+    // Supplementary offline records carry no local id today; the mobile app
+    // will start stamping SupID-… ids so retries can dedupe. The server must
+    // handle them the same way it handles PatientID-/AssetID- ids.
+    const parent = await cloudFunctions.postObjectsToClass({
+      parseClass: 'SurveyData',
+      parseUser: 'undefined',
+      localObject: {
+        fname: 'Idem',
+        lname: 'Parent',
+        surveyingOrganization: 'Puente',
+      },
+    });
+
+    const batch = () => ({
+      ...emptyBatch(),
+      residentSupplementaryForms: [{
+        parseClass: 'Vitals',
+        parseParentClass: 'SurveyData',
+        parseParentClassID: parent.id,
+        parseUser: 'undefined',
+        localObject: {
+          objectId: 'SupID-idem-1',
+          heartRate: '75',
+          surveyingOrganization: 'Puente',
+          testMarker: 'idem-sup',
+        },
+      }],
+    });
+
+    await cloudFunctions.uploadOfflineForms(batch());
+    await cloudFunctions.uploadOfflineForms(batch());
+
+    expect(await countByMarker('Vitals', 'idem-sup')).toEqual(1);
+    const vitals = await findVitals('idem-sup');
+    expect(vitals.get('objectIdOffline')).toEqual('SupID-idem-1');
+    expect(vitals.get('client')).toBeDefined();
+    expect(vitals.get('client').id).toEqual(parent.id);
+  });
+});
