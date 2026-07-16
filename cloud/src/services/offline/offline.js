@@ -1,14 +1,24 @@
 const { afterSurveyHouseholdHook, afterSupplementaryFormHook } = require('../post/hooks/afterSave');
 const post = require('../post/post');
 
+// Collection-time values (who surveyed, on which app/OS) must win over
+// sync-time metadata — whoever presses "sync" is often not the surveyor.
+// Metadata only fills fields the stored record left missing or empty.
+const mergeMetadataAsFallback = (localObject, metadata) => {
+  const merged = { ...localObject };
+  Object.entries(metadata || {}).forEach(([key, value]) => {
+    if (merged[key] === undefined || merged[key] === null || merged[key] === '') {
+      merged[key] = value;
+    }
+  });
+  return merged;
+};
+
 const postObjectsArray = (data, metadata) => {
   if (!data) return Promise.all([]);
   const promises = data.map(async (obj) => {
     const record = obj;
-    record.localObject = {
-      ...record.localObject,
-      ...metadata,
-    };
+    record.localObject = mergeMetadataAsFallback(record.localObject, metadata);
     const { localObject } = record;
     if (localObject.objectId && localObject.objectId.includes('PatientID-')) {
       localObject.objectIdOffline = localObject.objectId;
@@ -40,10 +50,7 @@ const postObjectsWithRelationshipsArray = async (data, metadata) => {
   if (!data) return Promise.all([]);
   const promises = data.map(async (obj) => {
     const record = obj;
-    record.localObject = {
-      ...record.localObject,
-      ...metadata,
-    };
+    record.localObject = mergeMetadataAsFallback(record.localObject, metadata);
     const { localObject } = record;
     if (record.parseParentClassID.includes('PatientID-')) {
       localObject.parseParentClassObjectIdOffline = record.parseParentClassID;
@@ -69,10 +76,7 @@ const postHouseholdArray = (data, metadata) => {
   const promises = data.map(async (obj) => {
     const record = obj;
 
-    record.localObject = {
-      ...record.localObject,
-      ...metadata,
-    };
+    record.localObject = mergeMetadataAsFallback(record.localObject, metadata);
     const { localObject } = record;
     if (localObject.objectId && localObject.objectId.includes('Household-')) {
       localObject.objectIdOffline = localObject.objectId;
