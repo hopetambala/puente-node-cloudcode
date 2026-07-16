@@ -14,6 +14,16 @@ const mergeMetadataAsFallback = (localObject, metadata) => {
   return merged;
 };
 
+// A partially-failed batch stays queued on the device in full, so a retry
+// re-sends records that already saved. The offline id (objectIdOffline) is
+// the idempotency key: if a record with it already exists, return that
+// record instead of creating a duplicate.
+const findExistingOfflineRecord = (parseClass, objectIdOffline) => {
+  const query = new Parse.Query(parseClass);
+  query.equalTo('objectIdOffline', objectIdOffline);
+  return query.first({ useMasterKey: true });
+};
+
 const postObjectsArray = (data, metadata) => {
   if (!data) return Promise.all([]);
   const promises = data.map(async (obj) => {
@@ -33,6 +43,13 @@ const postObjectsArray = (data, metadata) => {
     if (localObject.objectId && localObject.objectId.includes('AssetID-')) {
       localObject.objectIdOffline = localObject.objectId;
       delete localObject.objectId;
+    }
+
+    if (localObject.objectIdOffline) {
+      const existing = await findExistingOfflineRecord(
+        record.parseClass, localObject.objectIdOffline,
+      );
+      if (existing) return existing;
     }
 
     return post.postObjectFactory('post', record);
@@ -59,6 +76,21 @@ const postObjectsWithRelationshipsArray = async (data, metadata) => {
       localObject.parseParentClassObjectIdOffline = record.parseParentClassID;
     }
 
+    // Supplementary forms stamped with a SupID-… local id get the same
+    // treatment as PatientID-/AssetID- records: the local id becomes
+    // objectIdOffline (Parse rejects unknown objectIds) and dedupes retries.
+    if (localObject.objectId && localObject.objectId.includes('SupID-')) {
+      localObject.objectIdOffline = localObject.objectId;
+      delete localObject.objectId;
+    }
+
+    if (localObject.objectIdOffline) {
+      const existing = await findExistingOfflineRecord(
+        record.parseClass, localObject.objectIdOffline,
+      );
+      if (existing) return existing;
+    }
+
     return post.postObjectFactory('post-relationship', record);
   });
 
@@ -82,6 +114,14 @@ const postHouseholdArray = (data, metadata) => {
       localObject.objectIdOffline = localObject.objectId;
       delete localObject.objectId;
     }
+
+    if (localObject.objectIdOffline) {
+      const existing = await findExistingOfflineRecord(
+        record.parseClass, localObject.objectIdOffline,
+      );
+      if (existing) return existing;
+    }
+
     return post.postObjectFactory('post', record);
   });
 
