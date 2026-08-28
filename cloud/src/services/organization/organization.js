@@ -114,11 +114,60 @@ const Organization = {
  * ops problems, worked from the admin queue, and the record is still correct
  * without a pointer. The string it was collected with is retained regardless.
  */
-Organization.stampOrganization = async function stampOrganization(record, localObject = {}) {
-  const name = localObject.surveyingOrganization;
-  if (typeof name !== 'string' || name.trim() === '') return;
+/**
+ * Fetches the organization a parent record belongs to, as either an existing
+ * pointer or its collected string. Only the two fields are transferred.
+ */
+Organization.readParentOrganization = async function readParentOrganization(parentClass, parentId) {
+  const query = new Parse.Query(parentClass);
+  query.select('organization', 'surveyingOrganization');
+  const parent = await query.get(parentId, { useMasterKey: true });
+  return {
+    pointer: parent.get('organization') || null,
+    name: parent.get('surveyingOrganization') || null,
+  };
+};
 
+/**
+ * Sets the `organization` pointer on a record. Mutates `record`; returns nothing.
+ *
+ * `parent` is `{ parseClass, objectId }` for a supplementary record, or omitted.
+ * Supplementary classes overwhelmingly carry no `surveyingOrganization` of their
+ * own — the 2026-08-28 production audit found HistoryMedical, Allergies and
+ * Prescriptions at 100% missing, Vitals and EvaluationSurgical above 98% — because
+ * the organization is a property of the PERSON, not of a vitals reading. Reading
+ * only the child's own field would leave those records permanently unresolvable,
+ * blocking the backfill's 100% gate and leaving them without a restrictive ACL
+ * forever.
+ *
+ * The child's own collected string still wins when it has one: collection-time
+ * values are authoritative for the record that carries them.
+ *
+ * Deliberately swallows every failure. A collection in the field must never be
+ * rejected because an alias is missing or two organizations collide — those are
+ * ops problems, worked from the admin queue, and the record is still correct
+ * without a pointer.
+ */
+Organization.stampOrganization = async function stampOrganization(
+  record, localObject = {}, parent = null,
+) {
   try {
+    let name = localObject.surveyingOrganization;
+
+    if (typeof name !== 'string' || name.trim() === '') {
+      if (!parent || !parent.parseClass || !parent.objectId) return;
+      const fromParent = await Organization.readParentOrganization(
+        parent.parseClass, parent.objectId,
+      );
+      // A parent already carrying the pointer is the cheapest correct answer.
+      if (fromParent.pointer) {
+        record.set('organization', fromParent.pointer);
+        return;
+      }
+      name = fromParent.name;
+      if (typeof name !== 'string' || name.trim() === '') return;
+    }
+
     const organizations = await Organization.findAll();
     const result = Organization.resolve({ name }, organizations);
     if (result.status === 'resolved') record.set('organization', result.organization);

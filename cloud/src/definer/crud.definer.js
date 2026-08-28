@@ -230,20 +230,30 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
   }
 
   try {
-    const survey = supplementaryForm.save().then((result) => result).then(async (mainObject) => {
-      if (loop === true && Object.keys(loopedJson).length > 0) {
-        await utils.Loop.postLoopedForm(loopedJson, newFieldsArray, request.params, mainObject)
-          .then((result) => result)
-          .catch((error) => {
-            const err = `Error: loopedForm ${error}`;
-            modules.Error.logError(err);
-          });
-      }
-      return mainObject;
-    }).catch((error) => {
-      const err = `Error: postObjectsToClassWithRelation ${error}`;
-      modules.Error.logError(err);
-    });
+    // Stamp the organization before the save. A supplementary record is almost
+    // never collected with its own surveyingOrganization — the organization
+    // belongs to the PERSON — so it inherits from the parent. Chained rather
+    // than awaited because this is a Promise executor, and an async executor
+    // swallows rejections.
+    const survey = services.organization
+      .stampOrganization(supplementaryForm, localObject, {
+        parseClass: parseParentClass, objectId: parseParentClassID,
+      })
+      .then(() => supplementaryForm.save()).then((result) => result).then(async (mainObject) => {
+        if (loop === true && Object.keys(loopedJson).length > 0) {
+          await utils.Loop.postLoopedForm(loopedJson, newFieldsArray, request.params, mainObject)
+            .then((result) => result)
+            .catch((error) => {
+              const err = `Error: loopedForm ${error}`;
+              modules.Error.logError(err);
+            });
+        }
+        return mainObject;
+      })
+      .catch((error) => {
+        const err = `Error: postObjectsToClassWithRelation ${error}`;
+        modules.Error.logError(err);
+      });
 
     return resolve(survey);
   } catch (error) {

@@ -137,3 +137,61 @@ describe('stamping the organization pointer on write', () => {
     expect(record.get('organization')).toBeUndefined();
   });
 });
+
+describe('supplementary records inherit the organization from their parent', () => {
+  // Production audit 2026-08-28: supplementary classes overwhelmingly carry NO
+  // surveyingOrganization of their own — HistoryMedical 1038/1038, Allergies
+  // 535/535, Prescriptions 530/530, Vitals 599/607, EvaluationSurgical 531/532.
+  // The organization is a property of the PERSON, not of the vitals reading.
+  //
+  // So reading the child's own field stamps nothing, and these records would be
+  // permanently unresolvable — which blocks the backfill's 100% gate and would
+  // leave them open forever under the ACL work, since an unresolved record is
+  // never given a restrictive ACL.
+  it('stamps a child created with a relation, from the parent organization', async () => {
+    const parent = await cloudFunctions.postObjectsToClass({
+      parseClass: 'SurveyData',
+      parseUser: 'undefined',
+      localObject: { fname: 'Parent', surveyingOrganization: 'WOF' },
+    });
+
+    const child = await cloudFunctions.postObjectsToClassWithRelation({
+      parseParentClass: 'SurveyData',
+      parseParentClassID: parent.id,
+      parseClass: 'Vitals',
+      parseUser: 'undefined',
+      // No surveyingOrganization — exactly like ~99% of production Vitals.
+      localObject: { height: '6', weight: '2' },
+    });
+
+    // Identity, not hydration: the inherited pointer is deliberately NOT fetched
+    // (hydrating it would be a wasted query), so assert it references the same
+    // Organization the parent does — which is the actual contract.
+    const pointer = child.get('organization');
+    expect(pointer).toBeDefined();
+
+    const wof = await cloudFunctions.resolveOrganization({ name: 'WOF' });
+    expect(pointer.id).toEqual(wof.organization.objectId);
+    expect(pointer.id).toEqual(parent.get('organization').id);
+  });
+
+  it('prefers the child own organization string over the parent', async () => {
+    // A child that DOES carry its own collected string is authoritative for
+    // itself — collection-time values win.
+    const parent = await cloudFunctions.postObjectsToClass({
+      parseClass: 'SurveyData',
+      parseUser: 'undefined',
+      localObject: { fname: 'Parent2', surveyingOrganization: 'WOF' },
+    });
+
+    const child = await cloudFunctions.postObjectsToClassWithRelation({
+      parseParentClass: 'SurveyData',
+      parseParentClassID: parent.id,
+      parseClass: 'Vitals',
+      parseUser: 'undefined',
+      localObject: { height: '6', surveyingOrganization: 'World Outreach Fund' },
+    });
+
+    expect(child.get('organization').get('shortCode')).toEqual('wof');
+  });
+});
