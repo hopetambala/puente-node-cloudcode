@@ -167,7 +167,7 @@ Organization.readParentOrganization = async function readParentOrganization(pare
  * without a pointer.
  */
 Organization.stampOrganization = async function stampOrganization(
-  record, localObject = {}, parent = null,
+  record, localObject = {}, parent = null, preloaded = null,
 ) {
   try {
     let name = localObject.surveyingOrganization;
@@ -186,7 +186,10 @@ Organization.stampOrganization = async function stampOrganization(
       if (typeof name !== 'string' || name.trim() === '') return;
     }
 
-    const organizations = await Organization.findAll();
+    // A batch passes its organizations in so the list is fetched once for the
+    // whole upload rather than once per record — an offline sync of 50 records
+    // would otherwise pay 50 round-trips on the most latency-sensitive path.
+    const organizations = preloaded || await Organization.findAll();
     const result = Organization.resolve({ name }, organizations);
     if (result.status === 'resolved') record.set('organization', result.organization);
   } catch (error) {

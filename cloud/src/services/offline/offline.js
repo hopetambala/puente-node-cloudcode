@@ -1,5 +1,7 @@
 const { afterSurveyHouseholdHook, afterSupplementaryFormHook } = require('../post/hooks/afterSave');
 const post = require('../post/post');
+// Required directly rather than through services/index to avoid a require cycle.
+const Organization = require('../organization/organization');
 
 // Collection-time values (who surveyed, on which app/OS) must win over
 // sync-time metadata — whoever presses "sync" is often not the surveyor.
@@ -24,8 +26,11 @@ const findExistingOfflineRecord = (parseClass, objectIdOffline) => {
   return query.first({ useMasterKey: true });
 };
 
-const postObjectsArray = (data, metadata) => {
+const postObjectsArray = async (data, metadata) => {
   if (!data) return Promise.all([]);
+  // Fetched once for the whole batch: an offline sync of N records would
+  // otherwise pay N round-trips for a list that changes almost never.
+  const organizations = await Organization.findAll().catch(() => null);
   const promises = data.map(async (obj) => {
     const record = obj;
     record.localObject = mergeMetadataAsFallback(record.localObject, metadata);
@@ -52,7 +57,7 @@ const postObjectsArray = (data, metadata) => {
       if (existing) return existing;
     }
 
-    return post.postObjectFactory('post', record);
+    return post.postObjectFactory('post', record, organizations);
   });
 
   try {
@@ -64,6 +69,7 @@ const postObjectsArray = (data, metadata) => {
 };
 
 const postObjectsWithRelationshipsArray = async (data, metadata) => {
+  const organizations = await Organization.findAll().catch(() => null);
   if (!data) return Promise.all([]);
   const promises = data.map(async (obj) => {
     const record = obj;
@@ -91,7 +97,7 @@ const postObjectsWithRelationshipsArray = async (data, metadata) => {
       if (existing) return existing;
     }
 
-    return post.postObjectFactory('post-relationship', record);
+    return post.postObjectFactory('post-relationship', record, organizations);
   });
 
   try {
@@ -103,7 +109,8 @@ const postObjectsWithRelationshipsArray = async (data, metadata) => {
   }
 };
 
-const postHouseholdArray = (data, metadata) => {
+const postHouseholdArray = async (data, metadata) => {
+  const organizations = await Organization.findAll().catch(() => null);
   if (!data) return [];
   const promises = data.map(async (obj) => {
     const record = obj;
@@ -122,7 +129,7 @@ const postHouseholdArray = (data, metadata) => {
       if (existing) return existing;
     }
 
-    return post.postObjectFactory('post', record);
+    return post.postObjectFactory('post', record, organizations);
   });
 
   try {

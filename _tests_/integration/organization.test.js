@@ -1,3 +1,4 @@
+const { Parse } = require('parse/node');
 const { cloudFunctions } = require('../run-cloud');
 
 /**
@@ -209,5 +210,69 @@ describe('supplementary records inherit the organization from their parent', () 
     });
 
     expect(child.get('organization').get('shortCode')).toEqual('wof');
+  });
+});
+
+describe('offline sync stamps the organization', () => {
+  // uploadOfflineForms is how Collect actually syncs, and it does NOT route
+  // through postObjectsToClass — postObjectsArray calls postObjectFactory,
+  // which saves directly. Records arriving from the field are the majority of
+  // production data, so stamping that misses this path misses almost everything.
+  const metadata = {
+    surveyingUser: 'field-user',
+    surveyingOrganization: 'WOF',
+    appVersion: '1.0.0',
+    phoneOS: 'ios',
+  };
+
+  it('stamps records uploaded through uploadOfflineForms', async () => {
+    await cloudFunctions.uploadOfflineForms({
+      residentForms: [{
+        parseClass: 'SurveyData',
+        parseUser: 'undefined',
+        localObject: { fname: 'Offline', lname: 'Stamped', objectIdOffline: 'PatientID-org-1' },
+      }],
+      households: [],
+      assetForms: [],
+      assetSupplementaryForms: [],
+      residentSupplementaryForms: [],
+      metadata,
+    });
+
+    const q = new Parse.Query('SurveyData');
+    q.equalTo('objectIdOffline', 'PatientID-org-1');
+    q.include('organization');
+    const saved = await q.first();
+
+    expect(saved).toBeDefined();
+    // The org came from sync metadata via mergeMetadataAsFallback...
+    expect(saved.get('surveyingOrganization')).toEqual('WOF');
+    // ...and must be resolved to a pointer, exactly as the online path does.
+    expect(saved.get('organization')).toBeDefined();
+    expect(saved.get('organization').get('shortCode')).toEqual('wof');
+  });
+
+  it('stamps households uploaded through uploadOfflineForms', async () => {
+    await cloudFunctions.uploadOfflineForms({
+      residentForms: [],
+      households: [{
+        parseClass: 'Household',
+        parseUser: 'undefined',
+        localObject: { objectIdOffline: 'Household-org-1', relationship: 'head' },
+      }],
+      assetForms: [],
+      assetSupplementaryForms: [],
+      residentSupplementaryForms: [],
+      metadata,
+    });
+
+    const q = new Parse.Query('Household');
+    q.equalTo('objectIdOffline', 'Household-org-1');
+    q.include('organization');
+    const saved = await q.first();
+
+    expect(saved).toBeDefined();
+    expect(saved.get('organization')).toBeDefined();
+    expect(saved.get('organization').get('shortCode')).toEqual('wof');
   });
 });
