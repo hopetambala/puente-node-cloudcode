@@ -68,7 +68,17 @@ const Organization = {
    *   write path must catch this — a collision is an ops problem and must not
    *   reject a survey collected in the field. See `stampOrganization`.
    */
-  resolve: function resolve({ name } = {}, organizations = []) {
+  resolve: function resolve({ pointer, name } = {}, organizations = []) {
+    // A raw Parse pointer carries `objectId`; a hydrated Parse.Object carries
+    // `id`. Reading only one silently ignores the other and falls through to
+    // string matching. Kept identical to the client-side resolver in
+    // puente-react-nextjs-platform/app/modules/organization/index.js.
+    const pointerId = pointer && (pointer.objectId || pointer.id);
+    if (pointerId) {
+      const byPointer = organizations.find((org) => org.id === pointerId);
+      if (byPointer) return { status: 'resolved', organization: byPointer };
+    }
+
     const wanted = normalizeOrganizationName(name);
 
     const matches = wanted === null ? [] : organizations.filter((org) => {

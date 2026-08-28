@@ -42,6 +42,22 @@ describe('resolveOrganization', () => {
       .rejects.toThrow(/ambiguous/i);
   });
 
+  it('prefers a pointer over the collected name when both are given', async () => {
+    // The Cloud function accepts `pointer` in its params. Ignoring it would
+    // silently resolve by string instead — and the client-side resolver in
+    // Manage must apply the SAME rule or the two disagree about who owns a
+    // record. Accepts both pointer shapes: raw `objectId` and Parse `id`.
+    const wof = await cloudFunctions.resolveOrganization({ name: 'WOF' });
+
+    const result = await cloudFunctions.resolveOrganization({
+      pointer: { objectId: wof.organization.objectId },
+      name: 'MeasurablyDifferentOrg',
+    });
+
+    expect(result.status).toEqual('resolved');
+    expect(result.organization.shortCode).toEqual('wof');
+  });
+
   // ─── Guards ────────────────────────────────────────────────────────────────
   // Pin properties the implementation already has; each passed on first run.
 
