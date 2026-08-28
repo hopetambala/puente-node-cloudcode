@@ -101,6 +101,16 @@ Parse.Cloud.define('postObjectsToClass', async (request) => {
     return err;
   }
 
+  // Organization is tenancy, not survey data. Creating one through this
+  // generic, unauthenticated writer would let anyone claim an alias an existing
+  // tenant uses, forcing resolve() to raise and that tenant's records to save
+  // with no pointer. Use the dedicated createOrganization endpoint.
+  if (parseClass === 'Organization') {
+    const err = 'Error: Organization cannot be created through postObjectsToClass; use createOrganization';
+    modules.Error.logError(err);
+    return err;
+  }
+
   const surveyPoint = new Parse.Object(parseClass);
 
   if (photoFile) {
@@ -185,6 +195,12 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
     loopParentID,
     parseUser,
   } = request.params;
+
+  if (parseClass === 'Organization') {
+    const err = 'Error: Organization cannot be created through postObjectsToClassWithRelation; use createOrganization';
+    modules.Error.logError(err);
+    return resolve(err);
+  }
 
   const supplementaryForm = new Parse.Object(parseClass);
   const residentIdForm = new Parse.Object(parseParentClass);
@@ -378,54 +394,73 @@ Parse.Cloud.define('postObjectsToAnyClassWithRelation', (request) => new Promise
   });
 
   // store the Parse objects that were asspciated with local object
-  const arr = [];
+  const children = [];
 
   // check if each Class had any objects added to them
   // add the parent and add save prokmise
   if (vitalsObj) {
     parent.id = String(request.params.parseParentClassID);
     vitals.set('client', parent);
-    arr.push(vitals.save());
+    children.push(vitals);
   }
 
   if (historyMedicalObj) {
     parent.id = String(request.params.parseParentClassID);
     historyMedical.set('client', parent);
-    arr.push(historyMedical.save());
+    children.push(historyMedical);
   }
 
   if (prescriptionsObj) {
     parent.id = String(request.params.parseParentClassID);
     prescriptions.set('client', parent);
-    arr.push(prescriptions.save());
+    children.push(prescriptions);
   }
 
   if (allergiesObj) {
     parent.id = String(request.params.parseParentClassID);
     allergies.set('client', parent);
-    arr.push(allergies.save());
+    children.push(allergies);
   }
 
   if (evaluationSurgicalObj) {
     parent.id = String(request.params.parseParentClassID);
     evaluationSurgical.set('client', parent);
-    arr.push(evaluationSurgical.save());
+    children.push(evaluationSurgical);
   }
 
   if (evaluationMedicalObj) {
     parent.id = String(request.params.parseParentClassID);
     evaluationMedical.set('client', parent);
-    arr.push(evaluationMedical.save());
+    children.push(evaluationMedical);
   }
 
   if (environmentalHealthObj) {
     parent.id = String(request.params.parseParentClassID);
     environmentalHealth.set('client', parent);
-    arr.push(environmentalHealth.save());
+    children.push(environmentalHealth);
   }
 
+  // These seven clinical classes are 94-100% missing surveyingOrganization in
+  // production — the organization belongs to the PERSON, not to a vitals
+  // reading — so each child inherits from its parent. The organization list is
+  // fetched once for the whole set rather than once per child.
+  //
+  // Stamping must never block the save: a missing alias or an ambiguous one is
+  // an ops problem, and a clinical record collected in the field is not the
+  // place to surface it. stampOrganization swallows its own failures.
+  const stampAll = children.length
+    ? services.organization.findAll()
+      .catch(() => null)
+      .then((organizations) => Promise.all(children.map((child) => services.organization
+        .stampOrganization(child, {}, {
+          parseClass: request.params.parseParentClass,
+          objectId: String(request.params.parseParentClassID),
+        }, organizations))))
+    : Promise.resolve();
+
   // save all parse objects that had any objects added
-  Promise.all(arr)
+  stampAll
+    .then(() => Promise.all(children.map((child) => child.save())))
     .then((results) => {
       resolve(results);
     }, (error) => {

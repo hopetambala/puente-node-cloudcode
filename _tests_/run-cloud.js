@@ -88,6 +88,9 @@ const cloudFunctions = {
   resolveOrganization: (params) => Parse.Cloud
     .run('resolveOrganization', params)
     .then((response) => response),
+  createOrganization: (params) => Parse.Cloud
+    .run('createOrganization', params)
+    .then((response) => response),
 };
 
 module.exports = { cloudFunctions };

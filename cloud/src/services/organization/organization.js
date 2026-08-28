@@ -31,16 +31,18 @@ const logError = (message) => require('../../module').Error.logError(message); /
  * pipeline, which already strips accents before writing CSV headers
  * (replace_spanish_characters in puente-flask-rest-aggregator).
  *
- * NFD decomposition plus combining-mark removal covers those and every other
- * diacritic, rather than a hand-maintained map that silently misses whatever
- * was not listed.
+ * NFD decomposition plus \p{M} covers those and every other diacritic, rather
+ * than a hand-maintained map that silently misses whatever was not listed.
+ * \p{M} rather than the U+0300–U+036F range because that block is only one of
+ * several — a mark from Combining Diacritical Marks Extended (U+1AB0+) survived
+ * the range check and still blocked a match.
  *
  * MUST stay identical to normalizeOrganizationName in
  * puente-react-nextjs-platform/app/modules/organization/index.js.
  */
 const normalizeOrganizationName = (value) => (
   typeof value === 'string'
-    ? value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
+    ? value.normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase()
     : null
 );
 

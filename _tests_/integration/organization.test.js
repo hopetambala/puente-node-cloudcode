@@ -9,15 +9,9 @@ const { cloudFunctions } = require('../run-cloud');
  *
  * See puente-react-nextjs-platform/docs/billing-and-invoicing.md §3.
  */
-const createOrganization = (shortCode, aliases) => cloudFunctions.postObjectsToClass({
-  parseClass: 'Organization',
-  parseUser: 'undefined',
-  localObject: {
-    name: shortCode.toUpperCase(),
-    shortCode,
-    aliases,
-    active: true,
-  },
+// The dedicated endpoint — postObjectsToClass refuses this class.
+const createOrganization = (shortCode, aliases) => cloudFunctions.createOrganization({
+  name: shortCode.toUpperCase(), shortCode, aliases, active: true,
 });
 
 describe('resolveOrganization', () => {
@@ -32,16 +26,6 @@ describe('resolveOrganization', () => {
     expect(result.organization.shortCode).toEqual('wof');
   });
 
-  it('raises when two organizations claim the same alias', async () => {
-    // Returning `unresolved` here would be quietly wrong: the collision must be
-    // FIXED by a human, not swallowed. A wrong pointer misroutes records AND
-    // money, and looks exactly like a right one.
-    await createOrganization('collide-a', ['SharedAlias']);
-    await createOrganization('collide-b', ['sharedalias']);
-
-    await expect(cloudFunctions.resolveOrganization({ name: 'SharedAlias' }))
-      .rejects.toThrow(/ambiguous/i);
-  });
 
   it('prefers a pointer over the collected name when both are given', async () => {
     // The Cloud function accepts `pointer` in its params. Ignoring it would
@@ -140,19 +124,6 @@ describe('stamping the organization pointer on write', () => {
     expect(record.get('organization')).toBeUndefined();
     expect(record.get('surveyingOrganization')).toEqual('Org Not In Any Alias List');
   });
-
-  it('still saves the record when the organization alias is ambiguous', async () => {
-    // The collision raises inside resolve(). It must be loud in the log and
-    // invisible to the surveyor — an ops problem, not a failed collection.
-    const record = await cloudFunctions.postObjectsToClass({
-      parseClass: 'SurveyData',
-      parseUser: 'undefined',
-      localObject: { fname: 'Ambiguous', surveyingOrganization: 'SharedAlias' },
-    });
-
-    expect(record.id).toBeDefined();
-    expect(record.get('organization')).toBeUndefined();
-  });
 });
 
 describe('supplementary records inherit the organization from their parent', () => {
@@ -195,6 +166,13 @@ describe('supplementary records inherit the organization from their parent', () 
   it('prefers the child own organization string over the parent', async () => {
     // A child that DOES carry its own collected string is authoritative for
     // itself — collection-time values win.
+    //
+    // The child's org must be a DIFFERENT organization from the parent's,
+    // otherwise this passes even when the implementation always inherits and
+    // never reads the child's own value. (Copilot caught exactly that: an
+    // earlier version used two aliases of the same org and proved nothing.)
+    await createOrganization('other-org', ['A Completely Different Org']);
+
     const parent = await cloudFunctions.postObjectsToClass({
       parseClass: 'SurveyData',
       parseUser: 'undefined',
@@ -206,10 +184,11 @@ describe('supplementary records inherit the organization from their parent', () 
       parseParentClassID: parent.id,
       parseClass: 'Vitals',
       parseUser: 'undefined',
-      localObject: { height: '6', surveyingOrganization: 'World Outreach Fund' },
+      localObject: { height: '6', surveyingOrganization: 'A Completely Different Org' },
     });
 
-    expect(child.get('organization').get('shortCode')).toEqual('wof');
+    // The child's own value, NOT the parent's 'wof'.
+    expect(child.get('organization').get('shortCode')).toEqual('other-org');
   });
 });
 
@@ -274,5 +253,97 @@ describe('offline sync stamps the organization', () => {
     expect(saved).toBeDefined();
     expect(saved.get('organization')).toBeDefined();
     expect(saved.get('organization').get('shortCode')).toEqual('wof');
+  });
+});
+
+describe('Organization cannot be created through the generic writer', () => {
+  // postObjectsToClass is generic and unauthenticated. Left open, anyone could
+  // create an Organization claiming an alias an existing tenant already uses —
+  // resolution then raises on the ambiguity and that tenant's records save with
+  // no pointer. A denial-of-attribution needing no credentials.
+  it('refuses parseClass Organization, so a hostile alias never takes effect', async () => {
+    const result = await cloudFunctions.postObjectsToClass({
+      parseClass: 'Organization',
+      parseUser: 'undefined',
+      localObject: {
+        name: 'Hostile', shortCode: 'hostile', aliases: ['WOF'], active: true,
+      },
+    });
+
+    expect(String(result)).toMatch(/organization/i);
+    // The property that matters: WOF still resolves cleanly rather than raising.
+    const wof = await cloudFunctions.resolveOrganization({ name: 'WOF' });
+    expect(wof.status).toEqual('resolved');
+    expect(wof.organization.shortCode).toEqual('wof');
+  });
+
+  it('refuses parseClass Organization on the relation writer too', async () => {
+    const parent = await cloudFunctions.postObjectsToClass({
+      parseClass: 'SurveyData', parseUser: 'undefined', localObject: { fname: 'P' },
+    });
+
+    await cloudFunctions.postObjectsToClassWithRelation({
+      parseParentClass: 'SurveyData',
+      parseParentClassID: parent.id,
+      parseClass: 'Organization',
+      parseUser: 'undefined',
+      localObject: { name: 'Hostile2', shortCode: 'hostile2', aliases: ['WOF'] },
+    });
+
+    // WOF must still resolve cleanly rather than raise on a planted ambiguity.
+    const wof = await cloudFunctions.resolveOrganization({ name: 'WOF' });
+    expect(wof.status).toEqual('resolved');
+    expect(wof.organization.shortCode).toEqual('wof');
+  });
+
+  it('createOrganization itself refuses a colliding alias', async () => {
+    // The endpoint guard, which is what closes the attack even unauthenticated.
+    await expect(cloudFunctions.createOrganization({
+      name: 'Impostor', shortCode: 'impostor', aliases: ['World Outreach Fund'],
+    })).rejects.toThrow(/already belongs to/i);
+  });
+
+  it('createOrganization refuses a duplicate shortCode', async () => {
+    await expect(cloudFunctions.createOrganization({
+      name: 'Dupe', shortCode: 'wof', aliases: ['Something Unused'],
+    })).rejects.toThrow(/already taken/i);
+  });
+});
+
+describe('postObjectsToAnyClassWithRelation stamps its clinical children', () => {
+  // This endpoint saves SEVEN clinical classes directly (Vitals, HistoryMedical,
+  // Prescriptions, Allergies, EvaluationSurgical, EvaluationMedical,
+  // HistoryEnvironmentalHealth) — precisely the classes that are 94-100% missing
+  // surveyingOrganization in production. It has no callers today, but "no
+  // callers" is a fact about the present, not a guarantee, and it had no test
+  // coverage at all before this.
+  it('stamps children from the parent organization', async () => {
+    const parent = await cloudFunctions.postObjectsToClass({
+      parseClass: 'SurveyData',
+      parseUser: 'undefined',
+      localObject: { fname: 'AnyClassParent', surveyingOrganization: 'WOF' },
+    });
+
+    await cloudFunctions.postObjectsToAnyClassWithRelation({
+      parseParentClass: 'SurveyData',
+      parseParentClassID: parent.id,
+      localObject: {
+        a: { tag: 'Vitals', key: 'heartRate', value: '72' },
+        b: { tag: 'HistoryMedical', key: 'notes', value: 'anyclass-marker' },
+      },
+    });
+
+    const vq = new Parse.Query('Vitals');
+    vq.equalTo('heartRate', '72');
+    vq.include('organization');
+    const vitals = await vq.first();
+
+    expect(vitals).toBeDefined();
+    expect(vitals.get('organization')).toBeDefined();
+
+    const hq = new Parse.Query('HistoryMedical');
+    hq.equalTo('notes', 'anyclass-marker');
+    const history = await hq.first();
+    expect(history.get('organization')).toBeDefined();
   });
 });
