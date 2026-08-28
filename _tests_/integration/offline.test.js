@@ -345,3 +345,63 @@ describe('offline upload idempotency', () => {
     expect(vitals.get('client').id).toEqual(parent.id);
   });
 });
+
+describe('CONTRACT with puente-reactnative-collect', () => {
+  // Collect's modules/offline/post/index.js refuses to clear its local queue
+  // unless the upload result carries ALL FIVE categories as arrays:
+  //
+  //   const UPLOAD_CATEGORIES = ['residentForms','residentSupplementaryForms',
+  //     'households','assetForms','assetSupplementaryForms'];
+  //   const isCompleteUploadResult = (result) => !!result &&
+  //     typeof result === 'object' &&
+  //     UPLOAD_CATEGORIES.every((key) => Array.isArray(result[key]));
+  //
+  // If this shape drifts, Collect does not error — it silently keeps every
+  // record queued on the device forever. Nothing on the mobile side would
+  // catch it, because Collect mocks Cloud Code in its own tests.
+  const COLLECT_UPLOAD_CATEGORIES = [
+    'residentForms', 'residentSupplementaryForms', 'households',
+    'assetForms', 'assetSupplementaryForms',
+  ];
+
+  it('returns every category Collect requires, as an array', async () => {
+    const result = await cloudFunctions.uploadOfflineForms({
+      residentForms: [{
+        parseClass: 'SurveyData',
+        parseUser: 'undefined',
+        localObject: { fname: 'Contract', objectIdOffline: 'PatientID-contract-1' },
+      }],
+      households: [],
+      assetForms: [],
+      assetSupplementaryForms: [],
+      residentSupplementaryForms: [],
+      metadata: {
+        surveyingUser: 'u', surveyingOrganization: 'Puente', appVersion: '1', phoneOS: 'ios',
+      },
+    });
+
+    expect(result).toBeDefined();
+    expect(typeof result).toEqual('object');
+    COLLECT_UPLOAD_CATEGORIES.forEach((key) => {
+      expect(Array.isArray(result[key])).toBe(true);
+    });
+  });
+
+  it('returns every category as an array even when nothing is uploaded', async () => {
+    // An empty sync is routine — the queue is empty, or a retry after success.
+    const result = await cloudFunctions.uploadOfflineForms({
+      residentForms: [],
+      households: [],
+      assetForms: [],
+      assetSupplementaryForms: [],
+      residentSupplementaryForms: [],
+      metadata: {
+        surveyingUser: 'u', surveyingOrganization: 'Puente', appVersion: '1', phoneOS: 'ios',
+      },
+    });
+
+    COLLECT_UPLOAD_CATEGORIES.forEach((key) => {
+      expect(Array.isArray(result[key])).toBe(true);
+    });
+  });
+});

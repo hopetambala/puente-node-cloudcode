@@ -86,7 +86,7 @@ Parse.Cloud.define('countService', (request) => {
     localObject - Continas key value pairs that will be posted to the class
                 - this contains a latitude/longitude which will post the location
   ******************************************* */
-Parse.Cloud.define('postObjectsToClass', (request) => {
+Parse.Cloud.define('postObjectsToClass', async (request) => {
   const {
     photoFile,
     signature,
@@ -97,6 +97,16 @@ Parse.Cloud.define('postObjectsToClass', (request) => {
 
   if (!Object.keys(request.params).length) {
     const err = 'Error: no request params';
+    modules.Error.logError(err);
+    return err;
+  }
+
+  // Organization is tenancy, not survey data. Creating one through this
+  // generic, unauthenticated writer would let anyone claim an alias an existing
+  // tenant uses, forcing resolve() to raise and that tenant's records to save
+  // with no pointer. Use the dedicated createOrganization endpoint.
+  if (parseClass === 'Organization') {
+    const err = 'Error: Organization cannot be created through postObjectsToClass; use createOrganization';
     modules.Error.logError(err);
     return err;
   }
@@ -141,6 +151,16 @@ Parse.Cloud.define('postObjectsToClass', (request) => {
     surveyPoint.set('parseUser', userObject);
   }
 
+  // Stamp the canonical Organization from the string the FIELD collected, not
+  // from whoever pressed sync — collection-time values win over sync-time
+  // metadata. This is what lets every app version in the field, including
+  // years-old builds, produce pointered records with no mobile release.
+  //
+  // Resolution must never block a save. An unresolvable or ambiguous
+  // organization is an ops problem to be worked from the admin queue; a survey
+  // collected in a community is not the place to surface it.
+  await services.organization.stampOrganization(surveyPoint, localObject);
+
   try {
     const survey = surveyPoint.save().then((result) => result).catch((error) => {
       const err = `Error: postObjectsToClass ${error}`;
@@ -175,6 +195,12 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
     loopParentID,
     parseUser,
   } = request.params;
+
+  if (parseClass === 'Organization') {
+    const err = 'Error: Organization cannot be created through postObjectsToClassWithRelation; use createOrganization';
+    modules.Error.logError(err);
+    return resolve(err);
+  }
 
   const supplementaryForm = new Parse.Object(parseClass);
   const residentIdForm = new Parse.Object(parseParentClass);
@@ -220,20 +246,30 @@ Parse.Cloud.define('postObjectsToClassWithRelation', (request) => new Promise((r
   }
 
   try {
-    const survey = supplementaryForm.save().then((result) => result).then(async (mainObject) => {
-      if (loop === true && Object.keys(loopedJson).length > 0) {
-        await utils.Loop.postLoopedForm(loopedJson, newFieldsArray, request.params, mainObject)
-          .then((result) => result)
-          .catch((error) => {
-            const err = `Error: loopedForm ${error}`;
-            modules.Error.logError(err);
-          });
-      }
-      return mainObject;
-    }).catch((error) => {
-      const err = `Error: postObjectsToClassWithRelation ${error}`;
-      modules.Error.logError(err);
-    });
+    // Stamp the organization before the save. A supplementary record is almost
+    // never collected with its own surveyingOrganization — the organization
+    // belongs to the PERSON — so it inherits from the parent. Chained rather
+    // than awaited because this is a Promise executor, and an async executor
+    // swallows rejections.
+    const survey = services.organization
+      .stampOrganization(supplementaryForm, localObject, {
+        parseClass: parseParentClass, objectId: parseParentClassID,
+      })
+      .then(() => supplementaryForm.save()).then((result) => result).then(async (mainObject) => {
+        if (loop === true && Object.keys(loopedJson).length > 0) {
+          await utils.Loop.postLoopedForm(loopedJson, newFieldsArray, request.params, mainObject)
+            .then((result) => result)
+            .catch((error) => {
+              const err = `Error: loopedForm ${error}`;
+              modules.Error.logError(err);
+            });
+        }
+        return mainObject;
+      })
+      .catch((error) => {
+        const err = `Error: postObjectsToClassWithRelation ${error}`;
+        modules.Error.logError(err);
+      });
 
     return resolve(survey);
   } catch (error) {
@@ -358,54 +394,73 @@ Parse.Cloud.define('postObjectsToAnyClassWithRelation', (request) => new Promise
   });
 
   // store the Parse objects that were asspciated with local object
-  const arr = [];
+  const children = [];
 
   // check if each Class had any objects added to them
   // add the parent and add save prokmise
   if (vitalsObj) {
     parent.id = String(request.params.parseParentClassID);
     vitals.set('client', parent);
-    arr.push(vitals.save());
+    children.push(vitals);
   }
 
   if (historyMedicalObj) {
     parent.id = String(request.params.parseParentClassID);
     historyMedical.set('client', parent);
-    arr.push(historyMedical.save());
+    children.push(historyMedical);
   }
 
   if (prescriptionsObj) {
     parent.id = String(request.params.parseParentClassID);
     prescriptions.set('client', parent);
-    arr.push(prescriptions.save());
+    children.push(prescriptions);
   }
 
   if (allergiesObj) {
     parent.id = String(request.params.parseParentClassID);
     allergies.set('client', parent);
-    arr.push(allergies.save());
+    children.push(allergies);
   }
 
   if (evaluationSurgicalObj) {
     parent.id = String(request.params.parseParentClassID);
     evaluationSurgical.set('client', parent);
-    arr.push(evaluationSurgical.save());
+    children.push(evaluationSurgical);
   }
 
   if (evaluationMedicalObj) {
     parent.id = String(request.params.parseParentClassID);
     evaluationMedical.set('client', parent);
-    arr.push(evaluationMedical.save());
+    children.push(evaluationMedical);
   }
 
   if (environmentalHealthObj) {
     parent.id = String(request.params.parseParentClassID);
     environmentalHealth.set('client', parent);
-    arr.push(environmentalHealth.save());
+    children.push(environmentalHealth);
   }
 
+  // These seven clinical classes are 94-100% missing surveyingOrganization in
+  // production — the organization belongs to the PERSON, not to a vitals
+  // reading — so each child inherits from its parent. The organization list is
+  // fetched once for the whole set rather than once per child.
+  //
+  // Stamping must never block the save: a missing alias or an ambiguous one is
+  // an ops problem, and a clinical record collected in the field is not the
+  // place to surface it. stampOrganization swallows its own failures.
+  const stampAll = children.length
+    ? services.organization.findAll()
+      .catch(() => null)
+      .then((organizations) => Promise.all(children.map((child) => services.organization
+        .stampOrganization(child, {}, {
+          parseClass: request.params.parseParentClass,
+          objectId: String(request.params.parseParentClassID),
+        }, organizations))))
+    : Promise.resolve();
+
   // save all parse objects that had any objects added
-  Promise.all(arr)
+  stampAll
+    .then(() => Promise.all(children.map((child) => child.save())))
     .then((results) => {
       resolve(results);
     }, (error) => {

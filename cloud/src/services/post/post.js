@@ -1,6 +1,8 @@
 const utils = require('../../_utils');
+// Required directly rather than through services/index to avoid a require cycle.
+const Organization = require('../organization/organization');
 
-const postObject = async (survey) => {
+const postObject = async (survey, organizations = null) => {
   const surveyPoint = new Parse.Object(survey.parseClass);
   const {
     photoFile,
@@ -37,12 +39,16 @@ const postObject = async (survey) => {
     surveyPoint.set('parseUser', userObject);
   }
 
+  // uploadOfflineForms reaches this function, NOT postObjectsToClass, so
+  // stamping only the definer would miss every record synced from the field.
+  await Organization.stampOrganization(surveyPoint, localObject, null, organizations);
+
   return surveyPoint.save().then((result) => result).catch((error) => {
     console.error('Error: postObject',error); //eslint-disable-line
   });
 };
 
-const postObjectWithRelationships = async (survey) => {
+const postObjectWithRelationships = async (survey, organizations = null) => {
   const supplementaryForm = new Parse.Object(survey.parseClass);
   const loopParentForm = new Parse.Object(survey.parseClass);
 
@@ -90,6 +96,15 @@ const postObjectWithRelationships = async (survey) => {
     supplementaryForm.set('parseUser', userObject);
   }
 
+  // A supplementary record rarely carries its own organization — it belongs to
+  // the person. Where the parent is already in Parse we inherit from it; an
+  // offline-local parent is resolved later by afterSupplementaryFormHook, and
+  // sync metadata has usually supplied the string by then anyway.
+  const parent = (survey.parseParentClass && !parentIsOfflineLocal && parentId)
+    ? { parseClass: survey.parseParentClass, objectId: parentId }
+    : null;
+  await Organization.stampOrganization(supplementaryForm, localObject, parent, organizations);
+
   const results = await supplementaryForm.save().catch((error) => {
     console.error('Error: postObjectWithRelationships',error); //eslint-disable-line
   });
@@ -102,9 +117,9 @@ const postObjectWithRelationships = async (survey) => {
 };
 
 const Post = {
-  postObjectFactory: async function post(type, data) {
-    if (type === 'post') return postObject(data);
-    if (type === 'post-relationship') return postObjectWithRelationships(data);
+  postObjectFactory: async function post(type, data, organizations = null) {
+    if (type === 'post') return postObject(data, organizations);
+    if (type === 'post-relationship') return postObjectWithRelationships(data, organizations);
     return {};
   },
 };
