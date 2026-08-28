@@ -1,4 +1,12 @@
 /**
+ * `modules/error` requires `services`, so requiring it at load time here would
+ * close a cycle (services -> organization -> module -> services) and leave
+ * `modules.Error` undefined at call time. Resolved lazily at the call site
+ * instead — definers can require both because they load after services are built.
+ */
+const logError = (message) => require('../../module').Error.logError(message); // eslint-disable-line global-require
+
+/**
  * Organization resolution — the canonical tenancy entity.
  *
  * This is the SERVER-SIDE authority. Puente Manage carries a matching resolver
@@ -18,14 +26,36 @@ const normalizeOrganizationName = (value) => (
   typeof value === 'string' ? value.trim().toLowerCase() : null
 );
 
+/**
+ * Organizations are created by hand by Puente staff and number in the single
+ * digits, so one unpaginated fetch is the cheap option. The cap exists only so
+ * this can never become an unbounded query.
+ *
+ * If it is ever REACHED, organizations past it become invisible and their
+ * records silently unresolvable — so hitting it is reported, not shrugged off.
+ */
+const ORGANIZATION_FETCH_CAP = 1000;
+
 const Organization = {
   normalizeOrganizationName,
 
-  /** Every organization. There are a handful; a full fetch is the cheap option. */
+  /** Every organization. See ORGANIZATION_FETCH_CAP for why this is unpaginated. */
   findAll: async function findAll() {
     const query = new Parse.Query('Organization');
-    query.limit(1000);
-    return query.find({ useMasterKey: true });
+    query.limit(ORGANIZATION_FETCH_CAP);
+    const organizations = await query.find({ useMasterKey: true });
+
+    // A truncated list resolves records against an incomplete set, which looks
+    // exactly like "this organization has no alias for that string". Never let
+    // that pass silently.
+    if (organizations.length === ORGANIZATION_FETCH_CAP) {
+      logError(
+        `Organization.findAll hit the ${ORGANIZATION_FETCH_CAP}-row cap. Resolution `
+        + 'is now against an incomplete set and records may be left unresolved.',
+      );
+    }
+
+    return organizations;
   },
 
   /**
@@ -33,6 +63,10 @@ const Organization = {
    *
    * Never falls back to a "closest" organization: an unresolved record is
    * recoverable, a misattributed one is not.
+   *
+   * @throws {Error} when two organizations claim the same alias. Callers on a
+   *   write path must catch this — a collision is an ops problem and must not
+   *   reject a survey collected in the field. See `stampOrganization`.
    */
   resolve: function resolve({ name } = {}, organizations = []) {
     const wanted = normalizeOrganizationName(name);
@@ -79,8 +113,14 @@ Organization.stampOrganization = async function stampOrganization(record, localO
     const result = Organization.resolve({ name }, organizations);
     if (result.status === 'resolved') record.set('organization', result.organization);
   } catch (error) {
-    // Loud in the log, invisible to the surveyor.
-    console.error(`stampOrganization: ${error.message}`); // eslint-disable-line no-console
+    // Loud to the team, invisible to the surveyor. modules.Error.logError routes
+    // to the platform-alerts Slack channel outside dev — a collision that nobody
+    // is told about is one nobody fixes, and every record it touches stays
+    // unresolved, blocking the backfill and ACL gates downstream.
+    //
+    // String(error) rather than error.message to preserve the full cause chain:
+    // a genuine Parse outage here must be distinguishable from an ambiguous alias.
+    logError(`stampOrganization: ${String(error)}`);
   }
 };
 
