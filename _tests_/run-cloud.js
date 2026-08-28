@@ -85,6 +85,9 @@ const cloudFunctions = {
   uploadOfflineForms: (params) => Parse.Cloud
     .run('uploadOfflineForms', params)
     .then((response) => response),
+  resolveOrganization: (params) => Parse.Cloud
+    .run('resolveOrganization', params)
+    .then((response) => response),
 };
 
 module.exports = { cloudFunctions };

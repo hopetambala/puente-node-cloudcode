@@ -27,3 +27,8 @@ require('./src/definer/roles.definer');
  * Offline Uploader and Manager
  ******************************************** */
 require('./src/definer/offline.definer');
+
+/** ********************************************
+ * Organization resolution — the canonical tenancy entity
+ ******************************************** */
+require('./src/definer/organization.definer');

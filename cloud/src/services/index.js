@@ -4,6 +4,7 @@ const Aggregate = require('./aggregate/aggregate.js');
 const Post = require('./post/post.js');
 const Offline = require('./offline/offline.js');
 const Messaging = require('./messaging/messaging');
+const Organization = require('./organization/organization');
 
 const services = {
   batch: Batch,
@@ -12,6 +13,7 @@ const services = {
   post: Post,
   Messaging,
   offline: Offline,
+  organization: Organization,
 };
 
 module.exports = services;

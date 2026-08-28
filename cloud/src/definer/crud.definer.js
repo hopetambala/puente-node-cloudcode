@@ -86,7 +86,7 @@ Parse.Cloud.define('countService', (request) => {
     localObject - Continas key value pairs that will be posted to the class
                 - this contains a latitude/longitude which will post the location
   ******************************************* */
-Parse.Cloud.define('postObjectsToClass', (request) => {
+Parse.Cloud.define('postObjectsToClass', async (request) => {
   const {
     photoFile,
     signature,
@@ -140,6 +140,16 @@ Parse.Cloud.define('postObjectsToClass', (request) => {
     userObject.id = String(parseUser);
     surveyPoint.set('parseUser', userObject);
   }
+
+  // Stamp the canonical Organization from the string the FIELD collected, not
+  // from whoever pressed sync — collection-time values win over sync-time
+  // metadata. This is what lets every app version in the field, including
+  // years-old builds, produce pointered records with no mobile release.
+  //
+  // Resolution must never block a save. An unresolvable or ambiguous
+  // organization is an ops problem to be worked from the admin queue; a survey
+  // collected in a community is not the place to surface it.
+  await services.organization.stampOrganization(surveyPoint, localObject);
 
   try {
     const survey = surveyPoint.save().then((result) => result).catch((error) => {
