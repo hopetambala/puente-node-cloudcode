@@ -19,11 +19,29 @@ const logError = (message) => require('../../module').Error.logError(message); /
  */
 
 /**
- * Folds an organization string to its comparison form. Non-strings become null,
- * so an absent organization can never collide with an empty-string alias.
+ * Folds an organization string to its comparison form: accent-, case- and
+ * whitespace-insensitive. Non-strings become null, so an absent organization
+ * can never collide with an empty-string alias.
+ *
+ * Accents are folded because these names are frequently Spanish and are typed
+ * both ways. The 2026-08-28 production audit found 524 records under
+ * 'Asociacion para el impacto de desarrollo comunitario' and 31 under
+ * 'Asociación…' — one character splitting 555 records across what would
+ * otherwise be two organizations. It also keeps this consistent with the export
+ * pipeline, which already strips accents before writing CSV headers
+ * (replace_spanish_characters in puente-flask-rest-aggregator).
+ *
+ * NFD decomposition plus combining-mark removal covers those and every other
+ * diacritic, rather than a hand-maintained map that silently misses whatever
+ * was not listed.
+ *
+ * MUST stay identical to normalizeOrganizationName in
+ * puente-react-nextjs-platform/app/modules/organization/index.js.
  */
 const normalizeOrganizationName = (value) => (
-  typeof value === 'string' ? value.trim().toLowerCase() : null
+  typeof value === 'string'
+    ? value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
+    : null
 );
 
 /**

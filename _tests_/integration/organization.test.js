@@ -58,6 +58,22 @@ describe('resolveOrganization', () => {
     expect(result.organization.shortCode).toEqual('wof');
   });
 
+  it('folds Spanish accents, so "Asociación" and "Asociacion" are one organization', async () => {
+    // Production audit 2026-08-28: 524 records under
+    // 'Asociacion para el impacto de desarrollo comunitario' and 31 under
+    // 'Asociación…' — one character splitting 555 records. The Flask exporter
+    // already strips accents (replace_spanish_characters), so a resolver that
+    // does not fold them disagrees with the export pipeline.
+    await createOrganization('asoc', ['Asociacion para el impacto de desarrollo comunitario']);
+
+    const result = await cloudFunctions.resolveOrganization({
+      name: 'Asociación para el impacto de desarrollo comunitario',
+    });
+
+    expect(result.status).toEqual('resolved');
+    expect(result.organization.shortCode).toEqual('asoc');
+  });
+
   // ─── Guards ────────────────────────────────────────────────────────────────
   // Pin properties the implementation already has; each passed on first run.
 
