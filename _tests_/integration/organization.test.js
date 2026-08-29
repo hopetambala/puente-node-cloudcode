@@ -368,3 +368,31 @@ describe('createOrganization is privileged', () => {
     })).rejects.toThrow(/master key/i);
   });
 });
+
+describe('the canonical name is always resolvable', () => {
+  it('resolves an organization that has no aliases at all', async () => {
+    // createOrganization defaults `aliases` to [], and the registration picker
+    // offers an organization's `name`. Matching only aliases means such an
+    // organization can sit in the dropdown and still resolve as unknown — so
+    // its first member never gets the admin flow and its records never get an
+    // organization pointer. Raised by Copilot on PR #620.
+    await cloudFunctions.createOrganization({
+      name: 'Alias Free Org', shortCode: 'alias-free', active: true,
+    });
+
+    const result = await cloudFunctions.resolveOrganization({ name: 'Alias Free Org' });
+
+    expect(result.status).toEqual('resolved');
+    expect(result.organization.shortCode).toEqual('alias-free');
+  });
+
+  it('refuses a name that another organization already claims as an alias', async () => {
+    // Once the name counts as an implicit alias, a name colliding with someone
+    // else's alias makes that string ambiguous — resolve() throws, and on the
+    // record write path that means a whole tenant's records stop resolving.
+    // Cheaper to refuse at creation. `wof` already claims 'World Outreach Fund'.
+    await expect(cloudFunctions.createOrganization({
+      name: 'World Outreach Fund', shortCode: 'wof-duplicate', active: true,
+    })).rejects.toThrow(/already belongs to/i);
+  });
+});

@@ -102,8 +102,15 @@ const Organization = {
     const wanted = normalizeOrganizationName(name);
 
     const matches = wanted === null ? [] : organizations.filter((org) => {
-      const aliases = org.get('aliases') || [];
-      return aliases.some((alias) => normalizeOrganizationName(alias) === wanted);
+      // The canonical name is ALWAYS an implicit alias. `aliases` defaults to
+      // [] at creation and the registration picker offers an organization's
+      // `name`, so matching aliases alone lets an organization sit in the
+      // dropdown and still resolve as unknown — its first member never gets the
+      // admin flow, and its records never get an organization pointer.
+      // Kept identical in the client-side resolver in
+      // puente-react-nextjs-platform/app/modules/organization/index.js.
+      const candidates = [org.get('name'), ...(org.get('aliases') || [])];
+      return candidates.some((c) => normalizeOrganizationName(c) === wanted);
     });
 
     // Two organizations claiming one alias must be FIXED by a human, not

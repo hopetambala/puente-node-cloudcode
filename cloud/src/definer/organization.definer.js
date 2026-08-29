@@ -61,11 +61,15 @@ Parse.Cloud.define('createOrganization', async (request) => {
     throw new Error(`createOrganization: shortCode "${shortCode}" is already taken`);
   }
 
+  // Names participate in uniqueness in BOTH directions, because resolve()
+  // treats an organization's name as an implicit alias. A name colliding with
+  // someone else's alias makes that string ambiguous, and on the record write
+  // path an ambiguous string means a whole tenant's records stop resolving.
   const taken = new Map();
-  existing.forEach((o) => (o.get('aliases') || []).forEach(
+  existing.forEach((o) => [o.get('name'), ...(o.get('aliases') || [])].forEach(
     (a) => taken.set(service.normalizeOrganizationName(a), o.get('shortCode')),
   ));
-  const clash = aliases
+  const clash = [name, ...aliases]
     .map((a) => [a, taken.get(service.normalizeOrganizationName(a))])
     .find(([, owner]) => owner);
   if (clash) {
