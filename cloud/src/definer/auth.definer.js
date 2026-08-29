@@ -59,7 +59,9 @@ Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
       // Includes the deliberate ambiguous-alias throw from resolve(). A human
       // must fix that; it must not stop someone registering.
       modules.Error.logError(
-        `signup could not resolve organization "${organization}": ${error.message}`,
+        // String(error), not error.message: a non-Error throw would otherwise
+        // log "undefined" and lose the only clue about what failed.
+        `signup could not resolve organization "${organization}": ${String(error)}`,
       );
       return null;
     }
