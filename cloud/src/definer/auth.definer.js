@@ -33,7 +33,6 @@ Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
   if (String(email) !== '') {
     user.set('email', String(email));
   }
-  user.set('organization', String(organization));
   user.set('phonenumber', String(phonenumber));
 
   if (phonenumber) {
@@ -43,12 +42,57 @@ Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
   }
 
   let userRole = '';
-  // Query to count number of users for the organization passed into function
-  const userQuery = new Parse.Query(Parse.User);
-  userQuery.equalTo('organization', String(organization));
-  userQuery.count().then((results) => {
-    // first user signed up, gets admin accesss
+
+  /**
+   * Resolves the typed organization to a canonical `Organization`, or null.
+   *
+   * Never throws and never blocks the signup. An organization we cannot
+   * identify is an ops problem; a person who cannot create an account is a
+   * field problem, and Collect's signup screen is still a free-text box.
+   */
+  const resolveOrganization = async () => {
+    try {
+      const organizations = await services.organization.findAll();
+      const result = services.organization.resolve({ name: organization }, organizations);
+      return result.status === 'resolved' ? result.organization : null;
+    } catch (error) {
+      // Includes the deliberate ambiguous-alias throw from resolve(). A human
+      // must fix that; it must not stop someone registering.
+      modules.Error.logError(
+        // String(error), not error.message: a non-Error throw would otherwise
+        // log "undefined" and lose the only clue about what failed.
+        `signup could not resolve organization "${organization}": ${String(error)}`,
+      );
+      return null;
+    }
+  };
+
+  resolveOrganization().then(async (canonical) => {
+    // Store the CANONICAL name, not what was typed. Storing the typed string is
+    // what split "Puente" from "Puento" across thousands of rows, and what makes
+    // an account match no records and show an empty app with no error.
+    user.set('organization', canonical ? canonical.get('name') : String(organization));
+
+    if (!canonical) {
+      // The organization is not one we recognise. Create the account, grant
+      // nothing. Previously ANY unrecognised string produced a count of 0 and
+      // therefore an administrator — unauthenticated, no human in the loop.
+      user.set('role', 'contributor');
+      user.set('adminVerified', false);
+      userRole = 'contributor';
+      return user;
+    }
+
+    const userQuery = new Parse.Query(Parse.User);
+    userQuery.equalTo('organization', canonical.get('name'));
+    // useMasterKey is load-bearing: without it this count is subject to the
+    // _User CLP, and a restricted read returns 0 for an organization that
+    // already has members — minting a SECOND administrator.
+    const results = await userQuery.count({ useMasterKey: true });
+
     if (results === 0) {
+      // First member of a known organization gets admin. This grant is only
+      // safe because `canonical` proves a human already created the org.
       user.set('role', 'administrator');
       user.set('adminVerified', true);
       userRole = 'admin';

@@ -347,3 +347,52 @@ describe('postObjectsToAnyClassWithRelation stamps its clinical children', () =>
     expect(history.get('organization')).toBeDefined();
   });
 });
+
+describe('createOrganization is privileged', () => {
+  it('refuses to create an organization without the master key', async () => {
+    // The Organization list is exactly what the registration picker offers. The
+    // app id and JavaScript key ship in every client bundle, so without this
+    // guard anyone holding them can add an entry to the dropdown that every new
+    // account chooses from — and organizations are the tenancy and billing
+    // entity, not a lookup table.
+    //
+    // Master key rather than a role check: organizations are created by hand by
+    // staff, so there is no client that legitimately needs this. When
+    // puente_staff exists (see billing plan section 7) this becomes
+    // `request.master || isStaff(request.user)`.
+    await expect(cloudFunctions.createOrganizationUnprivileged({
+      name: 'Rogue Org',
+      shortCode: 'rogue-org',
+      aliases: ['Rogue Org'],
+      active: true,
+    })).rejects.toThrow(/master key/i);
+  });
+});
+
+describe('the canonical name is always resolvable', () => {
+  it('resolves an organization that has no aliases at all', async () => {
+    // createOrganization defaults `aliases` to [], and the registration picker
+    // offers an organization's `name`. Matching only aliases means such an
+    // organization can sit in the dropdown and still resolve as unknown — so
+    // its first member never gets the admin flow and its records never get an
+    // organization pointer. Raised by Copilot on PR #620.
+    await cloudFunctions.createOrganization({
+      name: 'Alias Free Org', shortCode: 'alias-free', active: true,
+    });
+
+    const result = await cloudFunctions.resolveOrganization({ name: 'Alias Free Org' });
+
+    expect(result.status).toEqual('resolved');
+    expect(result.organization.shortCode).toEqual('alias-free');
+  });
+
+  it('refuses a name that another organization already claims as an alias', async () => {
+    // Once the name counts as an implicit alias, a name colliding with someone
+    // else's alias makes that string ambiguous — resolve() throws, and on the
+    // record write path that means a whole tenant's records stop resolving.
+    // Cheaper to refuse at creation. `wof` already claims 'World Outreach Fund'.
+    await expect(cloudFunctions.createOrganization({
+      name: 'World Outreach Fund', shortCode: 'wof-duplicate', active: true,
+    })).rejects.toThrow(/already belongs to/i);
+  });
+});

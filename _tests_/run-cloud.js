@@ -1,6 +1,6 @@
 const { Parse } = require('parse/node');
 const {
-  PARSE_ENV, PARSE_APP_ID, PARSE_JAVASCRIPT_KEY, PARSE_SERVER_URL,
+  PARSE_ENV, PARSE_APP_ID, PARSE_JAVASCRIPT_KEY, PARSE_SERVER_URL, PARSE_MASTER_KEY,
 } = require('./env.config');
 
 if (PARSE_ENV === 'staging') {
@@ -12,7 +12,14 @@ if (PARSE_ENV === 'staging') {
   Parse.serverURL = PARSE_SERVER_URL;
 }
 
+// Node only. createOrganization is a privileged operation, so the harness
+// needs a key for it; every other call below stays unprivileged.
+Parse.masterKey = PARSE_MASTER_KEY;
+
 const cloudFunctions = {
+  // Deliberately WITHOUT the master key - proves the guard on createOrganization.
+  createOrganizationUnprivileged: (params) => Parse.Cloud
+    .run('createOrganization', params),
   hello: () => Parse.Cloud
     .run('hello')
     .then((res) => res.data),
@@ -89,7 +96,7 @@ const cloudFunctions = {
     .run('resolveOrganization', params)
     .then((response) => response),
   createOrganization: (params) => Parse.Cloud
-    .run('createOrganization', params)
+    .run('createOrganization', params, { useMasterKey: true })
     .then((response) => response),
 };
 
