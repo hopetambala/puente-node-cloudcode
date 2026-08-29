@@ -1,5 +1,15 @@
 const { cloudFunctions } = require('../run-cloud');
 
+// These tests are about ROLE assignment, so their fixture organization has to
+// be one the server can identify — signup no longer grants administrator for a
+// string nobody recognises. Registering it keeps the assertions below testing
+// what they were written to test.
+beforeAll(async () => {
+  await cloudFunctions.createOrganization({
+    name: 'star-wars', shortCode: 'star-wars', aliases: ['star-wars'], active: true,
+  });
+});
+
 describe('role testing', () => {
   let adminRoleID;
   let contribRoleID;

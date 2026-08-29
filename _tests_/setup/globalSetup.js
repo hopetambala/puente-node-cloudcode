@@ -6,6 +6,10 @@ const path = require('path');
 
 const APP_ID = 'test-app-id';
 const MASTER_KEY = 'test-master-key';
+// Hand the same key to the test workers. createOrganization is master-key
+// only, so run-cloud needs it; duplicating the literal in .env.dev would
+// point at the LOCAL DEV server's key instead, which is a different value.
+process.env.PARSE_MASTER_KEY = MASTER_KEY;
 const PORT = 1337;
 const SERVER_URL = `http://127.0.0.1:${PORT}/parse`;
 

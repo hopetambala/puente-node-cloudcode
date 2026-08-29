@@ -3,4 +3,5 @@ module.exports = {
   PARSE_JAVASCRIPT_KEY: process.env.PARSE_JAVASCRIPT_KEY,
   PARSE_APP_ID: process.env.PARSE_APP_ID,
   PARSE_SERVER_URL: process.env.PARSE_SERVER_URL,
+  PARSE_MASTER_KEY: process.env.PARSE_MASTER_KEY,
 };

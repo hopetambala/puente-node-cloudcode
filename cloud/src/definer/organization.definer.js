@@ -31,10 +31,23 @@ Parse.Cloud.define('resolveOrganization', async (request) => {
  * no pointer — a denial-of-attribution needing no credentials. Rejecting a
  * colliding alias at creation closes that regardless of who is calling.
  *
- * TODO: add a `puente_staff` role check once §7 lands. Today no role in this
- * codebase carries tenancy, so an endpoint check would be theatre.
+ * Creation is master-key only. The earlier note here argued an endpoint check
+ * would be theatre because no role carries tenancy — true of a ROLE check, but
+ * this is an AUTHENTICATION check, and it is not theatre: the app id and
+ * JavaScript key ship in every client bundle, and since the registration picker
+ * landed this list is what every new account chooses from.
+ *
+ * Master key rather than a role fits the actual process — staff create
+ * organizations by hand, so no client legitimately needs this. When
+ * `puente_staff` exists (§7) this becomes `request.master ||
+ * isStaff(request.user)`, which is what an OrganizationAdmin screen in Manage
+ * would need.
  */
 Parse.Cloud.define('createOrganization', async (request) => {
+  if (!request.master) {
+    throw new Error('createOrganization requires the master key');
+  }
+
   const service = services.organization;
   const {
     name, shortCode, aliases = [], plan, active = true,

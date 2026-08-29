@@ -347,3 +347,24 @@ describe('postObjectsToAnyClassWithRelation stamps its clinical children', () =>
     expect(history.get('organization')).toBeDefined();
   });
 });
+
+describe('createOrganization is privileged', () => {
+  it('refuses to create an organization without the master key', async () => {
+    // The Organization list is exactly what the registration picker offers. The
+    // app id and JavaScript key ship in every client bundle, so without this
+    // guard anyone holding them can add an entry to the dropdown that every new
+    // account chooses from — and organizations are the tenancy and billing
+    // entity, not a lookup table.
+    //
+    // Master key rather than a role check: organizations are created by hand by
+    // staff, so there is no client that legitimately needs this. When
+    // puente_staff exists (see billing plan section 7) this becomes
+    // `request.master || isStaff(request.user)`.
+    await expect(cloudFunctions.createOrganizationUnprivileged({
+      name: 'Rogue Org',
+      shortCode: 'rogue-org',
+      aliases: ['Rogue Org'],
+      active: true,
+    })).rejects.toThrow(/master key/i);
+  });
+});

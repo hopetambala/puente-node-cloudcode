@@ -1,5 +1,15 @@
 const { cloudFunctions } = require('../run-cloud');
 
+// `got` is a real Organization here so that "first user of an organization
+// becomes its administrator" is exercised for an organization the server can
+// actually identify. That grant is legitimate; granting it for a string nobody
+// recognises is the bug — see the guard tests at the bottom of this file.
+beforeAll(async () => {
+  await cloudFunctions.createOrganization({
+    name: 'got', shortCode: 'got', aliases: ['got', 'Game of Thrones'], active: true,
+  });
+});
+
 describe('role testing', () => {
   let adminRoleID;
   let contribRoleID;
@@ -153,5 +163,61 @@ describe('role testing', () => {
     ];
 
     return removeParams.map((user) => cloudFunctions.deleteUser(user));
+  });
+});
+
+describe('signup must not mint administrators from unrecognised organizations', () => {
+  it('does not grant administrator for an organization it cannot resolve', async () => {
+    // signup counted users matching the typed string EXACTLY, so any string no
+    // account already held produced count 0 -> role administrator, adminVerified
+    // true, unauthenticated. Typing "puente" where records say "Puente" was
+    // enough. Collect's signup screen is still free text, so this is reachable
+    // from a phone by anyone.
+    const result = await cloudFunctions.signup({
+      firstname: 'Arya',
+      lastname: 'Stark',
+      password: 'valarmorghulis',
+      email: 'nobody@example.org',
+      organization: 'House of Black and White',
+      restParams: { runMessaging: false },
+    });
+    const v = JSON.parse(JSON.stringify(result));
+
+    expect(v.role).toEqual('contributor');
+    expect(v.adminVerified).toEqual(false);
+  });
+
+  it('stores the canonical name when the user typed a known alias', async () => {
+    // The whole point of the alias table. Storing what was typed is what split
+    // "Puente" from "Puento" across 2,800 rows in production.
+    const result = await cloudFunctions.signup({
+      firstname: 'Sansa',
+      lastname: 'Stark',
+      password: 'ladyofwinterfell',
+      email: 'sansa@example.org',
+      organization: 'Game of Thrones',
+      restParams: { runMessaging: false },
+    });
+    const v = JSON.parse(JSON.stringify(result));
+
+    expect(v.organization).toEqual('got');
+  });
+
+  it('still creates the account when the organization is unrecognised', async () => {
+    // Never block a signup on a billing-adjacent lookup. An unresolved
+    // organization is an ops problem; a person who cannot make an account is a
+    // field problem.
+    const result = await cloudFunctions.signup({
+      firstname: 'Gendry',
+      lastname: 'Baratheon',
+      password: 'rowrowrow',
+      email: 'gendry@example.org',
+      organization: 'Flea Bottom Forge',
+      restParams: { runMessaging: false },
+    });
+    const v = JSON.parse(JSON.stringify(result));
+
+    expect(v.objectId).toBeTruthy();
+    expect(v.organization).toEqual('Flea Bottom Forge');
   });
 });
