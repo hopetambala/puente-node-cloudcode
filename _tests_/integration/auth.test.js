@@ -6,6 +6,13 @@ const { cloudFunctions } = require('../run-cloud');
 // actually identify. That grant is legitimate; granting it for a string nobody
 // recognises is the bug — see the guard tests at the bottom of this file.
 beforeAll(async () => {
+  // signup looks up the role it assigns and calls role.getUsers() with no null
+  // check, so these must exist before any signup here. They were previously
+  // created by roles.test.js, which meant this file only passed when jest
+  // happened to run that file first — true locally, false in CI, where files
+  // run in parallel workers against one server.
+  await cloudFunctions.createAdminRole();
+  await cloudFunctions.createContributorRole();
   await cloudFunctions.createOrganization({
     name: 'got', shortCode: 'got', aliases: ['got', 'Game of Thrones'], active: true,
   });
