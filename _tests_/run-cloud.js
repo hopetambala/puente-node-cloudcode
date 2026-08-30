@@ -95,6 +95,10 @@ const cloudFunctions = {
   resolveOrganization: (params) => Parse.Cloud
     .run('resolveOrganization', params)
     .then((response) => response),
+  editOrganizationAliases: (params) => Parse.Cloud
+    .run('editOrganizationAliases', params, { useMasterKey: true }),
+  editOrganizationAliasesUnprivileged: (params) => Parse.Cloud
+    .run('editOrganizationAliases', params),
   createOrganization: (params) => Parse.Cloud
     .run('createOrganization', params, { useMasterKey: true })
     .then((response) => response),

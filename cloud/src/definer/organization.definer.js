@@ -71,13 +71,10 @@ Parse.Cloud.define('createOrganization', async (request) => {
   // treats an organization's name as an implicit alias. A name colliding with
   // someone else's alias makes that string ambiguous, and on the record write
   // path an ambiguous string means a whole tenant's records stop resolving.
-  const taken = new Map();
-  existing.forEach((o) => [o.get('name'), ...(o.get('aliases') || [])].forEach(
-    (a) => taken.set(service.normalizeOrganizationName(a), o.get('shortCode')),
-  ));
-  const clash = [name, ...aliases]
-    .map((a) => [a, taken.get(service.normalizeOrganizationName(a))])
-    .find(([, owner]) => owner);
+  //
+  // Shared with editOrganizationAliases via findAliasClash so the two cannot
+  // drift into disagreeing about what counts as taken.
+  const clash = service.findAliasClash([name, ...aliases], existing);
   if (clash) {
     throw new Error(
       `createOrganization: alias "${clash[0]}" already belongs to "${clash[1]}". `
@@ -98,4 +95,54 @@ Parse.Cloud.define('createOrganization', async (request) => {
   org.setACL(acl);
 
   return org.save(null, { useMasterKey: true });
+});
+
+
+/**
+ * Replaces an organization's alias set.
+ *
+ * Same gate as createOrganization, for the same reason: aliases decide which
+ * organization owns a record, so an open endpoint would let anyone re-route a
+ * tenant's data by claiming their spelling.
+ *
+ * Replace rather than append — the admin screen edits the whole set, and a
+ * remove-an-alias operation has to be expressible. The caller sends the list it
+ * wants; the canonical `name` is always an implicit alias and never needs to be
+ * in it.
+ */
+Parse.Cloud.define('editOrganizationAliases', async (request) => {
+  if (!await services.roles.mayAdministerOrganizations(request)) {
+    throw new Error(
+      'editOrganizationAliases requires the master key or the puente_staff role',
+    );
+  }
+
+  const service = services.organization;
+  const { shortCode, aliases } = request.params;
+
+  if (!shortCode) throw new Error('editOrganizationAliases: shortCode is required');
+  if (!Array.isArray(aliases)) {
+    throw new Error('editOrganizationAliases: aliases must be an array');
+  }
+
+  const existing = await service.findAll();
+  const target = existing.find((o) => o.get('shortCode') === shortCode);
+  // Refuse rather than create: a typo in the shortCode would otherwise mint a
+  // nameless organization that the picker would then offer to new accounts.
+  if (!target) {
+    throw new Error(`editOrganizationAliases: no organization with shortCode "${shortCode}"`);
+  }
+
+  // The target's own strings are excluded, or re-saving an unchanged set would
+  // report the organization as colliding with itself.
+  const clash = service.findAliasClash(aliases, existing, { excludeShortCode: shortCode });
+  if (clash) {
+    throw new Error(
+      `editOrganizationAliases: alias "${clash[0]}" already belongs to "${clash[1]}". `
+      + 'Aliases must be unique across organizations.',
+    );
+  }
+
+  target.set('aliases', aliases);
+  return target.save(null, { useMasterKey: true });
 });

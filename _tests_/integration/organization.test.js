@@ -400,3 +400,56 @@ describe('the canonical name is always resolvable', () => {
     })).rejects.toThrow(/already belongs to/i);
   });
 });
+
+describe('editOrganizationAliases', () => {
+  beforeAll(async () => {
+    await createOrganization('alias-edit', ['Alias Edit Co']);
+    await createOrganization('alias-rival', ['Rival Spelling']);
+  });
+
+  it('is privileged — an unprivileged call is refused', async () => {
+    // Same reasoning as createOrganization: aliases decide which organization
+    // owns a record, so an open endpoint lets anyone re-route another tenant's
+    // data by claiming their spelling.
+    await expect(cloudFunctions.editOrganizationAliasesUnprivileged({
+      shortCode: 'alias-edit',
+      aliases: ['Whatever'],
+    })).rejects.toThrow(/master key|puente_staff/i);
+  });
+
+  it('replaces the alias set, and the new spelling then resolves', async () => {
+    await cloudFunctions.editOrganizationAliases({
+      shortCode: 'alias-edit',
+      aliases: ['Alias Edit Co', 'A.E. Co'],
+    });
+
+    const result = await cloudFunctions.resolveOrganization({ name: 'A.E. Co' });
+    expect(result.status).toEqual('resolved');
+    expect(result.organization.shortCode).toEqual('alias-edit');
+  });
+
+  it('refuses an alias that already belongs to another organization', async () => {
+    // An ambiguous alias makes resolve() raise, and a whole tenant's records
+    // then save with no pointer — a denial of attribution needing no
+    // credentials. Refuse at the edit, exactly as creation does.
+    await expect(cloudFunctions.editOrganizationAliases({
+      shortCode: 'alias-edit',
+      aliases: ['Rival Spelling'],
+    })).rejects.toThrow(/already belongs/i);
+  });
+
+  it('lets an organization keep its own existing aliases', async () => {
+    // Re-saving an unchanged set must not report the org colliding with itself.
+    await expect(cloudFunctions.editOrganizationAliases({
+      shortCode: 'alias-edit',
+      aliases: ['Alias Edit Co', 'A.E. Co'],
+    })).resolves.toBeDefined();
+  });
+
+  it('refuses an unknown shortCode rather than silently creating one', async () => {
+    await expect(cloudFunctions.editOrganizationAliases({
+      shortCode: 'no-such-org',
+      aliases: ['Anything'],
+    })).rejects.toThrow(/no-such-org/i);
+  });
+});
