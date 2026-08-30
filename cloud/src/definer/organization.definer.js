@@ -37,15 +37,21 @@ Parse.Cloud.define('resolveOrganization', async (request) => {
  * JavaScript key ship in every client bundle, and since the registration picker
  * landed this list is what every new account chooses from.
  *
- * Master key rather than a role fits the actual process — staff create
- * organizations by hand, so no client legitimately needs this. When
- * `puente_staff` exists (§7) this becomes `request.master ||
- * isStaff(request.user)`, which is what an OrganizationAdmin screen in Manage
- * would need.
+ * Master key OR `puente_staff` (the extension this comment used to anticipate).
+ * The master-key arm still carries the ops console, the seed script and the
+ * integration tests, none of which have a user. The role arm is what lets the
+ * OrganizationAdmin screen in Manage create a partner without shipping a master
+ * key to a browser.
+ *
+ * The role is evaluated SERVER-SIDE under the master key, and `puente_staff` is
+ * created with no public read or write — unlike the legacy `admin` role, which
+ * is publicly writable. See services/roles/roles.js.
  */
 Parse.Cloud.define('createOrganization', async (request) => {
-  if (!request.master) {
-    throw new Error('createOrganization requires the master key');
+  if (!await services.roles.mayAdministerOrganizations(request)) {
+    throw new Error(
+      'createOrganization requires the master key or the puente_staff role',
+    );
   }
 
   const service = services.organization;
