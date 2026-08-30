@@ -356,10 +356,14 @@ describe('createOrganization is privileged', () => {
     // account chooses from — and organizations are the tenancy and billing
     // entity, not a lookup table.
     //
-    // Master key rather than a role check: organizations are created by hand by
-    // staff, so there is no client that legitimately needs this. When
-    // puente_staff exists (see billing plan section 7) this becomes
-    // `request.master || isStaff(request.user)`.
+    // The guard is now `request.master || isStaff(request.user)` — the
+    // puente_staff extension this comment used to anticipate has landed. This
+    // call is unprivileged AND unauthenticated, so both arms refuse it, and the
+    // assertion below is unchanged: the message still names the master key.
+    //
+    // The staff-allowed arm is covered by unit tests on
+    // Roles.mayAdministerOrganizations; exercising it here would need a real
+    // role, a user and a session token in the fixture.
     await expect(cloudFunctions.createOrganizationUnprivileged({
       name: 'Rogue Org',
       shortCode: 'rogue-org',

@@ -15,6 +15,35 @@ Parse.Cloud.define('createContributorRole', () => {
   return service.createContributorRole();
 });
 
+/**
+ * Creates the cross-organization `puente_staff` role.
+ *
+ * Master-key only, and deliberately so: membership in this role is what gates
+ * organization administration, so an endpoint that let a session grant it would
+ * BE the escalation path. Staff are seeded by a master-key script, by hand.
+ */
+Parse.Cloud.define('createPuenteStaffRole', async (request) => {
+  if (!request.master) {
+    throw new Error('createPuenteStaffRole requires the master key');
+  }
+  return services.roles.createStaffRole();
+});
+
+/**
+ * Does the calling session belong to `puente_staff`?
+ *
+ * Manage needs this for nav visibility and its route guard. It exists as a
+ * Cloud function because the role is NOT publicly readable — a browser querying
+ * `_Role` directly would get nothing back and every staff member would render
+ * as non-staff.
+ *
+ * This is a UX affordance, not the security boundary. The boundary is the
+ * server-side check inside each privileged endpoint.
+ */
+Parse.Cloud.define('isStaff', async (request) => ({
+  isStaff: await services.roles.isStaff(request.user),
+}));
+
 Parse.Cloud.define('addToRole', (request) => new Promise((resolve, reject) => {
   const userQuery = new Parse.Query(Parse.User);
 
