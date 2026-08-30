@@ -266,3 +266,111 @@ Parse.Cloud.define('setOrgAdmin', async (request) => {
 
   return { objectId: target.id, shortCode, isOrgAdmin: isAdmin !== false };
 });
+
+/**
+ * Builds the org-admin seed plan for organizations that have no admin yet.
+ *
+ * D5: the EARLIEST account of each organization becomes its admin. That is
+ * Hope's call over staff-assigning each one, and it is applied as a dry run
+ * first because it is a BULK PRIVILEGE GRANT across every existing
+ * organization — the same discipline the section 6 backfill runbook uses, where
+ * the dry run is the deliverable.
+ *
+ * Three buckets, and the third is the point: an organization with no members
+ * is REPORTED rather than silently skipped. A silent skip is how an
+ * organization stays adminless and nobody notices.
+ */
+const buildOrgAdminSeedPlan = async () => {
+  const organizations = await services.organization.findAll();
+  const propose = [];
+  const alreadyHasAdmin = [];
+  const noMembers = [];
+
+  // Sequential on purpose: dozens of organizations, and a burst of parallel
+  // role reads against Back4App buys nothing but throttling risk.
+  for (const org of organizations) { // eslint-disable-line no-restricted-syntax
+    const shortCode = org.get('shortCode');
+    if (!shortCode) continue; // eslint-disable-line no-continue
+
+    // eslint-disable-next-line no-await-in-loop
+    const { ids } = await orgAdminIds(shortCode);
+    if (ids.size > 0) {
+      alreadyHasAdmin.push({ shortCode, name: org.get('name'), admins: ids.size });
+      continue; // eslint-disable-line no-continue
+    }
+
+    const userQuery = new Parse.Query(Parse.User);
+    userQuery.equalTo('organization', org.get('name'));
+    userQuery.select('username', 'firstname', 'lastname', 'createdAt');
+    // Earliest account first — that IS the rule being applied.
+    userQuery.ascending('createdAt');
+    // eslint-disable-next-line no-await-in-loop
+    const earliest = await userQuery.first({ useMasterKey: true });
+
+    if (!earliest) {
+      noMembers.push({ shortCode, name: org.get('name') });
+      continue; // eslint-disable-line no-continue
+    }
+
+    propose.push({
+      shortCode,
+      organization: org.get('name'),
+      userId: earliest.id,
+      username: earliest.get('username'),
+      firstname: earliest.get('firstname'),
+      lastname: earliest.get('lastname'),
+      createdAt: earliest.get('createdAt'),
+    });
+  }
+
+  return { propose, alreadyHasAdmin, noMembers };
+};
+
+/**
+ * The seed plan. Reads only — nothing is granted here.
+ *
+ * Master-key only: it enumerates every organization's earliest account, which
+ * is tenant data, and it is the input to a bulk privilege grant.
+ */
+Parse.Cloud.define('planOrgAdminSeed', async (request) => {
+  if (!request.master) throw new Error('planOrgAdminSeed requires the master key');
+  return buildOrgAdminSeedPlan();
+});
+
+/**
+ * Applies the seed plan.
+ *
+ * Requires `confirm: true` as a separate, explicit act. The plan is meant to be
+ * read by a human first, and an apply that runs on an empty params object is
+ * one keystroke away from a bulk grant nobody looked at.
+ *
+ * Idempotent: it re-plans, and an organization that already has an admin is no
+ * longer proposed, so a second run grants nothing.
+ */
+Parse.Cloud.define('applyOrgAdminSeed', async (request) => {
+  if (!request.master) throw new Error('applyOrgAdminSeed requires the master key');
+  if (request.params.confirm !== true) {
+    throw new Error(
+      'applyOrgAdminSeed requires confirm: true. Read the plan from '
+      + 'planOrgAdminSeed first — this is a bulk privilege grant.',
+    );
+  }
+
+  const plan = await buildOrgAdminSeedPlan();
+  const granted = [];
+
+  for (const row of plan.propose) { // eslint-disable-line no-restricted-syntax
+    // eslint-disable-next-line no-await-in-loop
+    await services.roles.createOrgAdminRole(row.shortCode);
+    // eslint-disable-next-line no-await-in-loop
+    const { role } = await orgAdminIds(row.shortCode);
+    // eslint-disable-next-line no-await-in-loop
+    const user = await new Parse.Query(Parse.User).get(row.userId, { useMasterKey: true });
+    role.getUsers().add(user);
+    // eslint-disable-next-line no-await-in-loop
+    await role.save(null, { useMasterKey: true });
+    granted.push({ shortCode: row.shortCode, username: row.username });
+  }
+
+  return { granted, skippedNoMembers: plan.noMembers, alreadyHadAdmin: plan.alreadyHasAdmin };
+});

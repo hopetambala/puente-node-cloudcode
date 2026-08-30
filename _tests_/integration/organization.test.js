@@ -671,3 +671,76 @@ describe('organization member management', () => {
       .rejects.toThrow(/master key|staff|admin/i);
   });
 });
+
+describe('the org-admin seed (D5) plans before it writes', () => {
+  beforeAll(async () => {
+    await cloudFunctions.createAdminRole();
+    await cloudFunctions.createContributorRole();
+    await createOrganization('seed-empty', []);
+  });
+
+  it('is master-key only — it is a bulk privilege grant', async () => {
+    await expect(cloudFunctions.planOrgAdminSeedUnprivileged({}))
+      .rejects.toThrow(/master key/i);
+  });
+
+  it('proposes the EARLIEST account of an organization that has no admin', async () => {
+    await createOrganization('seed-target', []);
+    // Two members, neither an admin: created directly so signup's
+    // first-member-becomes-admin rule does not pre-empt the seed.
+    const first = new Parse.User();
+    first.set('username', '9400000000');
+    first.set('password', 'pw');
+    first.set('organization', 'SEED-TARGET');
+    await first.signUp(null, { useMasterKey: true });
+    const second = new Parse.User();
+    second.set('username', '9400000001');
+    second.set('password', 'pw');
+    second.set('organization', 'SEED-TARGET');
+    await second.signUp(null, { useMasterKey: true });
+
+    const plan = await cloudFunctions.planOrgAdminSeed({});
+    const row = plan.propose.find((p) => p.shortCode === 'seed-target');
+
+    expect(row).toBeDefined();
+    expect(row.username).toEqual('9400000000');
+  });
+
+  it('reports an organization with no members rather than silently skipping it', async () => {
+    // A silent skip is how a whole organization stays adminless and nobody
+    // notices. Surfaced, like the unresolved bucket.
+    const plan = await cloudFunctions.planOrgAdminSeed({});
+
+    expect(plan.noMembers.map((o) => o.shortCode)).toContain('seed-empty');
+  });
+
+  it('writes nothing — the plan is a plan', async () => {
+    await cloudFunctions.planOrgAdminSeed({});
+
+    const roleQuery = new Parse.Query(Parse.Role);
+    roleQuery.equalTo('name', 'org_seed-target_admin');
+    const role = await roleQuery.first({ useMasterKey: true });
+    const members = role ? await role.getUsers().query().find({ useMasterKey: true }) : [];
+    expect(members).toHaveLength(0);
+  });
+
+  it('refuses to apply without an explicit confirmation', async () => {
+    await expect(cloudFunctions.applyOrgAdminSeed({}))
+      .rejects.toThrow(/confirm/i);
+  });
+
+  it('applies the plan when confirmed, and is idempotent', async () => {
+    const applied = await cloudFunctions.applyOrgAdminSeed({ confirm: true });
+    expect(applied.granted.length).toBeGreaterThan(0);
+
+    const roleQuery = new Parse.Query(Parse.Role);
+    roleQuery.equalTo('name', 'org_seed-target_admin');
+    const role = await roleQuery.first({ useMasterKey: true });
+    const members = await role.getUsers().query().find({ useMasterKey: true });
+    expect(members.map((m) => m.get('username'))).toEqual(['9400000000']);
+
+    // A second run has nothing left to propose for that organization.
+    const plan = await cloudFunctions.planOrgAdminSeed({});
+    expect(plan.propose.find((p) => p.shortCode === 'seed-target')).toBeUndefined();
+  });
+});
