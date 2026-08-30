@@ -335,3 +335,17 @@ describe('deactivating a user actually removes access', () => {
     await cloudFunctions.setUserActive({ userId: admin.id, active: true });
   });
 });
+
+describe('a failed sign-in rejects cleanly', () => {
+  it('rejects a wrong password instead of crashing the server', async () => {
+    // signin was written for the ancient (request, response) Cloud Code
+    // signature and called response.error(...) on every failure path. In modern
+    // Parse Server `response` is undefined, so ANY failed login threw a
+    // TypeError that took the whole process down — it simply had no test that
+    // ever made a sign-in fail.
+    await expect(cloudFunctions.signin({
+      username: 'nobody-at-all-9999',
+      password: 'definitely-wrong',
+    })).rejects.toBeDefined();
+  });
+});

@@ -338,7 +338,7 @@ Input Paramaters:
   username - selected username for the user
   password - user password
 ******************************************* */
-Parse.Cloud.define('signin', (request, response) => new Promise((resolve, reject) => {
+Parse.Cloud.define('signin', (request) => new Promise((resolve, reject) => {
   Parse.User.logIn(String(request.params.username), String(request.params.password))
     .then((result) => {
       console.log(`User logged in successful with username: ${result.get('username')}`); // eslint-disable-line
@@ -350,20 +350,27 @@ Parse.Cloud.define('signin', (request, response) => new Promise((resolve, reject
 
       userQuery.equalTo('email', request.params.username);
       userQuery.first().then((success) => {
+        // No account with that email: the original username failure is the
+        // real answer. Without this guard success.toJSON() throws, and an
+        // unhandled throw here takes the whole Parse process down.
+        if (!success) {
+          reject(error1);
+          return;
+        }
         const { username } = success.toJSON();
         Parse.User.logIn(username, String(request.params.password)).then((result) => {
           console.log(`User logged in successful with email: ${result.get('email')}`); // eslint-disable-line
           rejectIfDeactivated(result).then(resolve, reject);
         }, (error2) => {
           modules.Error.logError(`Error: ${error2.code} ${error2.message}`);
-          response.error(reject(error2));
+          reject(error2);
         });
       }, (error3) => {
         modules.Error.logError(`Error: ${error3.code} ${error3.message}`);
-        response.error(reject(error3));
+        reject(error3);
       });
       modules.Error.logError(`Error: ${error1.code} ${error1.message}`);
-      response.error(reject(error1));
+      reject(error1);
     });
 }));
 
