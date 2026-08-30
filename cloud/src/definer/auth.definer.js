@@ -163,6 +163,13 @@ Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
     if (results === 0) {
       // First member of a known organization gets admin. This grant is only
       // safe because `canonical` proves a human already created the org.
+      // The Parse role is the authorization; _User.role is display only. This
+      // applies to a staff-created organization exactly as it does to a
+      // self-created one - otherwise the first member of a partner org would
+      // read as administrator in the UI and be refused by every gate.
+      await services.roles.createOrgAdminRole(organizationRecord.get('shortCode'));
+      newOrgShortCode = organizationRecord.get('shortCode');
+
       user.set('role', 'administrator');
       user.set('adminVerified', true);
       userRole = 'admin';
@@ -229,6 +236,99 @@ Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
 }));
 
 
+/**
+ * Destroys every session belonging to a user.
+ *
+ * Deactivation that only sets a flag is a control that lies: Collect holds a
+ * session token and would keep syncing until it expired, which offline-first
+ * means could be a very long time. The admin would believe they removed access
+ * and they would be wrong.
+ */
+const destroySessionsFor = async (user) => {
+  const sessions = new Parse.Query(Parse.Session);
+  sessions.equalTo('user', user);
+  const existing = await sessions.find({ useMasterKey: true });
+  if (existing.length) {
+    await Parse.Object.destroyAll(existing, { useMasterKey: true });
+  }
+  return existing.length;
+};
+
+/**
+ * Refuses a deactivated account, and destroys the session the login just
+ * created so the refusal is not merely advisory.
+ */
+const rejectIfDeactivated = async (result) => {
+  if (result.get('deactivated') !== true) return result;
+  await destroySessionsFor(result);
+  throw new Error(
+    'This account has been deactivated. Contact your organization administrator.',
+  );
+};
+
+/** ******************************************
+SET USER ACTIVE
+Deactivates or reactivates a member of an organization.
+
+Input Paramaters:
+  userId - objectId of the account
+  active - false to deactivate, true to restore
+******************************************* */
+Parse.Cloud.define('setUserActive', async (request) => {
+  const { userId, active } = request.params;
+  if (!userId) throw new Error('setUserActive: userId is required');
+
+  const userQuery = new Parse.Query(Parse.User);
+  const target = await userQuery.get(String(userId), { useMasterKey: true });
+
+  // Authorization is scoped to the TARGET's organization, not the caller's, so
+  // an admin of one partner cannot reach into another.
+  const organizations = await services.organization.findAll();
+  let shortCode = null;
+  try {
+    const resolved = services.organization.resolve(
+      { name: target.get('organization') }, organizations,
+    );
+    shortCode = resolved.status === 'resolved' ? resolved.organization.get('shortCode') : null;
+  } catch (error) {
+    // An ambiguous alias throws by design. Leaving shortCode null means only
+    // the master key or puente_staff can act, which is the safe direction.
+    shortCode = null;
+  }
+
+  if (!await services.roles.mayAdministerOrganization(request, shortCode)) {
+    throw new Error(
+      'setUserActive requires the master key, the puente_staff role, or the '
+      + "organization's admin role",
+    );
+  }
+
+  if (active === false && shortCode) {
+    // An organization that deactivates its last admin locks itself out, and
+    // only a master key gets it back. puente_staff can still do it deliberately.
+    const roleQuery = new Parse.Query(Parse.Role);
+    roleQuery.equalTo('name', services.roles.orgAdminRoleName(shortCode));
+    const role = await roleQuery.first({ useMasterKey: true });
+    if (role) {
+      const admins = await role.getUsers().query().find({ useMasterKey: true });
+      const targetIsAdmin = admins.some((a) => a.id === target.id);
+      const staff = request.master || await services.roles.isStaff(request.user);
+      if (targetIsAdmin && admins.length <= 1 && !staff) {
+        throw new Error(
+          'Cannot deactivate the last admin of an organization. Appoint another '
+          + 'admin first, or ask Puente staff.',
+        );
+      }
+    }
+  }
+
+  target.set('deactivated', active === false);
+  await target.save(null, { useMasterKey: true });
+
+  const destroyed = active === false ? await destroySessionsFor(target) : 0;
+  return { objectId: target.id, deactivated: active === false, sessionsDestroyed: destroyed };
+});
+
 /** ******************************************
 SIGN IN
 Signs a user in with given username and password
@@ -238,11 +338,11 @@ Input Paramaters:
   username - selected username for the user
   password - user password
 ******************************************* */
-Parse.Cloud.define('signin', (request, response) => new Promise((resolve, reject) => {
+Parse.Cloud.define('signin', (request) => new Promise((resolve, reject) => {
   Parse.User.logIn(String(request.params.username), String(request.params.password))
     .then((result) => {
       console.log(`User logged in successful with username: ${result.get('username')}`); // eslint-disable-line
-      resolve(result);
+      rejectIfDeactivated(result).then(resolve, reject);
     }, (error1) => {
       // If the user inputs their email instead of the username
       // attempt to get the username
@@ -250,20 +350,27 @@ Parse.Cloud.define('signin', (request, response) => new Promise((resolve, reject
 
       userQuery.equalTo('email', request.params.username);
       userQuery.first().then((success) => {
+        // No account with that email: the original username failure is the
+        // real answer. Without this guard success.toJSON() throws, and an
+        // unhandled throw here takes the whole Parse process down.
+        if (!success) {
+          reject(error1);
+          return;
+        }
         const { username } = success.toJSON();
         Parse.User.logIn(username, String(request.params.password)).then((result) => {
           console.log(`User logged in successful with email: ${result.get('email')}`); // eslint-disable-line
-          resolve(result);
+          rejectIfDeactivated(result).then(resolve, reject);
         }, (error2) => {
           modules.Error.logError(`Error: ${error2.code} ${error2.message}`);
-          response.error(reject(error2));
+          reject(error2);
         });
       }, (error3) => {
         modules.Error.logError(`Error: ${error3.code} ${error3.message}`);
-        response.error(reject(error3));
+        reject(error3);
       });
       modules.Error.logError(`Error: ${error1.code} ${error1.message}`);
-      response.error(reject(error1));
+      reject(error1);
     });
 }));
 

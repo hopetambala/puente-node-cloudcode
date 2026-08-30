@@ -74,6 +74,13 @@ const cloudFunctions = {
   queryRoles: () => Parse.Cloud
     .run('queryRoles')
     .then((response) => response),
+  setUserActive: (params) => Parse.Cloud
+    .run('setUserActive', params, { useMasterKey: true })
+    .then((response) => response),
+  setUserActiveAsSession: (params, sessionToken) => Parse.Cloud
+    .run('setUserActive', params, { sessionToken }),
+  setUserActiveUnprivileged: (params) => Parse.Cloud
+    .run('setUserActive', params),
   addToRolePrivileged: (params) => Parse.Cloud
     .run('addToRole', params, { useMasterKey: true })
     .then((response) => response),
