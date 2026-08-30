@@ -531,3 +531,53 @@ describe('self-service organization creation at signup', () => {
     expect(user.get('organization')).toEqual('SELFSERVE-EXISTING');
   });
 });
+
+describe('the creator of a self-service organization becomes its role admin', () => {
+  it('puts the signer-up in org_<shortCode>_admin, not just role: administrator', async () => {
+    // _User.role is a string updateUser can set with no authentication, so it
+    // cannot carry authorization. Membership of the Parse role is what the
+    // server actually checks.
+    await cloudFunctions.signup({
+      firstname: 'Role',
+      lastname: 'Admin',
+      password: 'test-password',
+      email: '',
+      phonenumber: '9000000010',
+      organization: 'Notre Dame Outreach',
+    });
+
+    const orgQuery = new Parse.Query('Organization');
+    orgQuery.equalTo('name', 'Notre Dame Outreach');
+    const org = await orgQuery.first({ useMasterKey: true });
+    expect(org).toBeDefined();
+
+    const userQuery = new Parse.Query(Parse.User);
+    userQuery.equalTo('username', '9000000010');
+    const user = await userQuery.first({ useMasterKey: true });
+
+    const roleQuery = new Parse.Query(Parse.Role);
+    roleQuery.equalTo('name', `org_${org.get('shortCode')}_admin`);
+    roleQuery.equalTo('users', user);
+    expect(await roleQuery.first({ useMasterKey: true })).toBeDefined();
+  });
+
+  it('does not put someone who merely JOINS an organization in its admin role', async () => {
+    await cloudFunctions.signup({
+      firstname: 'Mere',
+      lastname: 'Member',
+      password: 'test-password',
+      email: '',
+      phonenumber: '9000000011',
+      organization: 'Notre Dame Outreach',
+    });
+
+    const userQuery = new Parse.Query(Parse.User);
+    userQuery.equalTo('username', '9000000011');
+    const user = await userQuery.first({ useMasterKey: true });
+
+    const roleQuery = new Parse.Query(Parse.Role);
+    roleQuery.equalTo('name', 'org_notre-dame-outreach_admin');
+    roleQuery.equalTo('users', user);
+    expect(await roleQuery.first({ useMasterKey: true })).toBeUndefined();
+  });
+});

@@ -6,6 +6,93 @@
 const STAFF_ROLE_NAME = 'puente_staff';
 
 const Roles = {
+
+  /**
+   * Creates the admin role for one organization, once.
+   *
+   * Locked exactly like `puente_staff`: no public read, no public write, both
+   * set explicitly so a future edit that opens them has to delete a line saying
+   * otherwise. Membership is grantable only through master-key `addToRole`.
+   */
+  createOrgAdminRole: async function createOrgAdminRole(shortCode, { Parse: injectedParse } = {}) {
+    const ParseSdk = injectedParse || Parse;
+    const name = Roles.orgAdminRoleName(shortCode);
+
+    const query = new ParseSdk.Query(ParseSdk.Role);
+    query.equalTo('name', name);
+    const existing = await query.first({ useMasterKey: true });
+    // Duplicate roles sharing a name make membership non-deterministic, so
+    // some of an organization's admins would silently read as non-admins.
+    if (existing) return existing;
+
+    const acl = new ParseSdk.ACL();
+    acl.setPublicReadAccess(false);
+    acl.setPublicWriteAccess(false);
+
+    const role = new ParseSdk.Role(name, acl);
+    return role.save(null, { useMasterKey: true });
+  },
+
+
+  /**
+   * The Parse role that administers one organization.
+   *
+   * Org-admin status lives in a ROLE, never in `_User.role`, because
+   * `updateUser` takes no auth and can set that string on any account by
+   * objectId — a field anyone can write cannot carry authorization. Roles are
+   * only grantable through `addToRole`, which is master-key only.
+   */
+  orgAdminRoleName: function orgAdminRoleName(shortCode) {
+    const code = typeof shortCode === 'string' ? shortCode.trim() : '';
+    // Without this, a missing shortCode yields "org__admin" — a single shared
+    // bucket that every organization resolves to, making every org admin an
+    // admin of every organization. Fail loudly instead.
+    if (!code) throw new Error('orgAdminRoleName requires a shortCode');
+    return `org_${code}_admin`;
+  },
+
+  /**
+   * Is this user an admin of THIS organization?
+   *
+   * Master key, for the same reason as isStaff: org roles are created with no
+   * public read, so a session-scoped query returns nothing and every admin
+   * would read as non-admin.
+   */
+  isOrgAdmin: async function isOrgAdmin(user, shortCode, { Parse: injectedParse } = {}) {
+    if (!user || !shortCode) return false;
+
+    const ParseSdk = injectedParse || Parse;
+    const query = new ParseSdk.Query(ParseSdk.Role);
+    query.equalTo('name', Roles.orgAdminRoleName(shortCode));
+    // The user clause is the tenancy boundary. Without it this returns true for
+    // anyone as soon as the organization has any admin at all.
+    query.equalTo('users', user);
+
+    return Boolean(await query.first({ useMasterKey: true }));
+  },
+
+  /**
+   * May this request administer ONE named organization?
+   *
+   * Master key, or `puente_staff` (any organization), or that organization's
+   * own admin. Staff is checked before the org role so a staff member needs no
+   * per-organization membership — they override every tenant by design.
+   *
+   * Distinct from `mayAdministerOrganizations` (plural), which asks whether the
+   * caller may create organizations at all. This one is scoped to a tenant.
+   */
+  mayAdministerOrganization: async function mayAdministerOrganization(
+    request, shortCode, dependencies,
+  ) {
+    if (request && request.master) return true;
+
+    const user = request && request.user;
+    if (!user) return false;
+
+    if (await Roles.isStaff(user, dependencies)) return true;
+    return Roles.isOrgAdmin(user, shortCode, dependencies);
+  },
+
   STAFF_ROLE_NAME,
 
   /**
