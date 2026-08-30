@@ -792,3 +792,41 @@ describe('members are matched by RESOLVING their organization string', () => {
     expect(plan.propose.find((p) => p.shortCode === 'alias-match-co')).toBeDefined();
   });
 });
+
+describe('myOrganizationAccess tells a client what it may administer', () => {
+  let adminSession;
+
+  beforeAll(async () => {
+    await cloudFunctions.createAdminRole();
+    await cloudFunctions.createContributorRole();
+    await createOrganization('access-co', []);
+    await cloudFunctions.signup({
+      firstname: 'Access',
+      lastname: 'Admin',
+      password: 'pw',
+      email: '',
+      phonenumber: '9600000000',
+      organization: 'ACCESS-CO',
+    });
+    const session = await Parse.User.logIn('9600000000', 'pw');
+    adminSession = session.getSessionToken();
+  });
+
+  afterAll(async () => { await Parse.User.logOut(); });
+
+  it('reports the organizations this user administers', async () => {
+    const access = await cloudFunctions.myOrganizationAccessAsSession({}, adminSession);
+
+    expect(access.isStaff).toBe(false);
+    expect(access.orgAdminOf).toEqual(['access-co']);
+  });
+
+  it('returns nothing administrable for an unauthenticated caller', async () => {
+    // The screen must fail closed. A guard that throws blanks the page, and one
+    // that assumes access shows a surface whose every action then fails.
+    const access = await cloudFunctions.myOrganizationAccess({});
+
+    expect(access.isStaff).toBe(false);
+    expect(access.orgAdminOf).toEqual([]);
+  });
+});

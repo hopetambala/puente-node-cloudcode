@@ -430,3 +430,40 @@ Parse.Cloud.define('applyOrgAdminSeed', async (request) => {
 
   return { granted, skippedNoMembers: plan.noMembers, alreadyHadAdmin: plan.alreadyHasAdmin };
 });
+
+/**
+ * What the calling session may administer.
+ *
+ * The OrganizationAdmin screen in Manage needs this to decide what to render:
+ * staff see every organization, an org admin sees only their own, and everyone
+ * else is redirected. Deriving it client-side is not possible — org roles carry
+ * no public read, so a browser querying `_Role` gets nothing back and every
+ * admin would render as non-admin.
+ *
+ * Deliberately NOT the security boundary. Every privileged endpoint checks for
+ * itself; this only decides what to draw. It fails closed — an unauthenticated
+ * caller gets an empty list rather than an error, because a guard that throws
+ * blanks the page while one that assumes access renders a surface whose every
+ * action then fails.
+ */
+Parse.Cloud.define('myOrganizationAccess', async (request) => {
+  const { user } = request;
+  if (!user) return { isStaff: false, orgAdminOf: [] };
+
+  const isStaff = await services.roles.isStaff(user);
+
+  // Only the organizations this user actually administers, checked one by one
+  // against the role. Staff are not enumerated across every organization here:
+  // the client is told `isStaff` and treats that as "all", which stays correct
+  // as organizations are added.
+  const organizations = await services.organization.findAll();
+  const orgAdminOf = [];
+  for (const org of organizations) { // eslint-disable-line no-restricted-syntax
+    const shortCode = org.get('shortCode');
+    if (!shortCode) continue; // eslint-disable-line no-continue
+    // eslint-disable-next-line no-await-in-loop
+    if (await services.roles.isOrgAdmin(user, shortCode)) orgAdminOf.push(shortCode);
+  }
+
+  return { isStaff, orgAdminOf };
+});
