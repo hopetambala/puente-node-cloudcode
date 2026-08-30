@@ -74,6 +74,16 @@ const cloudFunctions = {
   queryRoles: () => Parse.Cloud
     .run('queryRoles')
     .then((response) => response),
+  listOrganizationMembers: (params) => Parse.Cloud
+    .run('listOrganizationMembers', params, { useMasterKey: true }),
+  listOrganizationMembersUnprivileged: (params) => Parse.Cloud
+    .run('listOrganizationMembers', params),
+  setOrgAdmin: (params) => Parse.Cloud
+    .run('setOrgAdmin', params, { useMasterKey: true }),
+  setOrgAdminAsSession: (params, sessionToken) => Parse.Cloud
+    .run('setOrgAdmin', params, { sessionToken }),
+  setOrgAdminUnprivileged: (params) => Parse.Cloud
+    .run('setOrgAdmin', params),
   setUserActive: (params) => Parse.Cloud
     .run('setUserActive', params, { useMasterKey: true })
     .then((response) => response),

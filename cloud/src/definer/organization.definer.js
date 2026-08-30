@@ -146,3 +146,123 @@ Parse.Cloud.define('editOrganizationAliases', async (request) => {
   target.set('aliases', aliases);
   return target.save(null, { useMasterKey: true });
 });
+
+/**
+ * Resolves a shortCode to its Organization, or throws.
+ *
+ * Shared by the member endpoints so they cannot disagree about what a
+ * shortCode means.
+ */
+const organizationByShortCode = async (shortCode) => {
+  const organizations = await services.organization.findAll();
+  const org = organizations.find((o) => o.get('shortCode') === shortCode);
+  if (!org) throw new Error(`No organization with shortCode "${shortCode}"`);
+  return org;
+};
+
+/** The objectIds currently in an organization's admin role. */
+const orgAdminIds = async (shortCode) => {
+  const roleQuery = new Parse.Query(Parse.Role);
+  roleQuery.equalTo('name', services.roles.orgAdminRoleName(shortCode));
+  const role = await roleQuery.first({ useMasterKey: true });
+  if (!role) return { role: null, ids: new Set() };
+  const users = await role.getUsers().query().find({ useMasterKey: true });
+  return { role, ids: new Set(users.map((u) => u.id)) };
+};
+
+/**
+ * The members of one organization, with what an admin needs in order to act.
+ *
+ * A member list is tenant data — it carries names and phone numbers — so it is
+ * gated exactly like every other organization-scoped operation.
+ */
+Parse.Cloud.define('listOrganizationMembers', async (request) => {
+  const { shortCode } = request.params;
+  if (!shortCode) throw new Error('listOrganizationMembers: shortCode is required');
+
+  if (!await services.roles.mayAdministerOrganization(request, shortCode)) {
+    throw new Error(
+      'listOrganizationMembers requires the master key, the puente_staff role, '
+      + "or the organization's admin role",
+    );
+  }
+
+  const org = await organizationByShortCode(shortCode);
+  const { ids } = await orgAdminIds(shortCode);
+
+  const userQuery = new Parse.Query(Parse.User);
+  // Members are matched on the CANONICAL name, which signup stores. Matching
+  // the raw alias set here would be wrong: an account's organization field is
+  // normalised at signup, so the canonical name is the only value present.
+  userQuery.equalTo('organization', org.get('name'));
+  // _User is 17 fields and this list needs six.
+  userQuery.select('username', 'firstname', 'lastname', 'role', 'adminVerified', 'deactivated');
+  userQuery.limit(1000);
+  const users = await userQuery.find({ useMasterKey: true });
+
+  return users.map((u) => ({
+    objectId: u.id,
+    username: u.get('username'),
+    firstname: u.get('firstname'),
+    lastname: u.get('lastname'),
+    role: u.get('role'),
+    adminVerified: u.get('adminVerified') === true,
+    // Absent means active. A tri-state here would make the UI guess.
+    deactivated: u.get('deactivated') === true,
+    isOrgAdmin: ids.has(u.id),
+  }));
+});
+
+/**
+ * Promotes or demotes an organization admin.
+ *
+ * Membership of the Parse role IS the authorization, so this endpoint is the
+ * escalation to guard: it is gated on the TARGET's organization, never the
+ * caller's, so an admin of one partner cannot appoint themselves into another.
+ */
+Parse.Cloud.define('setOrgAdmin', async (request) => {
+  const { userId, isAdmin } = request.params;
+  if (!userId) throw new Error('setOrgAdmin: userId is required');
+
+  const target = await new Parse.Query(Parse.User).get(String(userId), { useMasterKey: true });
+
+  const organizations = await services.organization.findAll();
+  let shortCode = null;
+  try {
+    const resolved = services.organization.resolve(
+      { name: target.get('organization') }, organizations,
+    );
+    shortCode = resolved.status === 'resolved' ? resolved.organization.get('shortCode') : null;
+  } catch (error) {
+    shortCode = null;
+  }
+  if (!shortCode) throw new Error("setOrgAdmin: the target's organization does not resolve");
+
+  if (!await services.roles.mayAdministerOrganization(request, shortCode)) {
+    throw new Error(
+      'setOrgAdmin requires the master key, the puente_staff role, or the '
+      + "organization's admin role",
+    );
+  }
+
+  await services.roles.createOrgAdminRole(shortCode);
+  const { role, ids } = await orgAdminIds(shortCode);
+
+  if (isAdmin === false) {
+    // Demoting the last admin orphans the organization: nobody can then
+    // administer it and only a master key recovers it. Staff override.
+    const staff = request.master || await services.roles.isStaff(request.user);
+    if (ids.has(target.id) && ids.size <= 1 && !staff) {
+      throw new Error(
+        'Cannot demote the last admin of an organization. Appoint another admin '
+        + 'first, or ask Puente staff.',
+      );
+    }
+    role.getUsers().remove(target);
+  } else {
+    role.getUsers().add(target);
+  }
+  await role.save(null, { useMasterKey: true });
+
+  return { objectId: target.id, shortCode, isOrgAdmin: isAdmin !== false };
+});
