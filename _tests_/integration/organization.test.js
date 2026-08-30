@@ -581,3 +581,93 @@ describe('the creator of a self-service organization becomes its role admin', ()
     expect(await roleQuery.first({ useMasterKey: true })).toBeUndefined();
   });
 });
+
+describe('organization member management', () => {
+  let adminId;
+  let memberId;
+
+  beforeAll(async () => {
+    await cloudFunctions.createAdminRole();
+    await cloudFunctions.createContributorRole();
+    await createOrganization('members-co', []);
+
+    const admin = await cloudFunctions.signup({
+      firstname: 'Members',
+      lastname: 'Admin',
+      password: 'pw',
+      email: '',
+      phonenumber: '9300000000',
+      organization: 'MEMBERS-CO',
+    });
+    const member = await cloudFunctions.signup({
+      firstname: 'Members',
+      lastname: 'Member',
+      password: 'pw',
+      email: '',
+      phonenumber: '9300000001',
+      organization: 'MEMBERS-CO',
+    });
+    adminId = JSON.parse(JSON.stringify(admin)).objectId;
+    memberId = JSON.parse(JSON.stringify(member)).objectId;
+  });
+
+  it('lists the members of an organization with what an admin needs to act', async () => {
+    const members = await cloudFunctions.listOrganizationMembers({ shortCode: 'members-co' });
+
+    expect(members.length).toEqual(2);
+    const names = members.map((m) => m.username).sort();
+    expect(names).toEqual(['9300000000', '9300000001']);
+    // Enough to decide: who they are, whether they are an admin, whether they
+    // are still active. A list you cannot act from is a report, not a tool.
+    const [first] = members;
+    expect(first).toHaveProperty('isOrgAdmin');
+    expect(first).toHaveProperty('deactivated');
+  });
+
+  it('marks exactly the admin as an org admin', async () => {
+    const members = await cloudFunctions.listOrganizationMembers({ shortCode: 'members-co' });
+
+    const admin = members.find((m) => m.username === '9300000000');
+    const member = members.find((m) => m.username === '9300000001');
+    expect(admin.isOrgAdmin).toBe(true);
+    expect(member.isOrgAdmin).toBe(false);
+  });
+
+  it('refuses an unprivileged listing — member lists are tenant data', async () => {
+    await expect(cloudFunctions.listOrganizationMembersUnprivileged({ shortCode: 'members-co' }))
+      .rejects.toThrow(/master key|staff|admin/i);
+  });
+
+  it('promotes a member to org admin', async () => {
+    await cloudFunctions.setOrgAdmin({ userId: memberId, isAdmin: true });
+
+    const members = await cloudFunctions.listOrganizationMembers({ shortCode: 'members-co' });
+    expect(members.find((m) => m.username === '9300000001').isOrgAdmin).toBe(true);
+  });
+
+  it('demotes an admin once another admin exists', async () => {
+    await cloudFunctions.setOrgAdmin({ userId: adminId, isAdmin: false });
+
+    const members = await cloudFunctions.listOrganizationMembers({ shortCode: 'members-co' });
+    expect(members.find((m) => m.username === '9300000000').isOrgAdmin).toBe(false);
+  });
+
+  it('refuses an ORG ADMIN demoting the last admin, so an organization cannot orphan itself', async () => {
+    // Only 9300000001 is an admin at this point, and they are the caller.
+    // Exercised through a real session: the master key is an override by
+    // design (D13), so asserting this against it would test the wrong path -
+    // the same mistake made once already on setUserActive.
+    const session = await Parse.User.logIn('9300000001', 'pw');
+
+    await expect(cloudFunctions.setOrgAdminAsSession(
+      { userId: memberId, isAdmin: false }, session.getSessionToken(),
+    )).rejects.toThrow(/last admin/i);
+
+    await Parse.User.logOut();
+  });
+
+  it('refuses an unprivileged promotion — this is the escalation to guard', async () => {
+    await expect(cloudFunctions.setOrgAdminUnprivileged({ userId: adminId, isAdmin: true }))
+      .rejects.toThrow(/master key|staff|admin/i);
+  });
+});
