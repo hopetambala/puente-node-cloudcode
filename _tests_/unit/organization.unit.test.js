@@ -57,3 +57,47 @@ describe('Organization.resolve', () => {
     expect(Organization.resolve({}, [org('x', [''])]).status).toEqual('unresolved');
   });
 });
+
+describe('Organization.findAliasClash', () => {
+  const orgNamed = (shortCode, name, aliases) => ({
+    id: `id-${shortCode}`,
+    get: (k) => ({ shortCode, name, aliases }[k]),
+  });
+
+  const WOF = orgNamed('wof', 'World Outreach Fund', ['WOF']);
+  const RAYJON = orgNamed('rayjon', 'Rayjon', ['Rayjon Eye Clinic']);
+  const all = [WOF, RAYJON];
+
+  it('returns null when nothing is claimed', () => {
+    expect(Organization.findAliasClash(['Brand New Org'], all)).toBeNull();
+  });
+
+  it('reports the owner when a candidate matches another org alias', () => {
+    expect(Organization.findAliasClash(['Rayjon Eye Clinic'], all))
+      .toEqual(['Rayjon Eye Clinic', 'rayjon']);
+  });
+
+  it('treats a canonical name as an implicit alias', () => {
+    // resolve() matches on name as well as aliases, so a candidate colliding
+    // with someone's NAME is just as ambiguous as one colliding with an alias.
+    expect(Organization.findAliasClash(['World Outreach Fund'], all))
+      .toEqual(['World Outreach Fund', 'wof']);
+  });
+
+  it('folds case and accents before comparing', () => {
+    expect(Organization.findAliasClash(['  rayjon  '], all)[1]).toEqual('rayjon');
+  });
+
+  it('lets an organization keep its own strings via excludeShortCode', () => {
+    // Editing WOF must not report WOF's existing aliases as collisions with
+    // itself, or no organization could ever be saved twice.
+    expect(Organization.findAliasClash(['WOF'], all, { excludeShortCode: 'wof' })).toBeNull();
+    // ...but another org's alias is still refused during that same edit.
+    expect(Organization.findAliasClash(['Rayjon'], all, { excludeShortCode: 'wof' })[1])
+      .toEqual('rayjon');
+  });
+
+  it('reports the FIRST clash so the message names one concrete string', () => {
+    expect(Organization.findAliasClash(['Rayjon', 'WOF'], all)[0]).toEqual('Rayjon');
+  });
+});

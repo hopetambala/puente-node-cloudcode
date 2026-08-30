@@ -57,6 +57,42 @@ const normalizeOrganizationName = (value) => (
 const ORGANIZATION_FETCH_CAP = 1000;
 
 const Organization = {
+
+  /**
+   * The first candidate string already claimed by an organization.
+   *
+   * Returns `[candidate, ownerShortCode]`, or null when every candidate is
+   * free. Canonical names participate as implicit aliases, because resolve()
+   * matches on name as well as aliases — a candidate colliding with someone's
+   * NAME is exactly as ambiguous as one colliding with an alias, and an
+   * ambiguous string makes a whole tenant's records stop resolving.
+   *
+   * `excludeShortCode` omits one organization from the comparison, so editing
+   * an organization does not report its own existing strings as collisions
+   * with itself.
+   *
+   * Shared by createOrganization and editOrganizationAliases so the two cannot
+   * drift into disagreeing about what counts as taken.
+   */
+  findAliasClash: function findAliasClash(
+    candidates = [], organizations = [], { excludeShortCode } = {},
+  ) {
+    const taken = new Map();
+    organizations
+      .filter((o) => o.get('shortCode') !== excludeShortCode)
+      .forEach((o) => [o.get('name'), ...(o.get('aliases') || [])].forEach(
+        (a) => taken.set(normalizeOrganizationName(a), o.get('shortCode')),
+      ));
+
+    // First match rather than all of them: the error message should name one
+    // concrete string a human can act on.
+    const clash = candidates
+      .map((a) => [a, taken.get(normalizeOrganizationName(a))])
+      .find(([, owner]) => owner);
+
+    return clash || null;
+  },
+
   normalizeOrganizationName,
 
   /** Every organization. See ORGANIZATION_FETCH_CAP for why this is unpaginated. */
