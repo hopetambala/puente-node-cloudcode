@@ -744,3 +744,51 @@ describe('the org-admin seed (D5) plans before it writes', () => {
     expect(plan.propose.find((p) => p.shortCode === 'seed-target')).toBeUndefined();
   });
 });
+
+describe('members are matched by RESOLVING their organization string', () => {
+  // Found by running the real seed plan against production, 2026-08-30:
+  // 31 accounts carry organization "DRMT" and ZERO carry the canonical
+  // "DR Missions". Matching the canonical name only reported a real partner as
+  // having no members, and would have left it with no admin. 17 more accounts
+  // carry "Puente " with a trailing space, which exact containedIn also misses.
+  beforeAll(async () => {
+    await cloudFunctions.createAdminRole();
+    await cloudFunctions.createContributorRole();
+    await cloudFunctions.createOrganization({
+      name: 'Alias Match Co', shortCode: 'alias-match-co', aliases: ['AMC'], active: true,
+    });
+
+    // Written directly, as legacy accounts are: the raw string an old signup
+    // stored, before canonicalisation existed.
+    const legacy = new Parse.User();
+    legacy.set('username', '9500000000');
+    legacy.set('password', 'pw');
+    legacy.set('organization', 'AMC');
+    await legacy.signUp(null, { useMasterKey: true });
+
+    const spaced = new Parse.User();
+    spaced.set('username', '9500000001');
+    spaced.set('password', 'pw');
+    spaced.set('organization', 'Alias Match Co ');
+    await spaced.signUp(null, { useMasterKey: true });
+  });
+
+  it('lists a member whose organization string is an ALIAS', async () => {
+    const members = await cloudFunctions.listOrganizationMembers({ shortCode: 'alias-match-co' });
+
+    expect(members.map((m) => m.username)).toContain('9500000000');
+  });
+
+  it('lists a member whose string differs only by whitespace or case', async () => {
+    const members = await cloudFunctions.listOrganizationMembers({ shortCode: 'alias-match-co' });
+
+    expect(members.map((m) => m.username)).toContain('9500000001');
+  });
+
+  it('does not report the organization as memberless in the seed plan', async () => {
+    const plan = await cloudFunctions.planOrgAdminSeed({});
+
+    expect(plan.noMembers.map((o) => o.shortCode)).not.toContain('alias-match-co');
+    expect(plan.propose.find((p) => p.shortCode === 'alias-match-co')).toBeDefined();
+  });
+});
