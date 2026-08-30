@@ -74,6 +74,10 @@ const cloudFunctions = {
   queryRoles: () => Parse.Cloud
     .run('queryRoles')
     .then((response) => response),
+  myOrganizationAccessAsSession: (params, sessionToken) => Parse.Cloud
+    .run('myOrganizationAccess', params, { sessionToken }),
+  myOrganizationAccess: (params) => Parse.Cloud
+    .run('myOrganizationAccess', params),
   planOrgAdminSeed: (params) => Parse.Cloud
     .run('planOrgAdminSeed', params, { useMasterKey: true }),
   planOrgAdminSeedUnprivileged: (params) => Parse.Cloud
