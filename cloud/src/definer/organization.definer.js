@@ -161,6 +161,70 @@ const organizationByShortCode = async (shortCode) => {
 };
 
 /** The objectIds currently in an organization's admin role. */
+
+/**
+ * Cap on the account read. Truncation is reported, never swallowed: a partial
+ * member list reads exactly like a short one.
+ */
+const USER_FETCH_LIMIT = 1000;
+
+/**
+ * Every account grouped by the organization its stored string RESOLVES to.
+ *
+ * Matching the canonical name is WRONG and was a real bug: production carries
+ * 31 accounts whose organization is "DRMT" and none whose organization is
+ * "DR Missions", so a real partner reported as having no members and would have
+ * been left with no admin. Exact `containedIn` on the alias set is not enough
+ * either — 17 accounts carry "Puente " with a trailing space.
+ *
+ * Only the resolver handles all of it, because it folds case, accents and
+ * whitespace and knows the alias set. This is the same
+ * one-organization-several-strings rule that governs record scoping.
+ *
+ * One query for every organization, ascending by createdAt — so the first
+ * account in each group is that organization's earliest, which is exactly what
+ * the seed plan needs.
+ */
+const accountsByOrganization = async (organizations) => {
+  const userQuery = new Parse.Query(Parse.User);
+  userQuery.select(
+    'username', 'firstname', 'lastname', 'role',
+    'adminVerified', 'deactivated', 'organization', 'createdAt',
+  );
+  userQuery.limit(USER_FETCH_LIMIT);
+  userQuery.ascending('createdAt');
+  const users = await userQuery.find({ useMasterKey: true });
+
+  const byShortCode = new Map();
+  users.forEach((user) => {
+    let shortCode = null;
+    try {
+      const resolved = services.organization.resolve(
+        { name: user.get('organization') }, organizations,
+      );
+      shortCode = resolved.status === 'resolved' ? resolved.organization.get('shortCode') : null;
+    } catch (error) {
+      // An ambiguous alias throws by design. That account belongs to no
+      // organization we can name, so it is left out rather than guessed at.
+      shortCode = null;
+    }
+    if (!shortCode) return;
+    if (!byShortCode.has(shortCode)) byShortCode.set(shortCode, []);
+    byShortCode.get(shortCode).push(user);
+  });
+
+  if (users.length === USER_FETCH_LIMIT) {
+    // Same treatment findAll gives its own cap: a truncated read means the
+    // member lists and the seed plan are computed against an incomplete set,
+    // and a partial answer reads exactly like a complete one.
+    require('../module').Error.logError( // eslint-disable-line global-require
+      `accountsByOrganization hit the ${USER_FETCH_LIMIT}-account cap. Member `
+      + 'lists and the org-admin seed plan are now against an incomplete set.',
+    );
+  }
+
+  return { byShortCode, truncated: users.length === USER_FETCH_LIMIT };
+};
 const orgAdminIds = async (shortCode) => {
   const roleQuery = new Parse.Query(Parse.Role);
   roleQuery.equalTo('name', services.roles.orgAdminRoleName(shortCode));
@@ -187,18 +251,12 @@ Parse.Cloud.define('listOrganizationMembers', async (request) => {
     );
   }
 
-  const org = await organizationByShortCode(shortCode);
+  await organizationByShortCode(shortCode);
   const { ids } = await orgAdminIds(shortCode);
 
-  const userQuery = new Parse.Query(Parse.User);
-  // Members are matched on the CANONICAL name, which signup stores. Matching
-  // the raw alias set here would be wrong: an account's organization field is
-  // normalised at signup, so the canonical name is the only value present.
-  userQuery.equalTo('organization', org.get('name'));
-  // _User is 17 fields and this list needs six.
-  userQuery.select('username', 'firstname', 'lastname', 'role', 'adminVerified', 'deactivated');
-  userQuery.limit(1000);
-  const users = await userQuery.find({ useMasterKey: true });
+  const organizations = await services.organization.findAll();
+  const { byShortCode } = await accountsByOrganization(organizations);
+  const users = byShortCode.get(shortCode) || [];
 
   return users.map((u) => ({
     objectId: u.id,
@@ -282,6 +340,8 @@ Parse.Cloud.define('setOrgAdmin', async (request) => {
  */
 const buildOrgAdminSeedPlan = async () => {
   const organizations = await services.organization.findAll();
+  // One account read for every organization, rather than one per organization.
+  const accounts = await accountsByOrganization(organizations);
   const propose = [];
   const alreadyHasAdmin = [];
   const noMembers = [];
@@ -299,13 +359,9 @@ const buildOrgAdminSeedPlan = async () => {
       continue; // eslint-disable-line no-continue
     }
 
-    const userQuery = new Parse.Query(Parse.User);
-    userQuery.equalTo('organization', org.get('name'));
-    userQuery.select('username', 'firstname', 'lastname', 'createdAt');
-    // Earliest account first — that IS the rule being applied.
-    userQuery.ascending('createdAt');
-    // eslint-disable-next-line no-await-in-loop
-    const earliest = await userQuery.first({ useMasterKey: true });
+    // accountsByOrganization already sorted ascending by createdAt, so the
+    // first entry IS the organization's earliest account - the D5 rule.
+    const [earliest] = accounts.byShortCode.get(shortCode) || [];
 
     if (!earliest) {
       noMembers.push({ shortCode, name: org.get('name') });
