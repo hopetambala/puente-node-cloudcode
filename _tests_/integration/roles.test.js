@@ -1,3 +1,4 @@
+const { Parse } = require('parse/node');
 const { cloudFunctions } = require('../run-cloud');
 
 // These tests are about ROLE assignment, so their fixture organization has to
@@ -254,5 +255,41 @@ describe('role testing', () => {
     ];
 
     return removeParams.map((user) => cloudFunctions.deleteUser(user));
+  });
+});
+
+describe('the legacy admin role must not be publicly writable', () => {
+  it('createAdminRole does not grant public write', async () => {
+    // VERIFIED IN PRODUCTION 2026-08-30: the live `admin` role carries
+    // ACL {"*":{"read":true,"write":true}}. Anyone holding the app id and REST
+    // key can add themselves to it by writing the role object directly,
+    // bypassing addToRole entirely. And signup sets
+    // setRoleWriteAccess('admin', true) on EVERY user record, so membership of
+    // this role grants write access to every account in the system.
+    const role = await cloudFunctions.createAdminRole();
+    const fresh = await new Parse.Query(Parse.Role).get(role.id, { useMasterKey: true });
+
+    expect(fresh.getACL().getPublicWriteAccess()).toBe(false);
+  });
+
+  it('lockLegacyRoleAcls removes public write from an existing role', async () => {
+    // createAdminRole is idempotent, so fixing its code does not repair a role
+    // that already exists. Production needs a remediation it can run.
+    const role = await new Parse.Query(Parse.Role).first({ useMasterKey: true });
+    const acl = new Parse.ACL();
+    acl.setPublicReadAccess(true);
+    acl.setPublicWriteAccess(true);
+    role.setACL(acl);
+    await role.save(null, { useMasterKey: true });
+
+    await cloudFunctions.lockLegacyRoleAcls({});
+
+    const fresh = await new Parse.Query(Parse.Role).get(role.id, { useMasterKey: true });
+    expect(fresh.getACL().getPublicWriteAccess()).toBe(false);
+  });
+
+  it('lockLegacyRoleAcls is master-key only', async () => {
+    await expect(cloudFunctions.lockLegacyRoleAclsUnprivileged({}))
+      .rejects.toThrow(/master key/i);
   });
 });

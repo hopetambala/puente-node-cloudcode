@@ -99,8 +99,8 @@ const Roles = {
    * Is this user Puente-internal staff?
    *
    * Runs under the master key on purpose. `puente_staff` is created with no
-   * public read (unlike the legacy `admin` role, which `createAdminRole` below
-   * makes publicly WRITABLE — see the note there). A session-scoped query would
+   * public read (unlike the three legacy roles, which are publicly READABLE by
+   * design). A session-scoped query would
    * therefore find nothing and every staff member would read as non-staff: a
    * permission failure indistinguishable from a correct denial.
    *
@@ -127,10 +127,12 @@ const Roles = {
    * Creates the `puente_staff` role, once.
    *
    * Deliberately does NOT follow the pattern of the three legacy roles below.
-   * `createAdminRole` sets `setPublicWriteAccess(true)` on the role object,
-   * which means anyone holding the JavaScript key that ships in every client
-   * bundle can add themselves to `admin`. This role gates organization
-   * creation, so the same mistake here would make the gate theatre.
+   * `createAdminRole` USED to set `setPublicWriteAccess(true)` on the role
+   * object, so anyone holding the JavaScript key that ships in every client
+   * bundle could add themselves to `admin`. Fixed here — but the role created
+   * in production in 2020 still carries it until `lockLegacyRoleAcls` runs.
+   * This role gates organization creation, so the same mistake would make the
+   * gate theatre.
    *
    * The lock is written explicitly rather than left to Parse's defaults, so a
    * future edit that opens it up has to delete a line that says otherwise.
@@ -190,7 +192,13 @@ const Roles = {
             console.log('Admin Does Not Exist'); // eslint-disable-line
             const acl = new Parse.ACL();
             acl.setPublicReadAccess(true);
-            acl.setPublicWriteAccess(true);
+            // NOT publicly writable. This previously granted public write, and
+            // the live production role still carries it (verified 2026-08-30):
+            // anyone with the app id and REST key could add themselves to
+            // `admin` by writing the role object directly, bypassing addToRole.
+            // signup sets setRoleWriteAccess('admin', true) on EVERY user
+            // record, so that membership grants write access to every account.
+            acl.setPublicWriteAccess(false);
             acl.setRoleWriteAccess('manager', true);
             acl.setRoleWriteAccess('contributor', true);
             acl.setRoleReadAccess('manager', true);

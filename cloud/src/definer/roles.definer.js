@@ -89,3 +89,36 @@ Parse.Cloud.define('addToRole', (request) => new Promise((resolve, reject) => {
     reject(error);
   });
 }));
+
+/**
+ * Removes public WRITE from every existing role.
+ *
+ * createAdminRole is idempotent, so fixing its code does not repair a role that
+ * already exists — and the production `admin` role, created 2020-11-05, carries
+ * ACL {"*":{"read":true,"write":true}}. This is the remediation that repairs it.
+ *
+ * Public READ is left alone. The three legacy roles are read-publicly by design
+ * and nothing depends on hiding them; write is the escalation.
+ *
+ * Master-key only, obviously: an endpoint that rewrites role ACLs is exactly
+ * the thing an attacker would reach for.
+ */
+Parse.Cloud.define('lockLegacyRoleAcls', async (request) => {
+  if (!request.master) {
+    throw new Error('lockLegacyRoleAcls requires the master key');
+  }
+
+  const roles = await new Parse.Query(Parse.Role).find({ useMasterKey: true });
+  const repaired = [];
+
+  await Promise.all(roles.map(async (role) => {
+    const acl = role.getACL();
+    if (!acl || !acl.getPublicWriteAccess()) return;
+    acl.setPublicWriteAccess(false);
+    role.setACL(acl);
+    await role.save(null, { useMasterKey: true });
+    repaired.push(role.get('name'));
+  }));
+
+  return { repaired, checked: roles.length };
+});
