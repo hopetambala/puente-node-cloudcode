@@ -1,3 +1,4 @@
+const { Parse } = require('parse/node');
 const { cloudFunctions } = require('../run-cloud');
 
 // `got` is a real Organization here so that "first user of an organization
@@ -167,24 +168,36 @@ describe('role testing', () => {
 });
 
 describe('signup must not mint administrators from unrecognised organizations', () => {
-  it('does not grant administrator for an organization it cannot resolve', async () => {
-    // signup counted users matching the typed string EXACTLY, so any string no
-    // account already held produced count 0 -> role administrator, adminVerified
-    // true, unauthenticated. Typing "puente" where records say "Puente" was
-    // enough. Collect's signup screen is still free text, so this is reachable
-    // from a phone by anyone.
+  it('does not grant administrator over an organization by typing a variant of its name', async () => {
+    // POLICY CHANGE 2026-08-30. This test used to assert that ANY unresolvable
+    // organization was refused administrator. Self-service creation
+    // deliberately reverses that for CLEARLY DISTINCT names - see
+    // puente-react-nextjs-platform/docs/self-service-organizations.md.
+    //
+    // The security property that must survive, and is asserted here, is the
+    // narrower and more important one: a string CLOSE to an existing
+    // organization must never mint a second tenant or hand anyone admin near
+    // it. That is what protects existing partners' data, and it is now
+    // enforced by the fuzzy match rather than by refusing everything.
+    //
+    // 'Game of Thronesss' is one edit from the fixture organization's alias.
     const result = await cloudFunctions.signup({
       firstname: 'Arya',
       lastname: 'Stark',
       password: 'valarmorghulis',
       email: 'nobody@example.org',
-      organization: 'House of Black and White',
+      organization: 'Game of Thronesss',
       restParams: { runMessaging: false },
     });
     const v = JSON.parse(JSON.stringify(result));
 
     expect(v.role).toEqual('contributor');
     expect(v.adminVerified).toEqual(false);
+
+    // And no second tenant was created for the typo.
+    const q = new Parse.Query('Organization');
+    q.equalTo('name', 'Game of Thronesss');
+    expect(await q.first({ useMasterKey: true })).toBeUndefined();
   });
 
   it('stores the canonical name when the user typed a known alias', async () => {
