@@ -160,7 +160,9 @@ describe('role testing', () => {
       roleName: 'manager',
     };
 
-    return cloudFunctions.addToRole(addParams).then((result) => {
+    // addToRole is master-key only since org-admin became a Parse role; the
+    // assignment behaviour asserted below is unchanged.
+    return cloudFunctions.addToRolePrivileged(addParams).then((result) => {
       const jsonString = JSON.stringify(result);
       const jsonValues = JSON.parse(jsonString);
 
@@ -174,21 +176,28 @@ describe('role testing', () => {
     });
   });
 
+  it('refuses ANY unprivileged call, not just puente_staff', async () => {
+    // Once org-admin is a Parse role, a name-by-name blocklist is the wrong
+    // shape: org_<shortCode>_admin would be grantable by anyone holding the
+    // app id. addToRole writes every change under the master key and has zero
+    // callers in Manage or Collect, so it is closed to unprivileged callers
+    // entirely.
+    await expect(cloudFunctions.addToRole({
+      userID: contribRoleID,
+      roleName: 'manager',
+    })).rejects.toThrow(/master key/i);
+  });
+
   it('refuses to grant puente_staff, which would be a self-service escalation', async () => {
-    // addToRole takes no auth and does everything under the master key, so any
-    // unauthenticated caller holding the app id can name a role and join it.
-    // That is survivable for the three legacy roles, which are inert and gate
-    // nothing. It is NOT survivable for puente_staff, which gates
-    // createOrganization: it would hand out the privilege the gate exists to
-    // withhold, and the role's locked ACL cannot stop it because this function
-    // writes with the master key.
-    //
-    // The only legitimate grant path is the master-key seed script. There is
-    // deliberately no self-service promotion (see the billing roadmap, D3).
+    // Kept as a named case even though the master-key gate above already covers
+    // it. puente_staff is the privilege whose escalation was demonstrated
+    // against a live Parse server before it was closed; a regression here is
+    // the one that matters most, and a test naming it explicitly is what makes
+    // that visible to whoever breaks it.
     await expect(cloudFunctions.addToRole({
       userID: contribRoleID,
       roleName: 'puente_staff',
-    })).rejects.toThrow(/puente_staff/i);
+    })).rejects.toThrow(/master key/i);
   });
 
   it('should return both users now (both verified)', async () => {

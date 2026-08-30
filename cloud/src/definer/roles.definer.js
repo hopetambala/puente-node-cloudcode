@@ -45,24 +45,26 @@ Parse.Cloud.define('isStaff', async (request) => ({
 }));
 
 Parse.Cloud.define('addToRole', (request) => new Promise((resolve, reject) => {
-  // This function takes NO auth and does every write under the master key, so
-  // any unauthenticated caller holding the app id can name a role and join it.
-  // That is survivable for the three legacy roles, which are inert and gate
-  // nothing (see the billing scope §7.1). It is not survivable for
-  // `puente_staff`, which gates createOrganization — granting it here would
-  // hand out exactly the privilege that gate exists to withhold, and the role's
-  // locked ACL cannot prevent it because this write uses the master key.
+  // Master-key only. This function performs every write under the master key,
+  // so an unauthenticated caller could otherwise name any role and join it.
   //
-  // Staff membership has one legitimate path: the master-key seed script. There
-  // is deliberately no self-service promotion.
+  // It was previously open, with `puente_staff` blocked by name. A blocklist is
+  // the wrong shape once org-admin is itself a Parse role: `org_<shortCode>`
+  // admin membership decides who can administer a partner organization, and a
+  // name-by-name deny list has to be extended every time a role is added — the
+  // one that gets forgotten is the hole.
   //
-  // The wider problem — that addToRole is unauthenticated at all — is
-  // pre-existing and unaddressed here on purpose; it deserves its own change
-  // rather than being folded into this one.
-  if (String(request.params.roleName) === services.roles.STAFF_ROLE_NAME) {
+  // Closing it entirely is safe: there are zero callers in Manage and Collect
+  // (verified across both repos), so the only consumers are the integration
+  // suite and any master-key script.
+  //
+  // Role membership is granted deliberately, by something holding the master
+  // key. There is no self-service promotion anywhere in this system.
+  if (!request.master) {
     reject(new Error(
-      'addToRole cannot grant puente_staff. Staff membership is seeded with the '
-      + 'master key, never through an unauthenticated endpoint.',
+      'addToRole requires the master key. Role membership decides who can '
+      + 'administer an organization, so it is never grantable by an '
+      + 'unauthenticated caller.',
     ));
     return;
   }
