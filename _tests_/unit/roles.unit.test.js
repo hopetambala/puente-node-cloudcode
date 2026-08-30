@@ -195,3 +195,144 @@ describe('Roles.isStaff', () => {
     expect(calls.first[0]).toEqual({ useMasterKey: true });
   });
 });
+
+/**
+ * Stand-in that answers per role name, so a user can be an org admin without
+ * being staff and vice versa — the distinction the whole model rests on.
+ */
+const makeRoleParse = (memberOf = []) => {
+  const calls = { equalTo: [], first: [] };
+
+  function Query() { this.clauses = {}; }
+  Query.prototype.equalTo = function equalTo(key, value) {
+    this.clauses[key] = value;
+    calls.equalTo.push([key, value]);
+    return this;
+  };
+  Query.prototype.first = function first(options) {
+    calls.first.push(options);
+    const wanted = this.clauses.name;
+    return Promise.resolve(memberOf.includes(wanted) ? { id: `role-${wanted}` } : undefined);
+  };
+
+  return { Parse: { Query, Role: 'RoleClass' }, calls };
+};
+
+describe('Roles.orgAdminRoleName', () => {
+  it('derives a stable role name from the shortCode', () => {
+    expect(Roles.orgAdminRoleName('wof')).toEqual('org_wof_admin');
+  });
+
+  it('refuses a missing shortCode rather than building "org__admin"', () => {
+    // A role named org__admin would be a shared bucket every organization
+    // resolves to — every org admin would administer every organization.
+    expect(() => Roles.orgAdminRoleName('')).toThrow();
+    expect(() => Roles.orgAdminRoleName(undefined)).toThrow();
+  });
+});
+
+describe('Roles.isOrgAdmin', () => {
+  const user = { id: 'user-1' };
+
+  it('is true for a member of that organization admin role', async () => {
+    const { Parse } = makeRoleParse(['org_wof_admin']);
+
+    await expect(Roles.isOrgAdmin(user, 'wof', { Parse })).resolves.toBe(true);
+  });
+
+  it('is false for an admin of a DIFFERENT organization', async () => {
+    // The tenancy boundary. Rayjon's admin must not administer WOF.
+    const { Parse } = makeRoleParse(['org_rayjon_admin']);
+
+    await expect(Roles.isOrgAdmin(user, 'wof', { Parse })).resolves.toBe(false);
+  });
+
+  it('is false for a missing user, without querying', async () => {
+    const { Parse, calls } = makeRoleParse(['org_wof_admin']);
+
+    await expect(Roles.isOrgAdmin(undefined, 'wof', { Parse })).resolves.toBe(false);
+    expect(calls.first).toHaveLength(0);
+  });
+
+  it('queries with the master key, because org roles are not publicly readable', async () => {
+    const { Parse, calls } = makeRoleParse(['org_wof_admin']);
+
+    await Roles.isOrgAdmin(user, 'wof', { Parse });
+
+    expect(calls.first[0]).toEqual({ useMasterKey: true });
+  });
+});
+
+describe('Roles.mayAdministerOrganization', () => {
+  const user = { id: 'user-1' };
+
+  it('allows the master key without any lookup', async () => {
+    const { Parse, calls } = makeRoleParse([]);
+
+    await expect(Roles.mayAdministerOrganization({ master: true }, 'wof', { Parse }))
+      .resolves.toBe(true);
+    expect(calls.first).toHaveLength(0);
+  });
+
+  it('allows puente_staff on any organization', async () => {
+    const { Parse } = makeRoleParse(['puente_staff']);
+
+    await expect(Roles.mayAdministerOrganization({ master: false, user }, 'wof', { Parse }))
+      .resolves.toBe(true);
+    await expect(Roles.mayAdministerOrganization({ master: false, user }, 'rayjon', { Parse }))
+      .resolves.toBe(true);
+  });
+
+  it('allows an org admin on their OWN organization only', async () => {
+    const { Parse } = makeRoleParse(['org_wof_admin']);
+
+    await expect(Roles.mayAdministerOrganization({ master: false, user }, 'wof', { Parse }))
+      .resolves.toBe(true);
+    await expect(Roles.mayAdministerOrganization({ master: false, user }, 'rayjon', { Parse }))
+      .resolves.toBe(false);
+  });
+
+  it('refuses someone with no role at all', async () => {
+    const { Parse } = makeRoleParse([]);
+
+    await expect(Roles.mayAdministerOrganization({ master: false, user }, 'wof', { Parse }))
+      .resolves.toBe(false);
+  });
+
+  it('refuses an unauthenticated request', async () => {
+    const { Parse } = makeRoleParse(['puente_staff']);
+
+    await expect(Roles.mayAdministerOrganization({ master: false }, 'wof', { Parse }))
+      .resolves.toBe(false);
+  });
+});
+
+describe('Roles.createOrgAdminRole', () => {
+  it('locks the role: no public read, no public write, explicitly', async () => {
+    const { Parse, calls } = makeCreateParse(undefined);
+
+    await Roles.createOrgAdminRole('wof', { Parse });
+
+    const [role] = calls.created;
+    expect(role.name).toEqual('org_wof_admin');
+    expect(role.acl.getPublicWriteAccess()).toBe(false);
+    expect(role.acl.getPublicReadAccess()).toBe(false);
+    expect(calls.aclSets).toEqual(expect.arrayContaining([['read', false], ['write', false]]));
+  });
+
+  it('saves with the master key', async () => {
+    const { Parse, calls } = makeCreateParse(undefined);
+
+    await Roles.createOrgAdminRole('wof', { Parse });
+
+    expect(calls.saved[0].options).toEqual({ useMasterKey: true });
+  });
+
+  it('is idempotent, so a second organization save cannot duplicate the role', async () => {
+    const existing = { id: 'role-existing' };
+    const { Parse, calls } = makeCreateParse(existing);
+
+    await expect(Roles.createOrgAdminRole('wof', { Parse })).resolves.toBe(existing);
+    expect(calls.created).toHaveLength(0);
+  });
+});

@@ -42,6 +42,9 @@ Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
   }
 
   let userRole = '';
+  // Set when signup CREATES an organization, so the creator can be added to
+  // that organization's admin role after the account exists.
+  let newOrgShortCode = null;
 
   /**
    * Resolves the typed organization to a canonical `Organization`, or null.
@@ -132,6 +135,12 @@ Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
       created.setACL(orgAcl);
       organizationRecord = await created.save(null, { useMasterKey: true });
 
+      // The Parse role is what the server actually checks. The _User.role field
+      // is kept for the existing UI and reporting, but it is NOT authorization:
+      // updateUser takes no auth and can set that string on any account.
+      await services.roles.createOrgAdminRole(organizationRecord.get('shortCode'));
+      newOrgShortCode = organizationRecord.get('shortCode');
+
       user.set('organization', organizationRecord.get('name'));
       user.set('role', 'administrator');
       user.set('adminVerified', true);
@@ -183,7 +192,20 @@ Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
       acl.setWriteAccess(result, true);
       acl.setRoleWriteAccess('admin', true);
       result.setACL(acl);
-      result.save(null, { useMasterKey: true }).then((aclUser) => {
+      result.save(null, { useMasterKey: true }).then(async (aclUser) => {
+        // A self-created organization's admin role exists only for the creator
+        // at this point. Membership is what the server checks; the legacy role
+        // assignment below is unrelated and kept as-is.
+        if (newOrgShortCode) {
+          const orgRoleQuery = new Parse.Query(Parse.Role);
+          orgRoleQuery.equalTo('name', services.roles.orgAdminRoleName(newOrgShortCode));
+          const orgRole = await orgRoleQuery.first({ useMasterKey: true });
+          if (orgRole) {
+            orgRole.getUsers().add(aclUser);
+            await orgRole.save(null, { useMasterKey: true });
+          }
+        }
+
         const roleQuery = new Parse.Query(Parse.Role);
         roleQuery.equalTo('name', userRole);
 
