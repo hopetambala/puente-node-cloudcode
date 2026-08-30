@@ -101,3 +101,77 @@ describe('Organization.findAliasClash', () => {
     expect(Organization.findAliasClash(['Rayjon', 'WOF'], all)[0]).toEqual('Rayjon');
   });
 });
+
+describe('Organization.findSimilarOrganization', () => {
+  const orgNamed2 = (shortCode, name, aliases) => ({
+    id: `id-${shortCode}`,
+    get: (k) => ({ shortCode, name, aliases }[k]),
+  });
+
+  const PUENTE = orgNamed2('puente', 'Puente', ['Puente DR']);
+  const WOF = orgNamed2('wof', 'World Outreach Fund', ['WOF']);
+  const all = [PUENTE, WOF];
+
+  it('allows a clearly distinct name — this is the create path', () => {
+    expect(Organization.findSimilarOrganization('Timmy Global Health', all)).toBeNull();
+  });
+
+  it('allows an exact normalized match, because that is a JOIN not a creation', () => {
+    // resolve() owns exact matching. If findSimilar also refused here, an
+    // ordinary signup into an existing organization would be blocked.
+    expect(Organization.findSimilarOrganization('puente', all)).toBeNull();
+    expect(Organization.findSimilarOrganization('  PUENTE ', all)).toBeNull();
+  });
+
+  it('refuses a one-character typo, which would otherwise fork the tenant', () => {
+    // The whole reason self-service creation is safe. "Puentte" must not
+    // become a second Puente with its own invisible records.
+    const hit = Organization.findSimilarOrganization('Puentte', all);
+
+    expect(hit).not.toBeNull();
+    expect(hit.organization.get('shortCode')).toEqual('puente');
+  });
+
+  it('refuses by containment, which edit distance would wave through', () => {
+    // "Puente Colorado" is 9 edits from "Puente" — distance alone allows it.
+    // Containment is what catches this class, and it is the common real case.
+    const hit = Organization.findSimilarOrganization('Puente Colorado', all);
+
+    expect(hit).not.toBeNull();
+    expect(hit.organization.get('shortCode')).toEqual('puente');
+  });
+
+  it('compares against aliases, not only the canonical name', () => {
+    const hit = Organization.findSimilarOrganization('WOFF', all);
+
+    expect(hit).not.toBeNull();
+    expect(hit.organization.get('shortCode')).toEqual('wof');
+  });
+
+  it('folds accents, so an accented near-duplicate is still caught', () => {
+    const hit = Organization.findSimilarOrganization('Puénte Colorado', all);
+
+    expect(hit).not.toBeNull();
+  });
+
+  it('names the string it matched, so the refusal can tell a human what to do', () => {
+    const hit = Organization.findSimilarOrganization('Puentte', all);
+
+    expect(hit.matched).toBeDefined();
+    expect(typeof hit.reason).toEqual('string');
+  });
+
+  it('does not let a very short alias refuse everything by containment', () => {
+    // A two-character alias would otherwise be a substring of half the names
+    // anyone could type, and no organization could ever be created again.
+    const shortAlias = [orgNamed2('dr', 'DR', ['DR'])];
+
+    expect(Organization.findSimilarOrganization('Dominican Republic Mission', shortAlias))
+      .toBeNull();
+  });
+
+  it('treats a missing name as nothing to compare', () => {
+    expect(Organization.findSimilarOrganization(undefined, all)).toBeNull();
+    expect(Organization.findSimilarOrganization('', all)).toBeNull();
+  });
+});

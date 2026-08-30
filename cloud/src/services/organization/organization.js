@@ -56,7 +56,101 @@ const normalizeOrganizationName = (value) => (
  */
 const ORGANIZATION_FETCH_CAP = 1000;
 
+
+/**
+ * How close a proposed organization name may be to an existing one before a
+ * human has to look at it. Tunable in one place on purpose — see
+ * findSimilarOrganization for why the bias is toward refusing.
+ */
+const SIMILARITY_MAX_DISTANCE = 2;
+
+/** Containment is skipped below this length; see findSimilarOrganization. */
+const MIN_CONTAINMENT_LENGTH = 3;
+
+/** Standard edit distance. Organizations number in dozens, so the plain DP is fine. */
+function levenshtein(a, b) {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+
+  let previous = Array.from({ length: b.length + 1 }, (unused, i) => i);
+  for (let i = 1; i <= a.length; i += 1) {
+    const current = [i];
+    for (let j = 1; j <= b.length; j += 1) {
+      const substitution = previous[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1);
+      current[j] = Math.min(current[j - 1] + 1, previous[j] + 1, substitution);
+    }
+    previous = current;
+  }
+  return previous[b.length];
+}
 const Organization = {
+
+  /**
+   * The organization a proposed new name is too close to, or null if the name
+   * is clearly distinct and safe to create.
+   *
+   * This function is the entire safety argument for self-service organization
+   * creation. cloudcode #620 removed first-user-becomes-administrator because
+   * ANY unused string minted an admin; self-service puts that back, and what
+   * makes it safe is that a human still approves the ambiguous cases — this is
+   * what decides which cases those are. See
+   * puente-react-nextjs-platform/docs/self-service-organizations.md §1 and §3.
+   *
+   * Three rules, in order:
+   *
+   *   exact normalized match  -> null. That is a JOIN; resolve() owns it, and
+   *                              refusing here would block ordinary signups.
+   *   containment either way  -> too close. Catches "Puente Colorado" vs
+   *                              "Puente", which edit distance waves through.
+   *   distance <= 2           -> too close. Catches "Puentte".
+   *
+   * Deliberately tighter than edit distance alone. The asymmetry is the point:
+   * a false refusal costs one email to staff, while a false accept forks a
+   * tenant permanently and silently. Production has already shown that cost —
+   * DR Missions carried 11 rows under its canonical name and 611 under "DRMT".
+   *
+   * Returns `{ organization, matched, reason }` so the refusal can name the
+   * concrete string a human needs to act on.
+   */
+  findSimilarOrganization: function findSimilarOrganization(name, organizations = []) {
+    const wanted = normalizeOrganizationName(name);
+    if (wanted === null || wanted === '') return null;
+
+    const candidates = [];
+    organizations.forEach((org) => {
+      [org.get('name'), ...(org.get('aliases') || [])].forEach((raw) => {
+        const normalized = normalizeOrganizationName(raw);
+        if (normalized) candidates.push({ org, raw, normalized });
+      });
+    });
+
+    // Checked across ALL organizations before any similarity test, so an exact
+    // match on one org is never overridden by a near match on another.
+    if (candidates.some((c) => c.normalized === wanted)) return null;
+
+    const contained = candidates.find((c) => {
+      // A one- or two-character alias is a substring of half of everything
+      // anyone could type; without this floor no organization could ever be
+      // created again.
+      const shorter = Math.min(c.normalized.length, wanted.length);
+      if (shorter < MIN_CONTAINMENT_LENGTH) return false;
+      return c.normalized.includes(wanted) || wanted.includes(c.normalized);
+    });
+    if (contained) {
+      return { organization: contained.org, matched: contained.raw, reason: 'containment' };
+    }
+
+    const near = candidates.find(
+      (c) => levenshtein(c.normalized, wanted) <= SIMILARITY_MAX_DISTANCE,
+    );
+    if (near) {
+      return { organization: near.org, matched: near.raw, reason: 'distance' };
+    }
+
+    return null;
+  },
+
 
   /**
    * The first candidate string already claimed by an organization.

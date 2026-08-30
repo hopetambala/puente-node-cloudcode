@@ -453,3 +453,81 @@ describe('editOrganizationAliases', () => {
     })).rejects.toThrow(/no-such-org/i);
   });
 });
+
+describe('self-service organization creation at signup', () => {
+  const signUp = (phonenumber, org) => cloudFunctions.signup({
+    firstname: 'Self',
+    lastname: 'Service',
+    password: 'test-password',
+    email: '',
+    phonenumber,
+    organization: org,
+  });
+
+  const userFor = async (phonenumber) => {
+    const q = new Parse.Query(Parse.User);
+    q.equalTo('username', phonenumber);
+    return q.first({ useMasterKey: true });
+  };
+
+  beforeAll(async () => {
+    // signup does role.getUsers() with no null check, so the roles it assigns
+    // must exist or it throws before any organization logic runs.
+    await cloudFunctions.createAdminRole();
+    await cloudFunctions.createContributorRole();
+    await createOrganization('selfserve-existing', ['Selfserve Existing Co']);
+  });
+
+  it('creates the organization and makes the signer-up its administrator', async () => {
+    await signUp('9000000001', 'Timmy Global Health');
+
+    const resolved = await cloudFunctions.resolveOrganization({ name: 'Timmy Global Health' });
+    expect(resolved.status).toEqual('resolved');
+
+    const user = await userFor('9000000001');
+    expect(user.get('role')).toEqual('administrator');
+    expect(user.get('adminVerified')).toEqual(true);
+    // The canonical name is stored, never the raw typed string.
+    expect(user.get('organization')).toEqual('Timmy Global Health');
+  });
+
+  it('gives a self-created organization plan "no-charge", so nobody is billed by accident', async () => {
+    await signUp('9000000002', 'Hanwash Initiative');
+
+    const q = new Parse.Query('Organization');
+    q.equalTo('name', 'Hanwash Initiative');
+    const org = await q.first({ useMasterKey: true });
+
+    expect(org).toBeDefined();
+    expect(org.get('plan')).toEqual('no-charge');
+    expect(org.get('active')).toEqual(true);
+  });
+
+  it('REFUSES a near-duplicate, so a typo cannot fork a tenant', async () => {
+    // The whole safety argument. "SELFSERVE-EXISTING" is the canonical name of
+    // the fixture org; one extra character must not mint a second one.
+    await signUp('9000000003', 'SELFSERVE-EXISTINGG');
+
+    const q = new Parse.Query('Organization');
+    q.equalTo('name', 'SELFSERVE-EXISTINGG');
+    expect(await q.first({ useMasterKey: true })).toBeUndefined();
+  });
+
+  it('still creates the ACCOUNT when creation is refused — a signup is never rejected', async () => {
+    // An unidentified organization is an ops problem; a person who cannot make
+    // an account is a field problem.
+    const user = await userFor('9000000003');
+
+    expect(user).toBeDefined();
+    expect(user.get('role')).toEqual('contributor');
+    expect(user.get('adminVerified')).toEqual(false);
+  });
+
+  it('joins an existing organization rather than creating a second one', async () => {
+    await signUp('9000000004', 'Selfserve Existing Co');
+
+    const user = await userFor('9000000004');
+    // The alias resolves to the canonical name, and the account joins.
+    expect(user.get('organization')).toEqual('SELFSERVE-EXISTING');
+  });
+});

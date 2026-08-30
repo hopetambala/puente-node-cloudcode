@@ -54,7 +54,10 @@ Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
     try {
       const organizations = await services.organization.findAll();
       const result = services.organization.resolve({ name: organization }, organizations);
-      return result.status === 'resolved' ? result.organization : null;
+      return {
+        canonical: result.status === 'resolved' ? result.organization : null,
+        organizations,
+      };
     } catch (error) {
       // Includes the deliberate ambiguous-alias throw from resolve(). A human
       // must fix that; it must not stop someone registering.
@@ -63,28 +66,86 @@ Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
         // log "undefined" and lose the only clue about what failed.
         `signup could not resolve organization "${organization}": ${String(error)}`,
       );
-      return null;
+      return { canonical: null, organizations: [] };
     }
   };
 
-  resolveOrganization().then(async (canonical) => {
-    // Store the CANONICAL name, not what was typed. Storing the typed string is
-    // what split "Puente" from "Puento" across thousands of rows, and what makes
-    // an account match no records and show an empty app with no error.
-    user.set('organization', canonical ? canonical.get('name') : String(organization));
+  /**
+   * A URL-safe, unique shortCode for a self-created organization.
+   *
+   * shortCode is immutable and the CSV exporter keys on it, so a collision
+   * would make one organization's export unreachable. Suffixes on collision
+   * rather than failing the signup.
+   */
+  const deriveShortCode = (name, organizations) => {
+    const base = services.organization.normalizeOrganizationName(name)
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 40) || 'org';
+    const taken = new Set(organizations.map((o) => o.get('shortCode')));
+    if (!taken.has(base)) return base;
+    for (let n = 2; n < 1000; n += 1) {
+      if (!taken.has(`${base}-${n}`)) return `${base}-${n}`;
+    }
+    return `${base}-${Date.now()}`;
+  };
 
-    if (!canonical) {
-      // The organization is not one we recognise. Create the account, grant
-      // nothing. Previously ANY unrecognised string produced a count of 0 and
-      // therefore an administrator — unauthenticated, no human in the loop.
-      user.set('role', 'contributor');
-      user.set('adminVerified', false);
-      userRole = 'contributor';
+  resolveOrganization().then(async ({ canonical, organizations }) => {
+    let organizationRecord = canonical;
+
+    if (!organizationRecord) {
+      // The typed organization is not one we recognise. Before creating it,
+      // check it is not a near-duplicate of one that already exists — that
+      // check is the entire reason self-service creation is safe, because a
+      // typo would otherwise become a second tenant whose records are
+      // invisible to the first. See
+      // puente-react-nextjs-platform/docs/self-service-organizations.md.
+      const similar = services.organization.findSimilarOrganization(organization, organizations);
+
+      if (similar) {
+        // Refused. The ACCOUNT is still created — an unidentified organization
+        // is an ops problem, a person who cannot register is a field problem.
+        // The string is logged so staff can add an alias or create the org.
+        modules.Error.logError(
+          `signup refused to create organization "${organization}": too close to `
+          + `"${similar.matched}" (${similar.reason}). Needs a human.`,
+        );
+        user.set('organization', String(organization));
+        user.set('role', 'contributor');
+        user.set('adminVerified', false);
+        userRole = 'contributor';
+        return user;
+      }
+
+      // Clearly distinct: create it, and the signer-up becomes its admin.
+      const created = new Parse.Object('Organization');
+      created.set('name', String(organization).trim());
+      created.set('shortCode', deriveShortCode(organization, organizations));
+      created.set('aliases', []);
+      created.set('active', true);
+      // Self-created organizations are never billable until staff say so.
+      // Nobody is invoiced because they signed up to try the product.
+      created.set('plan', 'no-charge');
+      const orgAcl = new Parse.ACL();
+      // Public read so the registration picker can list it; no public write.
+      orgAcl.setPublicReadAccess(true);
+      created.setACL(orgAcl);
+      organizationRecord = await created.save(null, { useMasterKey: true });
+
+      user.set('organization', organizationRecord.get('name'));
+      user.set('role', 'administrator');
+      user.set('adminVerified', true);
+      userRole = 'admin';
       return user;
     }
 
+    // Store the CANONICAL name, not what was typed. Storing the typed string is
+    // what split "Puente" from "Puento" across thousands of rows, and what makes
+    // an account match no records and show an empty app with no error.
+    user.set('organization', organizationRecord.get('name'));
+
     const userQuery = new Parse.Query(Parse.User);
-    userQuery.equalTo('organization', canonical.get('name'));
+    userQuery.equalTo('organization', organizationRecord.get('name'));
     // useMasterKey is load-bearing: without it this count is subject to the
     // _User CLP, and a restricted read returns 0 for an organization that
     // already has members — minting a SECOND administrator.
