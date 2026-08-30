@@ -174,6 +174,23 @@ describe('role testing', () => {
     });
   });
 
+  it('refuses to grant puente_staff, which would be a self-service escalation', async () => {
+    // addToRole takes no auth and does everything under the master key, so any
+    // unauthenticated caller holding the app id can name a role and join it.
+    // That is survivable for the three legacy roles, which are inert and gate
+    // nothing. It is NOT survivable for puente_staff, which gates
+    // createOrganization: it would hand out the privilege the gate exists to
+    // withhold, and the role's locked ACL cannot stop it because this function
+    // writes with the master key.
+    //
+    // The only legitimate grant path is the master-key seed script. There is
+    // deliberately no self-service promotion (see the billing roadmap, D3).
+    await expect(cloudFunctions.addToRole({
+      userID: contribRoleID,
+      roleName: 'puente_staff',
+    })).rejects.toThrow(/puente_staff/i);
+  });
+
   it('should return both users now (both verified)', async () => {
     const queryParams = {
       organization: 'star-wars',

@@ -45,6 +45,28 @@ Parse.Cloud.define('isStaff', async (request) => ({
 }));
 
 Parse.Cloud.define('addToRole', (request) => new Promise((resolve, reject) => {
+  // This function takes NO auth and does every write under the master key, so
+  // any unauthenticated caller holding the app id can name a role and join it.
+  // That is survivable for the three legacy roles, which are inert and gate
+  // nothing (see the billing scope §7.1). It is not survivable for
+  // `puente_staff`, which gates createOrganization — granting it here would
+  // hand out exactly the privilege that gate exists to withhold, and the role's
+  // locked ACL cannot prevent it because this write uses the master key.
+  //
+  // Staff membership has one legitimate path: the master-key seed script. There
+  // is deliberately no self-service promotion.
+  //
+  // The wider problem — that addToRole is unauthenticated at all — is
+  // pre-existing and unaddressed here on purpose; it deserves its own change
+  // rather than being folded into this one.
+  if (String(request.params.roleName) === services.roles.STAFF_ROLE_NAME) {
+    reject(new Error(
+      'addToRole cannot grant puente_staff. Staff membership is seeded with the '
+      + 'master key, never through an unauthenticated endpoint.',
+    ));
+    return;
+  }
+
   const userQuery = new Parse.Query(Parse.User);
 
   userQuery.get(request.params.userID).then((user) => {
