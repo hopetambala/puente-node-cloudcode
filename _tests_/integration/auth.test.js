@@ -234,3 +234,104 @@ describe('signup must not mint administrators from unrecognised organizations', 
     expect(v.organization).toEqual('Flea Bottom Forge');
   });
 });
+
+describe('deactivating a user actually removes access', () => {
+  const PHONE = '9100000001';
+
+  beforeAll(async () => {
+    await cloudFunctions.createOrganization({
+      name: 'deactivation-co', shortCode: 'deactivation-co', aliases: [], active: true,
+    });
+    // Two members: the first is the org's admin, the second is deactivatable
+    // without tripping the last-admin protection.
+    await cloudFunctions.signup({
+      firstname: 'Org',
+      lastname: 'Admin',
+      password: 'pw',
+      email: '',
+      phonenumber: '9100000000',
+      organization: 'deactivation-co',
+    });
+    await cloudFunctions.signup({
+      firstname: 'Ordinary',
+      lastname: 'Member',
+      password: 'pw',
+      email: '',
+      phonenumber: PHONE,
+      organization: 'deactivation-co',
+    });
+  });
+
+  const userFor = async (username) => {
+    const q = new Parse.Query(Parse.User);
+    q.equalTo('username', username);
+    return q.first({ useMasterKey: true });
+  };
+
+  it('lets an active user sign in — the control', async () => {
+    await expect(cloudFunctions.signin({ username: PHONE, password: 'pw' }))
+      .resolves.toBeDefined();
+  });
+
+  it('refuses an unprivileged caller, so nobody can deactivate anyone', async () => {
+    const user = await userFor(PHONE);
+
+    await expect(cloudFunctions.setUserActiveUnprivileged({ userId: user.id, active: false }))
+      .rejects.toThrow(/master key|staff|admin/i);
+  });
+
+  it('refuses sign-in once deactivated', async () => {
+    const user = await userFor(PHONE);
+    await cloudFunctions.setUserActive({ userId: user.id, active: false });
+
+    await expect(cloudFunctions.signin({ username: PHONE, password: 'pw' }))
+      .rejects.toThrow(/deactivated/i);
+  });
+
+  it('destroys existing sessions, so an offline-first device stops syncing', async () => {
+    // A flag alone would be a control that lies: Collect holds a session token
+    // and would keep working until it expired, which offline-first means could
+    // be a very long time.
+    const user = await userFor(PHONE);
+    const sessions = new Parse.Query('_Session');
+    sessions.equalTo('user', user);
+
+    expect(await sessions.count({ useMasterKey: true })).toEqual(0);
+  });
+
+  it('restores access when reactivated', async () => {
+    const user = await userFor(PHONE);
+    await cloudFunctions.setUserActive({ userId: user.id, active: true });
+
+    await expect(cloudFunctions.signin({ username: PHONE, password: 'pw' }))
+      .resolves.toBeDefined();
+  });
+
+  it('refuses an ORG ADMIN deactivating the last admin of their organization', async () => {
+    // Otherwise a partner locks itself out and only a master key recovers it.
+    // Exercised as the org admin, with a real session - the master key is an
+    // override by design (D13), so asserting this against the master key would
+    // test the wrong path.
+    const admin = await userFor('9100000000');
+    // The session token is passed explicitly. cloudFunctions.signin runs
+    // Parse.User.logIn SERVER-side, so it leaves the test client with no
+    // session, and the call would otherwise arrive unauthenticated.
+    const session = await Parse.User.logIn('9100000000', 'pw');
+
+    await expect(cloudFunctions.setUserActiveAsSession(
+      { userId: admin.id, active: false }, session.getSessionToken(),
+    )).rejects.toThrow(/last admin/i);
+
+    await Parse.User.logOut();
+  });
+
+  it('lets the master key override the last-admin protection, per D13', async () => {
+    const admin = await userFor('9100000000');
+
+    await expect(cloudFunctions.setUserActive({ userId: admin.id, active: false }))
+      .resolves.toBeDefined();
+
+    // Restore, so this fixture does not leak a locked-out organization.
+    await cloudFunctions.setUserActive({ userId: admin.id, active: true });
+  });
+});
