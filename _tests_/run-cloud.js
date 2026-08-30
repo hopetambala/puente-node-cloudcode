@@ -91,6 +91,10 @@ const cloudFunctions = {
     .run('setUserActive', params, { sessionToken }),
   setUserActiveUnprivileged: (params) => Parse.Cloud
     .run('setUserActive', params),
+  lockLegacyRoleAcls: (params) => Parse.Cloud
+    .run('lockLegacyRoleAcls', params, { useMasterKey: true }),
+  lockLegacyRoleAclsUnprivileged: (params) => Parse.Cloud
+    .run('lockLegacyRoleAcls', params),
   addToRolePrivileged: (params) => Parse.Cloud
     .run('addToRole', params, { useMasterKey: true })
     .then((response) => response),
