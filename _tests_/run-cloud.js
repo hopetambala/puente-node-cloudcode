@@ -112,6 +112,9 @@ const cloudFunctions = {
     .run('getOrganizationBilling', params, { useMasterKey: true }),
   setOrganizationBillingPrivileged: (params) => Parse.Cloud
     .run('setOrganizationBilling', params, { useMasterKey: true }),
+  organizationUsage: (params) => Parse.Cloud.run('organizationUsage', params),
+  organizationUsagePrivileged: (params) => Parse.Cloud
+    .run('organizationUsage', params, { useMasterKey: true }),
   getRateCard: (params) => Parse.Cloud.run('getRateCard', params),
   updateRateCard: (params) => Parse.Cloud.run('updateRateCard', params),
   updateRateCardPrivileged: (params) => Parse.Cloud
