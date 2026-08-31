@@ -367,7 +367,21 @@ Parse.Cloud.define('signin', (request) => new Promise((resolve, reject) => {
       byPhone.equalTo('phonenumber', request.params.username);
       const userQuery = Parse.Query.or(byEmail, byPhone);
 
-      userQuery.first().then((success) => {
+      // find(), not first(). A phone number can now belong to several accounts -
+      // that is the point of it no longer being an identity - and picking the
+      // first match would try one person's password against another person's
+      // account and report "Invalid username/password". That message sends
+      // someone to reset a password that was never wrong.
+      userQuery.limit(2);
+      userQuery.find().then((matches) => {
+        if (matches.length > 1) {
+          reject(new Error(
+            'That phone number belongs to more than one account. '
+            + 'Please sign in with your email address instead.',
+          ));
+          return;
+        }
+        const success = matches[0];
         // No account with that email: the original username failure is the
         // real answer. Without this guard success.toJSON() throws, and an
         // unhandled throw here takes the whole Parse process down.

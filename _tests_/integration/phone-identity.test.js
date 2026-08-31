@@ -66,12 +66,11 @@ describe('signin still finds you by phone', () => {
   // Changing the username without this would silently break login for everyone
   // who signs up with both - they would type the phone they registered with and
   // be told their password was wrong.
-  it('signs in with the phone number even when the username is the email', async () => {
-    const result = await cloudFunctions.signin({
-      username: '8095550000', password: 'pw',
-    });
-    expect(result).toBeDefined();
-  });
+  // NOTE: "signs in by phone when the username is the email" now lives in the
+  // shared-phone describe below, against a phone only ONE account uses. It has
+  // to: 8095550000 is deliberately shared by two accounts in this file, so it
+  // no longer names a single person and the correct answer there is the
+  // ambiguity error, not a login.
 
   it('still signs in with the email', async () => {
     const result = await cloudFunctions.signin({
@@ -84,5 +83,24 @@ describe('signin still finds you by phone', () => {
     await expect(cloudFunctions.signin({
       username: '8095550000', password: 'wrong',
     })).rejects.toThrow();
+  });
+});
+
+describe('a shared phone number cannot identify one account', () => {
+  // Once two people share a phone, that phone no longer names a single account.
+  // Parse cannot log in "one of two", so the honest answer is to say so - and
+  // "Invalid username/password" is a lie that sends someone to reset a password
+  // that was never wrong.
+  it('tells the person to use their email instead of failing opaquely', async () => {
+    await expect(cloudFunctions.signin({
+      username: '8095550000', password: 'pw',
+    })).rejects.toThrow(/more than one account|use your email/i);
+  });
+
+  it('still signs in by phone when only ONE account has that number', async () => {
+    const result = await cloudFunctions.signin({
+      username: '8095551111', password: 'pw',
+    });
+    expect(result).toBeDefined();
   });
 });
