@@ -35,10 +35,22 @@ Parse.Cloud.define('signup', (request) => new Promise((resolve, reject) => {
   }
   user.set('phonenumber', String(phonenumber));
 
-  if (phonenumber) {
-    user.set('username', String(phonenumber));
-  } else {
+  // A phone number is NOT an identity. It is shared between colleagues,
+  // reassigned when someone leaves, and often belongs to the organization
+  // rather than the person - but Parse usernames must be unique, so making the
+  // phone the username meant the second person to use a field phone could not
+  // register at all, and the error named a field they never filled in.
+  //
+  // Email wins when there is one. Phone remains the fallback because Collect
+  // does not require an email: a promotora signing up on a field phone may not
+  // have one, and phone-only signup has to keep working.
+  //
+  // `signin` gains a phonenumber lookup alongside the email one, so anyone who
+  // registered with a phone can still sign in by typing it.
+  if (email) {
     user.set('username', String(email));
+  } else if (phonenumber) {
+    user.set('username', String(phonenumber));
   }
 
   let userRole = '';
@@ -346,13 +358,22 @@ Parse.Cloud.define('signin', (request) => new Promise((resolve, reject) => {
     }, (error1) => {
       // If the user inputs their email instead of the username
       // attempt to get the username
-      const userQuery = new Parse.Query(Parse.User);
+      // Look up by email OR phone number. The username is the email whenever
+      // one exists, so someone who registered with both will type their PHONE
+      // and be told their password is wrong unless this finds them.
+      const byEmail = new Parse.Query(Parse.User);
+      byEmail.equalTo('email', request.params.username);
+      const byPhone = new Parse.Query(Parse.User);
+      byPhone.equalTo('phonenumber', request.params.username);
+      const userQuery = Parse.Query.or(byEmail, byPhone);
 
-      userQuery.equalTo('email', request.params.username);
       userQuery.first().then((success) => {
         // No account with that email: the original username failure is the
         // real answer. Without this guard success.toJSON() throws, and an
         // unhandled throw here takes the whole Parse process down.
+        // Neither an email nor a phone number matched, so the original
+        // username failure is the real answer. This is also the only place that
+        // rejection can now happen for a missed lookup.
         if (!success) {
           reject(error1);
           return;
@@ -369,8 +390,16 @@ Parse.Cloud.define('signin', (request) => new Promise((resolve, reject) => {
         modules.Error.logError(`Error: ${error3.code} ${error3.message}`);
         reject(error3);
       });
+      // NOTE: no reject() here.
+      //
+      // This used to call reject(error1) immediately after kicking off the
+      // lookup above - synchronously, before the query could resolve - so the
+      // fallback could never win the race and was dead code. It looked like it
+      // worked only because usernames used to BE phone numbers, so the direct
+      // logIn above almost always succeeded and the fallback was never
+      // exercised. Every rejection path is now inside the lookup's own
+      // handlers, which is the only place that knows whether it failed.
       modules.Error.logError(`Error: ${error1.code} ${error1.message}`);
-      reject(error1);
     });
 }));
 

@@ -104,7 +104,10 @@ describe('role testing', () => {
 
       expect(jsonValues.firstname).toEqual('Han__');
       expect(jsonValues.lastname).toEqual('Solo');
-      expect(jsonValues.username).toEqual('1234567373');
+      // The username is the EMAIL now, not the phone: a phone number is shared
+      // and reassigned, so it cannot be a unique identity. See
+      // phone-identity.test.js.
+      expect(jsonValues.username).toEqual('soloman@gmail.com');
       expect(jsonValues.email).toEqual('soloman@gmail.com');
       expect(jsonValues.organization).toEqual('star-wars');
       expect(jsonValues.role).toEqual('contributor');
@@ -147,7 +150,7 @@ describe('role testing', () => {
 
       expect(contribUser[0].firstname).toEqual('Han__');
       expect(contribUser[0].lastname).toEqual('Solo');
-      expect(contribUser[0].username).toEqual('1234567373');
+      expect(contribUser[0].username).toEqual('soloman@gmail.com');
       expect(contribUser[0].organization).toEqual('star-wars');
       expect(contribUser[0].role).toEqual('contributor');
       expect(contribUser[0].adminVerified).toEqual(false);
@@ -169,7 +172,10 @@ describe('role testing', () => {
 
       expect(jsonValues.firstname).toEqual('Han__');
       expect(jsonValues.lastname).toEqual('Solo');
-      expect(jsonValues.username).toEqual('1234567373');
+      // The username is the EMAIL now, not the phone: a phone number is shared
+      // and reassigned, so it cannot be a unique identity. See
+      // phone-identity.test.js.
+      expect(jsonValues.username).toEqual('soloman@gmail.com');
       expect(jsonValues.organization).toEqual('star-wars');
       expect(jsonValues.role).toEqual('manager');
       expect(jsonValues.adminVerified).toEqual(true);
@@ -223,7 +229,7 @@ describe('role testing', () => {
 
       expect(contribUser[0].firstname).toEqual('Han__');
       expect(contribUser[0].lastname).toEqual('Solo');
-      expect(contribUser[0].username).toEqual('1234567373');
+      expect(contribUser[0].username).toEqual('soloman@gmail.com');
       expect(contribUser[0].organization).toEqual('star-wars');
       expect(contribUser[0].role).toEqual('manager');
       expect(contribUser[0].adminVerified).toEqual(true);
