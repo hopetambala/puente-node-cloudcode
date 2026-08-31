@@ -101,6 +101,12 @@ const cloudFunctions = {
     .run('setUserActive', params, { sessionToken }),
   setUserActiveUnprivileged: (params) => Parse.Cloud
     .run('setUserActive', params),
+  listInvoices: (params) => Parse.Cloud.run('listInvoices', params),
+  listInvoicesPrivileged: (params) => Parse.Cloud
+    .run('listInvoices', params, { useMasterKey: true }),
+  mirrorInvoice: (params) => Parse.Cloud.run('mirrorInvoice', params),
+  mirrorInvoicePrivileged: (params) => Parse.Cloud
+    .run('mirrorInvoice', params, { useMasterKey: true }),
   getRateCard: (params) => Parse.Cloud.run('getRateCard', params),
   updateRateCard: (params) => Parse.Cloud.run('updateRateCard', params),
   updateRateCardPrivileged: (params) => Parse.Cloud

@@ -33,3 +33,4 @@ require('./src/definer/offline.definer');
  ******************************************** */
 require('./src/definer/organization.definer');
 require('./src/definer/rateCard.definer');
+require('./src/definer/invoice.definer');
