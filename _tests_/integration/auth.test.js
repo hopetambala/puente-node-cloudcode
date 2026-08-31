@@ -81,7 +81,10 @@ describe('role testing', () => {
 
       expect(jsonValues.firstname).toEqual('Jon');
       expect(jsonValues.lastname).toEqual('Snow');
-      expect(jsonValues.username).toEqual('1234567890');
+      // The username is the EMAIL now. A phone number is shared and
+      // reassigned, so it cannot be a unique identity - see
+      // phone-identity.test.js.
+      expect(jsonValues.username).toEqual('iknownothing@gmail.com');
       expect(jsonValues.email).toEqual('iknownothing@gmail.com');
       expect(jsonValues.organization).toEqual('got');
       expect(jsonValues.role).toEqual('contributor');
@@ -125,7 +128,10 @@ describe('role testing', () => {
 
       expect(jsonValues.firstname).toEqual('Jon');
       expect(jsonValues.lastname).toEqual('Snow');
-      expect(jsonValues.username).toEqual('1234567890');
+      // The username is the EMAIL now. A phone number is shared and
+      // reassigned, so it cannot be a unique identity - see
+      // phone-identity.test.js.
+      expect(jsonValues.username).toEqual('iknownothing@gmail.com');
       expect(jsonValues.email).toEqual('iknownothing@gmail.com');
       expect(jsonValues.organization).toEqual('got');
       expect(jsonValues.role).toEqual('contributor');
@@ -151,7 +157,10 @@ describe('role testing', () => {
 
       expect(jsonValues.firstname).toEqual('Ron');
       expect(jsonValues.lastname).toEqual('Flow');
-      expect(jsonValues.username).toEqual('1234567890');
+      // The username is the EMAIL now. A phone number is shared and
+      // reassigned, so it cannot be a unique identity - see
+      // phone-identity.test.js.
+      expect(jsonValues.username).toEqual('iknownothing@gmail.com');
       expect(jsonValues.email).toEqual('iknownothing@gmail.com');
       expect(jsonValues.organization).toEqual('got');
       expect(jsonValues.role).toEqual('contributor');

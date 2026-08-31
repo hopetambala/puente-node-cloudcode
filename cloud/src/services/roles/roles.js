@@ -5,6 +5,30 @@
  */
 const STAFF_ROLE_NAME = 'puente_staff';
 
+/**
+ * Saves a role, tolerating a concurrent creator.
+ *
+ * The three legacy creators below all check-then-create, which is a race: two
+ * callers both see "does not exist", both save, and one fails on the unique
+ * name. That is not hypothetical - it broke a test the moment a third file
+ * created roles in parallel, and the same window exists for two signups landing
+ * together on a fresh deployment.
+ *
+ * Losing the race is a success, not an error: the role now exists, which is all
+ * the caller wanted. So re-query and return the winner's row.
+ */
+const saveRoleTolerantly = async (role, name) => {
+  try {
+    return await role.save({}, { useMasterKey: true });
+  } catch (error) {
+    const query = new Parse.Query(Parse.Role);
+    query.equalTo('name', name);
+    const existing = await query.first({ useMasterKey: true });
+    if (existing) return existing;
+    throw error;
+  }
+};
+
 const Roles = {
 
   /**
@@ -206,7 +230,7 @@ const Roles = {
             const adminRole = new Role();
             adminRole.set('name', 'admin');
             adminRole.setACL(acl);
-            adminRole.save({}, { useMasterKey: true })
+            saveRoleTolerantly(adminRole, 'admin')
               .then((admin) => {
                 resolve(admin);
               }, (error) => {
@@ -242,7 +266,7 @@ const Roles = {
           const managerRole = new Role();
           managerRole.set('name', 'manager');
           managerRole.setACL(acl);
-          managerRole.save({}, { useMasterKey: true })
+          saveRoleTolerantly(managerRole, 'manager')
             .then((manager) => {
               resolve(manager);
             }, (error) => {
@@ -275,7 +299,7 @@ const Roles = {
           const contributorRole = new Role();
           contributorRole.set('name', 'contributor');
           contributorRole.setACL(acl);
-          contributorRole.save({}, { useMasterKey: true })
+          saveRoleTolerantly(contributorRole, 'contributor')
             .then((contrib) => {
               resolve(contrib);
             }, (error) => {
