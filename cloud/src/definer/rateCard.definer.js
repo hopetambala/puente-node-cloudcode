@@ -101,3 +101,71 @@ Parse.Cloud.define('updateRateCard', async (request) => {
   await card.save(null, { useMasterKey: true });
   return { updated: true, updatedBy: card.get('updatedBy') };
 });
+
+/**
+ * Who an organization's invoice goes to, and what plan it is on.
+ *
+ * Both are relationship facts that move - a finance contact leaves, a partner
+ * moves onto or off a tier - so they are staff-editable data rather than a
+ * deploy. 56 of 58 organizations have no plan today, which is exactly why this
+ * has to be reachable from the UI and not from a console.
+ *
+ * A PARTIAL update leaves untouched fields untouched. Blanking a plan because
+ * the caller only sent an email would silently un-bill a paying partner, and
+ * nothing downstream would flag it - the invoice simply would not be created.
+ */
+const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+const findOrganization = async (shortCode) => {
+  const query = new Parse.Query('Organization');
+  query.equalTo('shortCode', String(shortCode));
+  return query.first({ useMasterKey: true });
+};
+
+Parse.Cloud.define('setOrganizationBilling', async (request) => {
+  if (!await services.roles.mayAdministerOrganizations(request)) {
+    throw new Error('setOrganizationBilling requires the master key or the puente_staff role');
+  }
+
+  const { shortCode, plan, billingEmail } = request.params;
+  if (!shortCode) throw new Error('setOrganizationBilling: shortCode is required');
+
+  const org = await findOrganization(shortCode);
+  // Refuse rather than create. A typo in the shortCode would otherwise mint a
+  // nameless organization that the picker then offers to new accounts.
+  if (!org) throw new Error(`setOrganizationBilling: no organization with shortCode "${shortCode}"`);
+
+  if (plan !== undefined) org.set('plan', plan === '' ? undefined : String(plan));
+
+  if (billingEmail !== undefined) {
+    // An empty string is a deliberate CLEAR - removing a stale contact has to
+    // be possible, and is different from not mentioning the field at all.
+    if (billingEmail === '') {
+      org.unset('billingEmail');
+    } else if (!EMAIL.test(String(billingEmail))) {
+      // An invoice sent to a malformed address fails silently at the provider,
+      // and the first anyone knows is a partner who never paid.
+      throw new Error(`setOrganizationBilling: "${billingEmail}" is not an email address`);
+    } else {
+      org.set('billingEmail', String(billingEmail).trim());
+    }
+  }
+
+  await org.save(null, { useMasterKey: true });
+  return { shortCode, plan: org.get('plan') || null, billingEmail: org.get('billingEmail') || null };
+});
+
+/** Read-only companion, same gate. */
+Parse.Cloud.define('getOrganizationBilling', async (request) => {
+  if (!await services.roles.mayAdministerOrganizations(request)) {
+    throw new Error('getOrganizationBilling requires the master key or the puente_staff role');
+  }
+  const org = await findOrganization(request.params.shortCode);
+  if (!org) throw new Error(`getOrganizationBilling: no organization with shortCode "${request.params.shortCode}"`);
+  return {
+    shortCode: org.get('shortCode'),
+    name: org.get('name'),
+    plan: org.get('plan') || null,
+    billingEmail: org.get('billingEmail') || null,
+  };
+});

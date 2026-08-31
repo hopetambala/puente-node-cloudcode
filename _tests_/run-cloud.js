@@ -107,6 +107,11 @@ const cloudFunctions = {
   mirrorInvoice: (params) => Parse.Cloud.run('mirrorInvoice', params),
   mirrorInvoicePrivileged: (params) => Parse.Cloud
     .run('mirrorInvoice', params, { useMasterKey: true }),
+  setOrganizationBilling: (params) => Parse.Cloud.run('setOrganizationBilling', params),
+  getOrganizationBilling: (params) => Parse.Cloud
+    .run('getOrganizationBilling', params, { useMasterKey: true }),
+  setOrganizationBillingPrivileged: (params) => Parse.Cloud
+    .run('setOrganizationBilling', params, { useMasterKey: true }),
   getRateCard: (params) => Parse.Cloud.run('getRateCard', params),
   updateRateCard: (params) => Parse.Cloud.run('updateRateCard', params),
   updateRateCardPrivileged: (params) => Parse.Cloud
