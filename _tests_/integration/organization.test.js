@@ -830,3 +830,69 @@ describe('myOrganizationAccess tells a client what it may administer', () => {
     expect(access.orgAdminOf).toEqual([]);
   });
 });
+
+describe('merging a duplicate organization into the surviving one', () => {
+  /**
+   * The 2026-08-30 production incident. holy-family-mission was a duplicate row
+   * for records that belong to cevicos. The intended procedure — deactivate the
+   * duplicate, then move its strings onto the survivor — was impossible: the
+   * retired row still OWNED its name, so the re-alias was refused, and the row
+   * had to be DELETED instead. Deleting it destroys the provenance of every
+   * record ever collected under it.
+   *
+   * There is no updateOrganization endpoint, so deactivation is a master-key
+   * write, exactly as staff perform it from the console today.
+   */
+  const deactivate = async (shortCode) => {
+    const query = new Parse.Query('Organization');
+    query.equalTo('shortCode', shortCode);
+    const org = await query.first({ useMasterKey: true });
+    org.set('active', false);
+    await org.save(null, { useMasterKey: true });
+  };
+
+  beforeAll(async () => {
+    await cloudFunctions.createOrganization({
+      name: 'Holy Family Mission', shortCode: 'merge-hfm', aliases: ['HFM Clinic'], active: true,
+    });
+    await cloudFunctions.createOrganization({
+      name: 'Cevicos', shortCode: 'merge-cevicos', aliases: [], active: true,
+    });
+  });
+
+  it('refuses the re-alias while the duplicate is still live', async () => {
+    // The guard is not being weakened: two LIVE organizations may not claim one
+    // string, because resolve() would then raise and unscope both tenants.
+    await expect(cloudFunctions.editOrganizationAliases({
+      shortCode: 'merge-cevicos',
+      aliases: ['Holy Family Mission'],
+    })).rejects.toThrow(/already belongs/i);
+  });
+
+  it('accepts the re-alias once the duplicate is deactivated', async () => {
+    await deactivate('merge-hfm');
+
+    await expect(cloudFunctions.editOrganizationAliases({
+      shortCode: 'merge-cevicos',
+      aliases: ['Holy Family Mission', 'HFM Clinic'],
+    })).resolves.toBeDefined();
+  });
+
+  it('sends the merged strings to the SURVIVING organization', async () => {
+    // The payoff. Every record collected under the duplicate's name now scopes
+    // to cevicos, which is what the merge was for.
+    const result = await cloudFunctions.resolveOrganization({ name: 'Holy Family Mission' });
+
+    expect(result.status).toEqual('resolved');
+    expect(result.organization.shortCode).toEqual('merge-cevicos');
+  });
+
+  it('keeps the retired row, so the records collected under it keep their provenance', async () => {
+    const query = new Parse.Query('Organization');
+    query.equalTo('shortCode', 'merge-hfm');
+    const retired = await query.first({ useMasterKey: true });
+
+    expect(retired).toBeDefined();
+    expect(retired.get('active')).toBe(false);
+  });
+});

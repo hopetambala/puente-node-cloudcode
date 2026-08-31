@@ -32,3 +32,4 @@ require('./src/definer/offline.definer');
  * Organization resolution — the canonical tenancy entity
  ******************************************** */
 require('./src/definer/organization.definer');
+require('./src/definer/rateCard.definer');
