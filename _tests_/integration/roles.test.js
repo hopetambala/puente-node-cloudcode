@@ -293,3 +293,67 @@ describe('the legacy admin role must not be publicly writable', () => {
       .rejects.toThrow(/master key/i);
   });
 });
+
+describe('seedPuenteStaff makes staff exist at all', () => {
+  // puente_staff gates organization administration, but nothing had ever
+  // created it: createPuenteStaffRole is master-key only and had not been run,
+  // so in production NOBODY was staff and the admin screen redirected everyone.
+  // Doing it by hand is create-the-role then add-each-user; one call is one
+  // fewer chance to do half of it.
+  let staffUserId;
+
+  beforeAll(async () => {
+    await cloudFunctions.createOrganization({
+      name: 'seed-staff-co', shortCode: 'seed-staff-co', aliases: [], active: true,
+    });
+    const user = await cloudFunctions.signup({
+      firstname: 'Seed',
+      lastname: 'Staff',
+      password: 'pw',
+      email: '',
+      phonenumber: '9700000000',
+      organization: 'seed-staff-co',
+    });
+    staffUserId = JSON.parse(JSON.stringify(user)).objectId;
+  });
+
+  it('is master-key only — it grants the highest privilege in the system', async () => {
+    await expect(cloudFunctions.seedPuenteStaffUnprivileged({ userIds: [staffUserId] }))
+      .rejects.toThrow(/master key/i);
+  });
+
+  it('creates the role and puts the named accounts in it', async () => {
+    const result = await cloudFunctions.seedPuenteStaff({ userIds: [staffUserId] });
+
+    expect(result.granted).toEqual([staffUserId]);
+
+    const roleQuery = new Parse.Query(Parse.Role);
+    roleQuery.equalTo('name', 'puente_staff');
+    roleQuery.equalTo('users', { __type: 'Pointer', className: '_User', objectId: staffUserId });
+    expect(await roleQuery.first({ useMasterKey: true })).toBeDefined();
+  });
+
+  it('is idempotent, so re-running cannot duplicate the role or the membership', async () => {
+    await expect(cloudFunctions.seedPuenteStaff({ userIds: [staffUserId] }))
+      .resolves.toBeDefined();
+
+    const roles = await new Parse.Query(Parse.Role)
+      .equalTo('name', 'puente_staff').find({ useMasterKey: true });
+    expect(roles).toHaveLength(1);
+  });
+
+  it('reports a userId it could not find rather than failing the whole seed', async () => {
+    // A typo in one id must not silently drop the others, nor abort the batch.
+    const result = await cloudFunctions.seedPuenteStaff({
+      userIds: [staffUserId, 'ZZnotarealid00'],
+    });
+
+    expect(result.granted).toContain(staffUserId);
+    expect(result.notFound).toContain('ZZnotarealid00');
+  });
+
+  it('refuses an empty list rather than quietly doing nothing', async () => {
+    await expect(cloudFunctions.seedPuenteStaff({ userIds: [] }))
+      .rejects.toThrow(/userIds/i);
+  });
+});

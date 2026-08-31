@@ -91,6 +91,66 @@ Parse.Cloud.define('addToRole', (request) => new Promise((resolve, reject) => {
 }));
 
 /**
+ * Creates `puente_staff` and puts the named accounts in it, in one call.
+ *
+ * This exists because the two-step version had already failed once: the role
+ * gates every organization-administration endpoint and the admin screen in
+ * Manage, and it had never been created in production. Nobody was staff, so the
+ * screen redirected everyone — including the people meant to repair the
+ * organizations a seed had just created.
+ *
+ * Doing it by hand is createPuenteStaffRole, then addToRole per account, both
+ * master-key. One call is one fewer chance to do half of it and believe it
+ * worked.
+ *
+ * Master-key only, for the reason createPuenteStaffRole is: membership in this
+ * role IS the highest privilege in the system, so an endpoint a session could
+ * reach would be the escalation path rather than the fix for one.
+ *
+ * Deliberately does NOT touch `_User.role`. That string is a display label that
+ * `updateUser` lets anyone write; staff status lives in the role object alone.
+ */
+Parse.Cloud.define('seedPuenteStaff', async (request) => {
+  if (!request.master) {
+    throw new Error('seedPuenteStaff requires the master key');
+  }
+
+  const userIds = Array.isArray(request.params && request.params.userIds)
+    ? request.params.userIds.filter((id) => typeof id === 'string' && id.trim())
+    : [];
+
+  // An empty list would create the role, add nobody, and return a success the
+  // caller would reasonably read as "staff are seeded". Refuse instead.
+  if (!userIds.length) {
+    throw new Error('seedPuenteStaff requires a non-empty userIds array');
+  }
+
+  // Idempotent by construction — returns the existing role if there is one.
+  const role = await services.roles.createStaffRole();
+
+  const granted = [];
+  const notFound = [];
+
+  await Promise.all(userIds.map(async (objectId) => {
+    try {
+      const user = await new Parse.Query(Parse.User).get(objectId, { useMasterKey: true });
+      // Parse's relation add is a set operation, so re-running cannot
+      // duplicate a membership.
+      role.getUsers().add(user);
+      granted.push(objectId);
+    } catch (error) {
+      // One mistyped id must not abort the batch or silently drop the rest —
+      // a half-applied seed is the failure mode this endpoint exists to avoid.
+      notFound.push(objectId);
+    }
+  }));
+
+  if (granted.length) await role.save(null, { useMasterKey: true });
+
+  return { granted, notFound, roleId: role.id };
+});
+
+/**
  * Removes public WRITE from every existing role.
  *
  * createAdminRole is idempotent, so fixing its code does not repair a role that
