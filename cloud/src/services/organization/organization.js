@@ -67,6 +67,22 @@ const SIMILARITY_MAX_DISTANCE = 2;
 /** Containment is skipped below this length; see findSimilarOrganization. */
 const MIN_CONTAINMENT_LENGTH = 3;
 
+/**
+ * Whether an organization is still in service.
+ *
+ * Tri-state on purpose: `active` was added after the class existed, so the rows
+ * that predate it carry no value at all and ABSENT MUST MEAN ACTIVE. Reading it
+ * as `=== true` would retire every organization created before the field, which
+ * on the alias paths below would hand their names away to whoever asked next.
+ *
+ * `active !== false` is the identical rule the registration pickers already
+ * apply — puente-react-nextjs-platform/app/modules/organization/index.js
+ * (toOrganizationOptions) and puente-reactnative-collect/modules/organization/
+ * index.js. Keep the three the same or the picker and the server will disagree
+ * about which organizations exist.
+ */
+const isActive = (org) => org.get('active') !== false;
+
 /** Standard edit distance. Organizations number in dozens, so the plain DP is fine. */
 function levenshtein(a, b) {
   if (a === b) return 0;
@@ -109,6 +125,16 @@ const Organization = {
    * a false refusal costs one email to staff, while a false accept forks a
    * tenant permanently and silently. Production has already shown that cost —
    * DR Missions carried 11 rows under its canonical name and 611 under "DRMT".
+   *
+   * DEACTIVATED organizations are deliberately still compared against, unlike
+   * findAliasClash. That looks inconsistent and is not: findAliasClash answers
+   * "who OWNS this string", and a retired organization owns nothing. This
+   * answers "should a human look at this", and a retired partner's name is
+   * exactly the string a human should look at — resolve() prefers a live
+   * claimant, so letting a self-service signup mint a NEW organization under a
+   * retired one's name would quietly re-home all of that retired
+   * organization's historical records onto a stranger. Refusing costs one
+   * email to staff; accepting is silent and irreversible.
    *
    * Returns `{ organization, matched, reason }` so the refusal can name the
    * concrete string a human needs to act on.
@@ -165,6 +191,28 @@ const Organization = {
    * an organization does not report its own existing strings as collisions
    * with itself.
    *
+   * DEACTIVATED organizations do not own anything here. This is the asymmetry
+   * with resolve(), and it is deliberate: retiring an organization has to
+   * RELEASE its names so the surviving organization can take them over.
+   * Without this, the 2026-08-30 holy-family-mission -> cevicos merge was
+   * impossible — the retired row still owned "Holy Family Mission", cevicos
+   * could not claim it, and the only way to finish the merge was to DELETE the
+   * duplicate, destroying the provenance of every record collected under it.
+   *
+   * Deactivate-then-re-alias is now the merge procedure, and it is
+   * non-destructive: the retired row stays, and resolve() keeps pointing its
+   * historical records somewhere sensible.
+   *
+   * On the obvious objection — deactivate a rival, then claim their name:
+   * every path that reaches here is already gated. createOrganization and
+   * editOrganizationAliases both require the master key or `puente_staff`
+   * (organization.definer.js), and deactivating an organization is a write to
+   * the Organization row, which carries public READ only. So the caller who
+   * could exploit this is a caller who could already edit both rows directly.
+   * The check that a name is not being re-homed by ACCIDENT is
+   * findSimilarOrganization, which deliberately still sees inactive
+   * organizations — see the note there.
+   *
    * Shared by createOrganization and editOrganizationAliases so the two cannot
    * drift into disagreeing about what counts as taken.
    */
@@ -174,6 +222,7 @@ const Organization = {
     const taken = new Map();
     organizations
       .filter((o) => o.get('shortCode') !== excludeShortCode)
+      .filter(isActive)
       .forEach((o) => [o.get('name'), ...(o.get('aliases') || [])].forEach(
         (a) => taken.set(normalizeOrganizationName(a), o.get('shortCode')),
       ));
@@ -214,9 +263,21 @@ const Organization = {
    * Never falls back to a "closest" organization: an unresolved record is
    * recoverable, a misattributed one is not.
    *
-   * @throws {Error} when two organizations claim the same alias. Callers on a
-   *   write path must catch this — a collision is an ops problem and must not
-   *   reject a survey collected in the field. See `stampOrganization`.
+   * DEACTIVATED ORGANIZATIONS STILL RESOLVE. This is deliberate; do not "fix"
+   * it by filtering them out. `active` means "do not OFFER this in the
+   * registration picker" — that is the only thing the pickers use it for
+   * (`active !== false` in toOrganizationOptions, both Manage and Collect). It
+   * does not mean the organization never existed. Years of records legitimately
+   * carry a retired partner's collected string, and they must keep scoping to
+   * it: dropping inactive rows here would leave every one of those records
+   * unresolved, which strips their organization pointer on the next write,
+   * blanks their owner in the exports, and defeats the restrictive ACLs that
+   * are keyed on that pointer. Retiring a partner must not retroactively
+   * orphan their data.
+   *
+   * @throws {Error} when two LIVE organizations claim the same alias. Callers
+   *   on a write path must catch this — a collision is an ops problem and must
+   *   not reject a survey collected in the field. See `stampOrganization`.
    */
   resolve: function resolve({ pointer, name } = {}, organizations = []) {
     // A raw Parse pointer carries `objectId`; a hydrated Parse.Object carries
@@ -243,19 +304,33 @@ const Organization = {
       return candidates.some((c) => normalizeOrganizationName(c) === wanted);
     });
 
+    // A live claimant outranks a retired one. This is what makes a merge a
+    // REDIRECT rather than a collision: findAliasClash lets the surviving
+    // organization take over a deactivated one's names, after which both rows
+    // match the string, and without this the whole point of the merge —
+    // consolidating those records onto the survivor — would instead throw on
+    // every write. When nothing live claims the string the retired row is
+    // still the right answer, which is the historical-record case above.
+    const live = matches.filter(isActive);
+    const claimed = live.length > 0 ? live : matches;
+
     // Two organizations claiming one alias must be FIXED by a human, not
     // swallowed. Returning `unresolved` would hide a collision that misroutes
     // records AND money; a wrong pointer looks exactly like a right one.
-    if (matches.length > 1) {
-      const claimants = matches.map((org) => org.get('shortCode')).join(', ');
+    //
+    // Deactivating one side is therefore also the REMEDY for a collision, not
+    // a way to hide one: two live claimants still throw, and two retired ones
+    // still throw, because neither case names a single owner.
+    if (claimed.length > 1) {
+      const claimants = claimed.map((org) => org.get('shortCode')).join(', ');
       throw new Error(
         `Ambiguous organization alias "${name}": claimed by ${claimants}. `
         + 'Aliases must be unique across organizations.',
       );
     }
 
-    if (matches.length === 1) {
-      return { status: 'resolved', organization: matches[0] };
+    if (claimed.length === 1) {
+      return { status: 'resolved', organization: claimed[0] };
     }
 
     return { status: 'unresolved', value: name === undefined ? null : name };

@@ -101,6 +101,10 @@ const cloudFunctions = {
     .run('setUserActive', params, { sessionToken }),
   setUserActiveUnprivileged: (params) => Parse.Cloud
     .run('setUserActive', params),
+  getRateCard: (params) => Parse.Cloud.run('getRateCard', params),
+  updateRateCard: (params) => Parse.Cloud.run('updateRateCard', params),
+  updateRateCardPrivileged: (params) => Parse.Cloud
+    .run('updateRateCard', params, { useMasterKey: true }),
   seedPuenteStaff: (params) => Parse.Cloud
     .run('seedPuenteStaff', params, { useMasterKey: true }),
   seedPuenteStaffUnprivileged: (params) => Parse.Cloud

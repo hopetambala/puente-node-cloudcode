@@ -102,6 +102,116 @@ describe('Organization.findAliasClash', () => {
   });
 });
 
+describe('deactivated organizations', () => {
+  /**
+   * A stand-in carrying the `active` flag. Absent means active — the same
+   * tri-state the registration pickers apply (`active !== false`).
+   */
+  const orgActive = (shortCode, name, aliases, active) => ({
+    id: `id-${shortCode}`,
+    get: (k) => ({
+      shortCode,
+      name,
+      aliases,
+      active,
+    }[k]),
+  });
+
+  // The 2026-08-30 production merge: holy-family-mission was a duplicate row
+  // for records that belong to cevicos.
+  const HFM = orgActive('holy-family-mission', 'Holy Family Mission', ['HFM'], false);
+  const CEVICOS = orgActive('cevicos', 'Cevicos', [], true);
+
+  describe('findAliasClash', () => {
+    it('lets a surviving organization claim a deactivated one\'s name', () => {
+      // The merge that motivated this: deactivate the duplicate, then re-home
+      // its strings onto the survivor. While the retired row still counted as
+      // an owner, the only way to finish the merge was to DELETE it, which
+      // loses the provenance of every record collected under it.
+      expect(Organization.findAliasClash(
+        ['Holy Family Mission', 'HFM'], [HFM, CEVICOS], { excludeShortCode: 'cevicos' },
+      )).toBeNull();
+    });
+
+    it('still refuses a name a LIVE organization holds', () => {
+      // Guard on the scope of the change: only DEACTIVATED organizations
+      // release their names. A live organization's strings stay untouchable.
+      expect(Organization.findAliasClash(
+        ['Cevicos'], [HFM, CEVICOS], { excludeShortCode: 'holy-family-mission' },
+      )).toEqual(['Cevicos', 'cevicos']);
+    });
+
+    it('treats an organization with no `active` field as live', () => {
+      // `active` postdates the class. Absent must mean live, or every row that
+      // predates the field would silently hand its name to the next caller.
+      const legacy = { id: 'id-legacy', get: (k) => ({ shortCode: 'legacy', name: 'Legacy Org', aliases: [] }[k]) };
+
+      expect(Organization.findAliasClash(['Legacy Org'], [legacy]))
+        .toEqual(['Legacy Org', 'legacy']);
+    });
+  });
+
+  describe('resolve', () => {
+    it('still resolves a deactivated organization by its own name', () => {
+      // DO NOT "FIX" THIS. Deactivation means "stop offering this in the
+      // picker", not "forget it existed". Years of records carry a retired
+      // partner's collected string and must keep scoping to it — filtering
+      // inactive organizations out here would leave all of them unresolved,
+      // stripping their pointer, their export attribution and their ACL.
+      const result = Organization.resolve({ name: 'HFM' }, [HFM, CEVICOS]);
+
+      expect(result.status).toEqual('resolved');
+      expect(result.organization.get('shortCode')).toEqual('holy-family-mission');
+    });
+
+    it('prefers the surviving active claimant once a name has been re-homed', () => {
+      // The state the merge LEAVES BEHIND: two rows now carry the string, the
+      // retired one and the survivor that took it over. Treating that as an
+      // ambiguity throws on the record write path, and stampOrganization then
+      // swallows it and saves every incoming record with NO organization
+      // pointer — the merge would silently unscope the very records it was
+      // meant to consolidate.
+      const merged = orgActive('cevicos', 'Cevicos', ['Holy Family Mission'], true);
+      const result = Organization.resolve({ name: 'Holy Family Mission' }, [HFM, merged]);
+
+      expect(result.status).toEqual('resolved');
+      expect(result.organization.get('shortCode')).toEqual('cevicos');
+    });
+
+    it('still raises when two LIVE organizations claim one string', () => {
+      // Deactivating one side is the REMEDY for a collision, not a way to hide
+      // one. Two live claimants name no single owner and still need a human.
+      const a = orgActive('a', 'A', ['Shared'], true);
+      const b = orgActive('b', 'B', ['Shared'], true);
+
+      expect(() => Organization.resolve({ name: 'Shared' }, [a, b])).toThrow(/ambiguous/i);
+    });
+
+    it('still raises when only RETIRED organizations collide', () => {
+      // No live claimant to prefer, so there is still no single owner. Falling
+      // back to "the first retired one" would misattribute records silently.
+      const a = orgActive('a', 'A', ['Shared'], false);
+      const b = orgActive('b', 'B', ['Shared'], false);
+
+      expect(() => Organization.resolve({ name: 'Shared' }, [a, b])).toThrow(/ambiguous/i);
+    });
+  });
+
+  describe('findSimilarOrganization', () => {
+    it('still sees deactivated organizations, so a retired name is not re-used by accident', () => {
+      // Deliberately NOT given the same treatment as findAliasClash. This is
+      // not an ownership rule, it is the "make a human look" guard on
+      // self-service signup, and a retired partner's name is exactly the kind
+      // of string that must not quietly become a DIFFERENT tenant — resolve()
+      // would then re-home the retired org's historical records onto it.
+      const hit = Organization.findSimilarOrganization('Holy Family Missionn', [HFM, CEVICOS]);
+
+      expect(hit).not.toBeNull();
+      expect(hit.organization.get('shortCode')).toEqual('holy-family-mission');
+    });
+  });
+});
+
 describe('Organization.findSimilarOrganization', () => {
   const orgNamed2 = (shortCode, name, aliases) => ({
     id: `id-${shortCode}`,
