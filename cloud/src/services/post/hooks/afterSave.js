@@ -1,5 +1,13 @@
+// A record that could not be saved arrives here as an explicit failure marker
+// from services/offline/offline.js (or, historically, as a bare undefined).
+// Calling .get() on it is what threw and wedged the entire batch, so pass it
+// through untouched and let Offline.upload report it.
+const { isUnsaved } = require('../../offline/failureMarker');
+
 const afterSurveyHouseholdHook = async (records) => {
+  if (!Array.isArray(records)) return [];
   const data = records.map(async (record) => {
+    if (isUnsaved(record)) return record;
     const survey = record;
     const householdPointer = await survey.get('householdObjectIdOffline');
     if (!householdPointer) return survey;
@@ -16,7 +24,7 @@ const afterSurveyHouseholdHook = async (records) => {
   });
 
   try {
-    return Promise.all(data);
+    return await Promise.all(data);
   } catch (error) {
 			console.error(`Got an error ${error.code} : ${error.message}`); //eslint-disable-line
     return [];
@@ -24,7 +32,9 @@ const afterSurveyHouseholdHook = async (records) => {
 };
 
 const afterSupplementaryFormHook = async (records, parentClass = 'SurveyData') => {
+  if (!Array.isArray(records)) return [];
   const data = records.map(async (record) => {
+    if (isUnsaved(record)) return record;
     const supplementaryForm = record;
     const parentPointer = await supplementaryForm.get('parseParentClassObjectIdOffline');
     if (!parentPointer) return supplementaryForm;
@@ -43,7 +53,7 @@ const afterSupplementaryFormHook = async (records, parentClass = 'SurveyData') =
   });
 
   try {
-    return Promise.all(data);
+    return await Promise.all(data);
   } catch (error) {
 			console.error(`Got an error ${error.code} : ${error.message}`); //eslint-disable-line
     return [];
