@@ -405,3 +405,111 @@ describe('CONTRACT with puente-reactnative-collect', () => {
     });
   });
 });
+
+describe('offline upload partial failure', () => {
+  // PROVEN in puente-reactnative-collect
+  // modules/offline/__test__/partial-failure.integrate.test.js (2026-09-04):
+  // a household that cannot be saved is reported to the client as a clean
+  // SUCCESS. The households category has no afterSave hook, and a swallowed
+  // save failure still yields an ARRAY — holding undefined. Collect sees five
+  // arrays, calls cleanupPostedOfflineForms(), and deletes the queue,
+  // destroying a record whose only copy was on the phone.
+  //
+  // The partial payload deliberately does NOT put the five arrays at the top
+  // level: a build already in the field reads that as incomplete, reports
+  // Error and keeps its whole queue — its current safe behaviour — so this
+  // change needs no app release to be safe. Collect has no OTA.
+  it('does not report a clean success when a record failed to save', async () => {
+    // Pin latitude as a Number so the second household is refused by Parse.
+    const pin = new Parse.Object('Household');
+    pin.set('latitude', 12.34);
+    pin.set('householdId', 'partial-pin');
+    await pin.save(null, { useMasterKey: true });
+
+    const result = await cloudFunctions.uploadOfflineForms({
+      residentForms: [],
+      households: [
+        { parseClass: 'Household', localObject: { latitude: 18.5, householdId: 'partial-ok' } },
+        { parseClass: 'Household', localObject: { latitude: 'not-a-number', householdId: 'partial-bad' } },
+      ],
+      assetForms: [],
+      assetSupplementaryForms: [],
+      residentSupplementaryForms: [],
+      metadata,
+    });
+
+    const badSaved = await new Parse.Query('Household')
+      .equalTo('householdId', 'partial-bad').count({ useMasterKey: true });
+    const okSaved = await new Parse.Query('Household')
+      .equalTo('householdId', 'partial-ok').count({ useMasterKey: true });
+
+    // the failure is real, and its neighbour is fine
+    expect(badSaved).toBe(0);
+    expect(okSaved).toBe(1);
+
+    // Collect's completeness check must NOT pass on a partial failure.
+    const looksLikeCleanSuccess = ['residentForms', 'residentSupplementaryForms',
+      'households', 'assetForms', 'assetSupplementaryForms']
+      .every((k) => Array.isArray(result[k]));
+    expect(looksLikeCleanSuccess).toBe(false);
+
+    // It must say what saved and what did not, so a newer build can delete
+    // only the queue entries that made it.
+    expect(result.status).toBe('PartialFailure');
+    expect(result.saved.households).toHaveLength(1);
+    expect(result.failures).toHaveLength(1);
+    expect(result.failures[0].category).toBe('households');
+  });
+});
+
+describe('offline upload malformed and incomplete records', () => {
+  // `record.parseParentClassID.includes(...)` was unguarded, so a supplementary
+  // form with no parent threw a TypeError — which, before the failure marker,
+  // took the whole batch down with it.
+  it('handles a supplementary form with no parent id instead of wedging the batch', async () => {
+    const result = await cloudFunctions.uploadOfflineForms({
+      residentForms: [],
+      households: [],
+      assetForms: [],
+      assetSupplementaryForms: [],
+      residentSupplementaryForms: [{
+        parseClass: 'FormResults',
+        localObject: { title: 'no-parent-marker', fields: [] },
+      }],
+      metadata,
+    });
+
+    ['residentForms', 'residentSupplementaryForms', 'households',
+      'assetForms', 'assetSupplementaryForms']
+      .forEach((k) => expect(Array.isArray(result[k])).toBe(true));
+    expect(result.residentSupplementaryForms).toHaveLength(1);
+  });
+
+  // A corrupted queue can send a category that is not an array. That must be
+  // reported as a failure, never silently coerced to empty — coercing would
+  // tell the device "nothing to save, all good" and it would delete records.
+  // And the answer must still be the documented shape: returning the bare
+  // Error serialises across Parse as {}, leaving a newer client with no
+  // failures list to act on.
+  it('answers in the documented shape when a category is malformed', async () => {
+    const result = await cloudFunctions.uploadOfflineForms({
+      residentForms: 'not-an-array',
+      households: [],
+      assetForms: [],
+      assetSupplementaryForms: [],
+      residentSupplementaryForms: [],
+      metadata,
+    });
+
+    expect(result.status).toBe('Error');
+    expect(result.saved).toBeDefined();
+    expect(result.saved.residentForms).toEqual([]);
+    expect(result.failures.length).toBeGreaterThan(0);
+
+    // and an old build must still read it as "not a clean success"
+    const looksLikeCleanSuccess = ['residentForms', 'residentSupplementaryForms',
+      'households', 'assetForms', 'assetSupplementaryForms']
+      .every((k) => Array.isArray(result[k]));
+    expect(looksLikeCleanSuccess).toBe(false);
+  });
+});
