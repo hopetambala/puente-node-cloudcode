@@ -199,7 +199,17 @@ const Offline = {
       const saved = {};
       const failures = [];
       Object.entries(categories).forEach(([key, list]) => {
-        const rows = Array.isArray(list) ? list : [];
+        // Unreachable by construction — every branch above resolves a
+        // Promise.all — but coercing a non-array to [] here would drop its
+        // records AND record no failure, so the payload would read as a clean
+        // success and the device would delete its queue. That is the exact bug
+        // this change exists to fix. Throw instead: the catch below turns it
+        // into the documented Error shape, which is covered by
+        // "answers in the documented shape when a category is malformed".
+        if (!Array.isArray(list)) {
+          throw new Error(`offline upload: category ${key} was not an array`);
+        }
+        const rows = list;
         saved[key] = rows.filter((row) => !isUnsaved(row));
         rows.filter(isUnsaved).forEach((row) => failures.push({
           category: key,
