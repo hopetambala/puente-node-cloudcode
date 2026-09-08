@@ -1,14 +1,27 @@
 name: Deploy to Back4App
 
-# Deploys cloud code to the production Back4App app on merge to master.
-# Gated on the Jest suite passing first. Requires two repo secrets:
+# Deploys cloud code to the production Back4App app on merge to master, then
+# mirrors the same commit onto staging so the two cannot drift.
+#
+# Why staging is deployed here rather than by hand: on 2026-09-04 staging was
+# found running Cloud Code from 2026-07-15 — 13 files behind production, with 5
+# missing entirely and INVERTED metadata semantics. Every Maestro flow, and the
+# release gate that depends on them, had been validating a backend that was not
+# what ships. A client fix was reverted on the strength of a staging-only
+# failure. Keeping the two in lockstep automatically is the only fix that holds.
+#
+# Requires these repo secrets:
 #   B4A_ACCOUNT_KEY       — a Back4App account key (Dashboard → Account Keys)
 #   B4A_PRODUCTION_APP_ID — the production app's Application ID
+#   B4A_STAGING_APP_ID    — the staging app's Application ID (optional; the
+#                           staging job SKIPS if it is unset, so adding this
+#                           workflow can never break the production deploy)
 
 on:
   push:
     branches:
       - master
+  workflow_dispatch:
 
 env:
   PARSE_ENV: "dev"
@@ -72,3 +85,58 @@ jobs:
 
       - name: Deploy cloud code
         run: b4a deploy production -d "GHA ${GITHUB_SHA::7}"
+
+  # Mirrors the commit just shipped to production onto staging. `needs: deploy`
+  # means staging never runs ahead of production, so staging can be behind for
+  # a few minutes but never ahead — the direction that matters, because the E2E
+  # harness runs against staging and must not pass on code production lacks.
+  deploy-staging:
+    needs: deploy
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for the staging app id
+        id: guard
+        env:
+          B4A_STAGING_APP_ID: ${{ secrets.B4A_STAGING_APP_ID }}
+        run: |
+          if [ -z "$B4A_STAGING_APP_ID" ]; then
+            echo "::warning::B4A_STAGING_APP_ID is not set — skipping the staging deploy. Staging will drift from production until it is added."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install b4a CLI
+        if: steps.guard.outputs.configured == 'true'
+        run: |
+          curl -sL -o /usr/local/bin/b4a \
+            https://github.com/back4app/parse-cli/releases/download/release_3.3.1/b4a_linux
+          chmod +x /usr/local/bin/b4a
+          b4a version
+
+      - name: Configure Back4App account key
+        if: steps.guard.outputs.configured == 'true'
+        env:
+          B4A_ACCOUNT_KEY: ${{ secrets.B4A_ACCOUNT_KEY }}
+        run: |
+          if [ -z "$B4A_ACCOUNT_KEY" ]; then
+            echo "::error::B4A_ACCOUNT_KEY secret is not set"; exit 1
+          fi
+          mkdir -p "$HOME/.back4app"
+          printf 'machine parsecli.back4app.com\n\tlogin default\n\tpassword %s\n' \
+            "$B4A_ACCOUNT_KEY" > "$HOME/.back4app/netrc"
+          chmod 600 "$HOME/.back4app/netrc"
+
+      - name: Link staging app
+        if: steps.guard.outputs.configured == 'true'
+        env:
+          B4A_STAGING_APP_ID: ${{ secrets.B4A_STAGING_APP_ID }}
+        run: |
+          printf '{\n  "applications": {\n    "staging": {\n      "applicationId": "%s"\n    }\n  }\n}\n' \
+            "$B4A_STAGING_APP_ID" > .parse.local
+
+      - name: Deploy cloud code to staging
+        if: steps.guard.outputs.configured == 'true'
+        run: b4a deploy staging -d "mirror production ${GITHUB_SHA::7}"
