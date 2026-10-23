@@ -12,11 +12,29 @@
  * the phone number and the email stays empty. `signin` tries the username first,
  * so TestMcMaster / <password> logs in to Manage and Collect.
  *
- *   TEST_PASSWORD='…' npx env-cmd -f .env.prod node scripts/create-mcmaster-org.js
+ * Use PRODUCTION keys: the ones Manage is built with. This repo's .env.prod
+ * holds the STAGING app id (identical to .env.staging), so running with it
+ * creates the account on staging, where production Manage can't sign in —
+ * which is exactly what happened on 2026-10-23. The script refuses staging.
+ *
+ *   npx env-cmd -f ../puente-react-nextjs-platform/.env.local sh -c '
+ *     PARSE_APP_ID=$NEXT_PUBLIC_parseAppId \
+ *     PARSE_JAVASCRIPT_KEY=$NEXT_PUBLIC_parseJavascriptKey \
+ *     PARSE_SERVER_URL=$NEXT_PUBLIC_parseServerUrl \
+ *     TEST_PASSWORD=test node scripts/create-mcmaster-org.js'
  */
+const crypto = require('crypto');
+
 const {
-  PARSE_APP_ID, PARSE_JAVASCRIPT_KEY, PARSE_SERVER_URL, TEST_PASSWORD,
+  PARSE_APP_ID, PARSE_JAVASCRIPT_KEY, TEST_PASSWORD, ALLOW_STAGING,
 } = process.env;
+const PARSE_SERVER_URL = (process.env.PARSE_SERVER_URL || '').replace(/\/+$/, '');
+
+// First 8 hex of sha1(app id): says which app a run writes to without printing
+// the id. f7e6fde6 is staging (.env.staging and .env.prod here); production
+// Manage is 07059151.
+const appHash = (id) => crypto.createHash('sha1').update(String(id)).digest('hex').slice(0, 8);
+const STAGING_APP_HASHES = ['f7e6fde6'];
 
 const ORGANIZATION = 'McMaster';
 const USERNAME = 'TestMcMaster';
@@ -26,6 +44,11 @@ const main = async () => {
     PARSE_APP_ID, PARSE_JAVASCRIPT_KEY, PARSE_SERVER_URL, TEST_PASSWORD,
   }).filter(([, v]) => !v).map(([k]) => k);
   if (missing.length) throw new Error(`Missing env: ${missing.join(', ')}`);
+  const target = appHash(PARSE_APP_ID);
+  if (STAGING_APP_HASHES.includes(target) && ALLOW_STAGING !== '1') {
+    throw new Error(`Parse app ${target} is STAGING. Use Manage's production keys, or set ALLOW_STAGING=1.`);
+  }
+  console.log(`Writing to Parse app ${target}.`);
 
   const response = await fetch(`${PARSE_SERVER_URL}/functions/signup`, {
     method: 'POST',

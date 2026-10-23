@@ -6,8 +6,13 @@
  * Rayjon and the McMaster team sign off on it before running this.
  *
  *   node scripts/create-vision-exam-form.js --print       # show the form, write nothing
- *   npx env-cmd -f .env.prod node scripts/create-vision-exam-form.js
- *   npx env-cmd -f .env.prod node scripts/create-vision-exam-form.js --test-copy
+ * With PRODUCTION keys (Manage's .env.local; this repo's .env.prod is staging):
+ *
+ *   npx env-cmd -f ../puente-react-nextjs-platform/.env.local sh -c '
+ *     PARSE_APP_ID=$NEXT_PUBLIC_parseAppId \
+ *     PARSE_JAVASCRIPT_KEY=$NEXT_PUBLIC_parseJavascriptKey \
+ *     PARSE_SERVER_URL=$NEXT_PUBLIC_parseServerUrl \
+ *     node scripts/create-vision-exam-form.js --test-copy'
  *
  * --test-copy makes "PRUEBA - …", a copy with one invented community, for
  * testing without test patients reaching the real form's research export
@@ -23,6 +28,8 @@
  * Built in Manage it would be the same form; scripted so that 60-option lists
  * are typed once, correctly.
  */
+const crypto = require('crypto');
+
 const ORGANIZATION = 'McMaster';
 const FORM_NAME = 'Examen de la vista (Vision exam)';
 
@@ -100,7 +107,15 @@ const main = async () => {
   if (!communities.length) {
     throw new Error('Fill in COMMUNITIES first: the community question is how the study groups patients.');
   }
-  const { PARSE_APP_ID, PARSE_JAVASCRIPT_KEY, PARSE_SERVER_URL } = process.env;
+  const { PARSE_APP_ID, PARSE_JAVASCRIPT_KEY, ALLOW_STAGING } = process.env;
+  const PARSE_SERVER_URL = (process.env.PARSE_SERVER_URL || '').replace(/\/+$/, '');
+  // Same guard as create-mcmaster-org.js: f7e6fde6 is staging.
+  const target = crypto.createHash('sha1').update(String(PARSE_APP_ID)).digest('hex')
+    .slice(0, 8);
+  if (target === 'f7e6fde6' && ALLOW_STAGING !== '1') {
+    throw new Error(`Parse app ${target} is STAGING. Use Manage's production keys, or set ALLOW_STAGING=1.`);
+  }
+  console.log(`Writing to Parse app ${target}.`);
   const name = testCopy ? `PRUEBA - ${FORM_NAME}` : FORM_NAME;
   const headers = {
     'Content-Type': 'application/json',
